@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:inspect/data/model/create_category_model/create_category_model.dart';
 import 'package:inspect/data/model/field_model/field_model.dart';
 import 'package:inspect/data/model/get_category_model/get_category_model.dart';
-import 'package:inspect/repository/category/category_repository.dart';
+import 'package:inspect/data/repository/category/category_repository.dart';
 import 'package:inspect/storage/local_category_storage_service.dart';
 import 'package:inspect/storage/local_storage.dart';
 

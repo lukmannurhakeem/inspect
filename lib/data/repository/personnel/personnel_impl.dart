@@ -5,11 +5,11 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:inspect/data/model/personnel_model/personnel_model.dart';
 import 'package:inspect/data/model/personnel_team_member_model/personnel_team_member_model.dart';
 import 'package:inspect/data/model/personnel_team_model/personnel_team_model.dart';
+import 'package:inspect/data/repository/personnel/personnel_repository.dart';
 import 'package:inspect/errors/app_exception.dart';
 import 'package:inspect/errors/error_handler.dart';
 import 'package:inspect/network/api_client.dart';
 import 'package:inspect/network/api_endpoint.dart';
-import 'package:inspect/repository/personnel/personnel_repository.dart';
 
 class PersonnelImpl implements PersonnelRepository {
   final ApiClient _api;

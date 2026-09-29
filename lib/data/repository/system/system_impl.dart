@@ -9,11 +9,12 @@ import 'package:inspect/data/model/get_company_division/get_company_division.dar
 import 'package:inspect/data/model/get_report_type_model/get_report_type_model.dart';
 import 'package:inspect/data/model/item_report_model/item_report_model.dart';
 import 'package:inspect/data/model/regulation_model/regulation_model.dart';
+import 'package:inspect/data/repository/system/system_repository.dart';
 import 'package:inspect/errors/app_exception.dart';
 import 'package:inspect/errors/error_handler.dart';
 import 'package:inspect/network/api_client.dart';
 import 'package:inspect/network/api_endpoint.dart';
-import 'package:inspect/repository/system/system_repository.dart';
+
 
 typedef DioMediaType = http_parser.MediaType;
 

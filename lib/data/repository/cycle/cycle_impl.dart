@@ -1,7 +1,7 @@
 import 'package:inspect/data/model/cycle_model/cycle_model.dart';
+import 'package:inspect/data/repository/cycle/cycle_repository.dart';
 import 'package:inspect/network/api_client.dart';
 import 'package:inspect/network/api_endpoint.dart';
-import 'package:inspect/repository/cycle/cycle_repository.dart';
 
 class CycleImpl implements CycleRepository {
   final ApiClient _api;

@@ -1,7 +1,7 @@
 import 'package:inspect/data/model/get_agent_model/get_agent_model.dart';
 import 'package:inspect/network/api_client.dart';
 import 'package:inspect/network/api_endpoint.dart';
-import 'package:inspect/repository/agent/agent_repository.dart';
+import 'package:inspect/data/repository/agent/agent_repository.dart';
 
 class AgentImpl implements AgentRepository {
   final ApiClient _api;

@@ -1,7 +1,7 @@
 import 'package:inspect/data/model/inspection_plan_model/inspection_plan_model.dart';
+import 'package:inspect/data/repository/planner/planner_repository.dart';
 import 'package:inspect/network/api_client.dart';
 import 'package:inspect/network/api_endpoint.dart';
-import 'package:inspect/repository/planner/planner_repository.dart';
 
 class PlannerImpl implements PlannerRepository {
   final ApiClient _api;

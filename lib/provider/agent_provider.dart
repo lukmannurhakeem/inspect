@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:inspect/data/model/get_agent_model/get_agent_model.dart';
-import 'package:inspect/repository/agent/agent_repository.dart';
+import 'package:inspect/data/repository/agent/agent_repository.dart';
 import 'package:inspect/widget/common_snackbar.dart';
 
 class AgentProvider extends ChangeNotifier {

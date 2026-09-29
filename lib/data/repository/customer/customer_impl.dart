@@ -4,9 +4,9 @@ import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:inspect/data/model/get_customer_model/get_customer_model.dart';
+import 'package:inspect/data/repository/customer/customer_repository.dart';
 import 'package:inspect/network/api_client.dart';
 import 'package:inspect/network/api_endpoint.dart';
-import 'package:inspect/repository/customer/customer_repository.dart';
 
 class CustomerImpl implements CustomerRepository {
   final ApiClient _api;

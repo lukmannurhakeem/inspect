@@ -6,11 +6,11 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:inspect/data/model/area_model/area_model.dart';
 import 'package:inspect/data/model/get_site_by_customer_id_model/get_site_by_customer_id_model.dart';
 import 'package:inspect/data/model/get_site_model/get_site_model.dart';
+import 'package:inspect/data/repository/site/site_repository.dart';
 import 'package:inspect/errors/app_exception.dart';
 import 'package:inspect/errors/error_handler.dart';
 import 'package:inspect/network/api_client.dart';
 import 'package:inspect/network/api_endpoint.dart';
-import 'package:inspect/repository/site/site_repository.dart';
 
 class SiteImpl implements SiteRepository {
   final ApiClient _api;

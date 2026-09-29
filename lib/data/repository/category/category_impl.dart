@@ -1,8 +1,8 @@
 import 'package:inspect/data/model/create_category_model/create_category_model.dart';
 import 'package:inspect/data/model/get_category_model/get_category_model.dart';
+import 'package:inspect/data/repository/category/category_repository.dart';
 import 'package:inspect/network/api_client.dart';
 import 'package:inspect/network/api_endpoint.dart';
-import 'package:inspect/repository/category/category_repository.dart';
 
 class CategoryImpl implements CategoryRepository {
   final ApiClient _api;

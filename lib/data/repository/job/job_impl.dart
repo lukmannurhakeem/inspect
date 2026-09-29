@@ -4,9 +4,10 @@ import 'package:inspect/data/model/job_location_item_model/job_location_item_mod
 import 'package:inspect/data/model/job_model/job_model.dart';
 import 'package:inspect/data/model/job_register_model/job_register_model.dart';
 import 'package:inspect/data/model/report_approval_model/report_approval_model.dart';
+import 'package:inspect/data/repository/job/job_repository.dart';
 import 'package:inspect/network/api_client.dart';
 import 'package:inspect/network/api_endpoint.dart';
-import 'package:inspect/repository/job/job_repository.dart';
+
 
 class JobImpl implements JobRepository {
 final ApiClient _api;
