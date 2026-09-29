@@ -229,8 +229,8 @@ return $default(_that.reportId,_that.reportTypeId,_that.reportName,_that.itemId,
 }
 
 /// @nodoc
-@JsonSerializable()
 
+@JsonSerializable(explicitToJson: true)
 class _ItemReportModel implements ItemReportModel {
   const _ItemReportModel({@JsonKey(name: 'reportID') this.reportId, @JsonKey(name: 'reportTypeID') this.reportTypeId, this.reportName, @JsonKey(name: 'itemID') this.itemId, this.itemNo, this.status, this.inspectedBy, this.reportDate, this.regulation, this.reportData, this.createdAt, this.updatedAt});
   factory _ItemReportModel.fromJson(Map<String, dynamic> json) => _$ItemReportModelFromJson(json);
@@ -335,7 +335,7 @@ $ReportDataCopyWith<$Res>? get reportData {
 /// @nodoc
 mixin _$ReportData {
 
- Field? get field1; Field? get field2;
+ Map<String, Field>? get fields;
 /// Create a copy of ReportData
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -348,16 +348,16 @@ $ReportDataCopyWith<ReportData> get copyWith => _$ReportDataCopyWithImpl<ReportD
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReportData&&(identical(other.field1, field1) || other.field1 == field1)&&(identical(other.field2, field2) || other.field2 == field2));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReportData&&const DeepCollectionEquality().equals(other.fields, fields));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,field1,field2);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(fields));
 
 @override
 String toString() {
-  return 'ReportData(field1: $field1, field2: $field2)';
+  return 'ReportData(fields: $fields)';
 }
 
 
@@ -368,11 +368,11 @@ abstract mixin class $ReportDataCopyWith<$Res>  {
   factory $ReportDataCopyWith(ReportData value, $Res Function(ReportData) _then) = _$ReportDataCopyWithImpl;
 @useResult
 $Res call({
- Field? field1, Field? field2
+ Map<String, Field>? fields
 });
 
 
-$FieldCopyWith<$Res>? get field1;$FieldCopyWith<$Res>? get field2;
+
 
 }
 /// @nodoc
@@ -385,38 +385,13 @@ class _$ReportDataCopyWithImpl<$Res>
 
 /// Create a copy of ReportData
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? field1 = freezed,Object? field2 = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? fields = freezed,}) {
   return _then(_self.copyWith(
-field1: freezed == field1 ? _self.field1 : field1 // ignore: cast_nullable_to_non_nullable
-as Field?,field2: freezed == field2 ? _self.field2 : field2 // ignore: cast_nullable_to_non_nullable
-as Field?,
+fields: freezed == fields ? _self.fields : fields // ignore: cast_nullable_to_non_nullable
+as Map<String, Field>?,
   ));
 }
-/// Create a copy of ReportData
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$FieldCopyWith<$Res>? get field1 {
-    if (_self.field1 == null) {
-    return null;
-  }
 
-  return $FieldCopyWith<$Res>(_self.field1!, (value) {
-    return _then(_self.copyWith(field1: value));
-  });
-}/// Create a copy of ReportData
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$FieldCopyWith<$Res>? get field2 {
-    if (_self.field2 == null) {
-    return null;
-  }
-
-  return $FieldCopyWith<$Res>(_self.field2!, (value) {
-    return _then(_self.copyWith(field2: value));
-  });
-}
 }
 
 
@@ -498,10 +473,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Field? field1,  Field? field2)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Map<String, Field>? fields)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ReportData() when $default != null:
-return $default(_that.field1,_that.field2);case _:
+return $default(_that.fields);case _:
   return orElse();
 
 }
@@ -519,10 +494,10 @@ return $default(_that.field1,_that.field2);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Field? field1,  Field? field2)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Map<String, Field>? fields)  $default,) {final _that = this;
 switch (_that) {
 case _ReportData():
-return $default(_that.field1,_that.field2);case _:
+return $default(_that.fields);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -539,10 +514,10 @@ return $default(_that.field1,_that.field2);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Field? field1,  Field? field2)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Map<String, Field>? fields)?  $default,) {final _that = this;
 switch (_that) {
 case _ReportData() when $default != null:
-return $default(_that.field1,_that.field2);case _:
+return $default(_that.fields);case _:
   return null;
 
 }
@@ -554,11 +529,18 @@ return $default(_that.field1,_that.field2);case _:
 @JsonSerializable()
 
 class _ReportData implements ReportData {
-  const _ReportData({this.field1, this.field2});
+  const _ReportData({final  Map<String, Field>? fields}): _fields = fields;
   factory _ReportData.fromJson(Map<String, dynamic> json) => _$ReportDataFromJson(json);
 
-@override final  Field? field1;
-@override final  Field? field2;
+ final  Map<String, Field>? _fields;
+@override Map<String, Field>? get fields {
+  final value = _fields;
+  if (value == null) return null;
+  if (_fields is EqualUnmodifiableMapView) return _fields;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(value);
+}
+
 
 /// Create a copy of ReportData
 /// with the given fields replaced by the non-null parameter values.
@@ -573,16 +555,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReportData&&(identical(other.field1, field1) || other.field1 == field1)&&(identical(other.field2, field2) || other.field2 == field2));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReportData&&const DeepCollectionEquality().equals(other._fields, _fields));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,field1,field2);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_fields));
 
 @override
 String toString() {
-  return 'ReportData(field1: $field1, field2: $field2)';
+  return 'ReportData(fields: $fields)';
 }
 
 
@@ -593,11 +575,11 @@ abstract mixin class _$ReportDataCopyWith<$Res> implements $ReportDataCopyWith<$
   factory _$ReportDataCopyWith(_ReportData value, $Res Function(_ReportData) _then) = __$ReportDataCopyWithImpl;
 @override @useResult
 $Res call({
- Field? field1, Field? field2
+ Map<String, Field>? fields
 });
 
 
-@override $FieldCopyWith<$Res>? get field1;@override $FieldCopyWith<$Res>? get field2;
+
 
 }
 /// @nodoc
@@ -610,39 +592,14 @@ class __$ReportDataCopyWithImpl<$Res>
 
 /// Create a copy of ReportData
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? field1 = freezed,Object? field2 = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? fields = freezed,}) {
   return _then(_ReportData(
-field1: freezed == field1 ? _self.field1 : field1 // ignore: cast_nullable_to_non_nullable
-as Field?,field2: freezed == field2 ? _self.field2 : field2 // ignore: cast_nullable_to_non_nullable
-as Field?,
+fields: freezed == fields ? _self._fields : fields // ignore: cast_nullable_to_non_nullable
+as Map<String, Field>?,
   ));
 }
 
-/// Create a copy of ReportData
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$FieldCopyWith<$Res>? get field1 {
-    if (_self.field1 == null) {
-    return null;
-  }
 
-  return $FieldCopyWith<$Res>(_self.field1!, (value) {
-    return _then(_self.copyWith(field1: value));
-  });
-}/// Create a copy of ReportData
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$FieldCopyWith<$Res>? get field2 {
-    if (_self.field2 == null) {
-    return null;
-  }
-
-  return $FieldCopyWith<$Res>(_self.field2!, (value) {
-    return _then(_self.copyWith(field2: value));
-  });
-}
 }
 
 

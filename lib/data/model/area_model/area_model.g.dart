@@ -20,3 +20,25 @@ Map<String, dynamic> _$AreaModelToJson(_AreaModel instance) =>
       'areaname': instance.areaname,
       'areacode': instance.areacode,
     };
+
+_GetAreaModel _$GetAreaModelFromJson(Map<String, dynamic> json) =>
+    _GetAreaModel(
+      areas:
+          (json['areas'] as List<dynamic>?)
+              ?.map((e) => AreaModel.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      total: (json['total'] as num?)?.toInt() ?? 0,
+      page: (json['page'] as num?)?.toInt() ?? 1,
+      limit: (json['limit'] as num?)?.toInt() ?? 10,
+      totalPages: (json['totalPages'] as num?)?.toInt() ?? 1,
+    );
+
+Map<String, dynamic> _$GetAreaModelToJson(_GetAreaModel instance) =>
+    <String, dynamic>{
+      'areas': instance.areas,
+      'total': instance.total,
+      'page': instance.page,
+      'limit': instance.limit,
+      'totalPages': instance.totalPages,
+    };

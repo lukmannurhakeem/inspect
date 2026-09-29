@@ -19,3 +19,17 @@ abstract class AreaModel with _$AreaModel {
 
   String get displayName => areaname ?? areacode ?? '';
 }
+
+@freezed
+abstract class GetAreaModel with _$GetAreaModel {
+  const factory GetAreaModel({
+    @Default([]) List<AreaModel> areas,
+    @Default(0) int total,
+    @Default(1) int page,
+    @Default(10) int limit,
+    @Default(1) int totalPages,
+  }) = _GetAreaModel;
+
+  factory GetAreaModel.fromJson(Map<String, dynamic> json) =>
+      _$GetAreaModelFromJson(json);
+}

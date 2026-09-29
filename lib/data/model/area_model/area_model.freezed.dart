@@ -283,4 +283,285 @@ as String?,
 
 }
 
+
+/// @nodoc
+mixin _$GetAreaModel {
+
+ List<AreaModel> get areas; int get total; int get page; int get limit; int get totalPages;
+/// Create a copy of GetAreaModel
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$GetAreaModelCopyWith<GetAreaModel> get copyWith => _$GetAreaModelCopyWithImpl<GetAreaModel>(this as GetAreaModel, _$identity);
+
+  /// Serializes this GetAreaModel to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GetAreaModel&&const DeepCollectionEquality().equals(other.areas, areas)&&(identical(other.total, total) || other.total == total)&&(identical(other.page, page) || other.page == page)&&(identical(other.limit, limit) || other.limit == limit)&&(identical(other.totalPages, totalPages) || other.totalPages == totalPages));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(areas),total,page,limit,totalPages);
+
+@override
+String toString() {
+  return 'GetAreaModel(areas: $areas, total: $total, page: $page, limit: $limit, totalPages: $totalPages)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $GetAreaModelCopyWith<$Res>  {
+  factory $GetAreaModelCopyWith(GetAreaModel value, $Res Function(GetAreaModel) _then) = _$GetAreaModelCopyWithImpl;
+@useResult
+$Res call({
+ List<AreaModel> areas, int total, int page, int limit, int totalPages
+});
+
+
+
+
+}
+/// @nodoc
+class _$GetAreaModelCopyWithImpl<$Res>
+    implements $GetAreaModelCopyWith<$Res> {
+  _$GetAreaModelCopyWithImpl(this._self, this._then);
+
+  final GetAreaModel _self;
+  final $Res Function(GetAreaModel) _then;
+
+/// Create a copy of GetAreaModel
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? areas = null,Object? total = null,Object? page = null,Object? limit = null,Object? totalPages = null,}) {
+  return _then(_self.copyWith(
+areas: null == areas ? _self.areas : areas // ignore: cast_nullable_to_non_nullable
+as List<AreaModel>,total: null == total ? _self.total : total // ignore: cast_nullable_to_non_nullable
+as int,page: null == page ? _self.page : page // ignore: cast_nullable_to_non_nullable
+as int,limit: null == limit ? _self.limit : limit // ignore: cast_nullable_to_non_nullable
+as int,totalPages: null == totalPages ? _self.totalPages : totalPages // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [GetAreaModel].
+extension GetAreaModelPatterns on GetAreaModel {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _GetAreaModel value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _GetAreaModel() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _GetAreaModel value)  $default,){
+final _that = this;
+switch (_that) {
+case _GetAreaModel():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _GetAreaModel value)?  $default,){
+final _that = this;
+switch (_that) {
+case _GetAreaModel() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<AreaModel> areas,  int total,  int page,  int limit,  int totalPages)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _GetAreaModel() when $default != null:
+return $default(_that.areas,_that.total,_that.page,_that.limit,_that.totalPages);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<AreaModel> areas,  int total,  int page,  int limit,  int totalPages)  $default,) {final _that = this;
+switch (_that) {
+case _GetAreaModel():
+return $default(_that.areas,_that.total,_that.page,_that.limit,_that.totalPages);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<AreaModel> areas,  int total,  int page,  int limit,  int totalPages)?  $default,) {final _that = this;
+switch (_that) {
+case _GetAreaModel() when $default != null:
+return $default(_that.areas,_that.total,_that.page,_that.limit,_that.totalPages);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _GetAreaModel implements GetAreaModel {
+  const _GetAreaModel({final  List<AreaModel> areas = const [], this.total = 0, this.page = 1, this.limit = 10, this.totalPages = 1}): _areas = areas;
+  factory _GetAreaModel.fromJson(Map<String, dynamic> json) => _$GetAreaModelFromJson(json);
+
+ final  List<AreaModel> _areas;
+@override@JsonKey() List<AreaModel> get areas {
+  if (_areas is EqualUnmodifiableListView) return _areas;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_areas);
+}
+
+@override@JsonKey() final  int total;
+@override@JsonKey() final  int page;
+@override@JsonKey() final  int limit;
+@override@JsonKey() final  int totalPages;
+
+/// Create a copy of GetAreaModel
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$GetAreaModelCopyWith<_GetAreaModel> get copyWith => __$GetAreaModelCopyWithImpl<_GetAreaModel>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$GetAreaModelToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GetAreaModel&&const DeepCollectionEquality().equals(other._areas, _areas)&&(identical(other.total, total) || other.total == total)&&(identical(other.page, page) || other.page == page)&&(identical(other.limit, limit) || other.limit == limit)&&(identical(other.totalPages, totalPages) || other.totalPages == totalPages));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_areas),total,page,limit,totalPages);
+
+@override
+String toString() {
+  return 'GetAreaModel(areas: $areas, total: $total, page: $page, limit: $limit, totalPages: $totalPages)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$GetAreaModelCopyWith<$Res> implements $GetAreaModelCopyWith<$Res> {
+  factory _$GetAreaModelCopyWith(_GetAreaModel value, $Res Function(_GetAreaModel) _then) = __$GetAreaModelCopyWithImpl;
+@override @useResult
+$Res call({
+ List<AreaModel> areas, int total, int page, int limit, int totalPages
+});
+
+
+
+
+}
+/// @nodoc
+class __$GetAreaModelCopyWithImpl<$Res>
+    implements _$GetAreaModelCopyWith<$Res> {
+  __$GetAreaModelCopyWithImpl(this._self, this._then);
+
+  final _GetAreaModel _self;
+  final $Res Function(_GetAreaModel) _then;
+
+/// Create a copy of GetAreaModel
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? areas = null,Object? total = null,Object? page = null,Object? limit = null,Object? totalPages = null,}) {
+  return _then(_GetAreaModel(
+areas: null == areas ? _self._areas : areas // ignore: cast_nullable_to_non_nullable
+as List<AreaModel>,total: null == total ? _self.total : total // ignore: cast_nullable_to_non_nullable
+as int,page: null == page ? _self.page : page // ignore: cast_nullable_to_non_nullable
+as int,limit: null == limit ? _self.limit : limit // ignore: cast_nullable_to_non_nullable
+as int,totalPages: null == totalPages ? _self.totalPages : totalPages // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+
+}
+
 // dart format on

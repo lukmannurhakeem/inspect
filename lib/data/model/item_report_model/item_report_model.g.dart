@@ -41,22 +41,19 @@ Map<String, dynamic> _$ItemReportModelToJson(_ItemReportModel instance) =>
       'inspectedBy': instance.inspectedBy,
       'reportDate': instance.reportDate?.toIso8601String(),
       'regulation': instance.regulation,
-      'reportData': instance.reportData,
+      'reportData': instance.reportData?.toJson(),
       'createdAt': instance.createdAt?.toIso8601String(),
       'updatedAt': instance.updatedAt?.toIso8601String(),
     };
 
 _ReportData _$ReportDataFromJson(Map<String, dynamic> json) => _ReportData(
-  field1: json['field1'] == null
-      ? null
-      : Field.fromJson(json['field1'] as Map<String, dynamic>),
-  field2: json['field2'] == null
-      ? null
-      : Field.fromJson(json['field2'] as Map<String, dynamic>),
+  fields: (json['fields'] as Map<String, dynamic>?)?.map(
+    (k, e) => MapEntry(k, Field.fromJson(e as Map<String, dynamic>)),
+  ),
 );
 
 Map<String, dynamic> _$ReportDataToJson(_ReportData instance) =>
-    <String, dynamic>{'field1': instance.field1, 'field2': instance.field2};
+    <String, dynamic>{'fields': instance.fields};
 
 _Field _$FieldFromJson(Map<String, dynamic> json) =>
     _Field(value: json['value'] as String?);

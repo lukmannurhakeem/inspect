@@ -5,6 +5,7 @@ part 'item_report_model.g.dart';
 
 @freezed
 abstract class ItemReportModel with _$ItemReportModel {
+  @JsonSerializable(explicitToJson: true)
   const factory ItemReportModel({
     @JsonKey(name: 'reportID') String? reportId,
     @JsonKey(name: 'reportTypeID') String? reportTypeId,
@@ -27,8 +28,7 @@ abstract class ItemReportModel with _$ItemReportModel {
 @freezed
 abstract class ReportData with _$ReportData {
   const factory ReportData({
-    Field? field1,
-    Field? field2,
+    Map<String, Field>? fields,
   }) = _ReportData;
 
   factory ReportData.fromJson(Map<String, dynamic> json) =>
