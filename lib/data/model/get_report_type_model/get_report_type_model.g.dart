@@ -9,7 +9,7 @@ part of 'get_report_type_model.dart';
 _GetReportTypeModel _$GetReportTypeModelFromJson(Map<String, dynamic> json) =>
     _GetReportTypeModel(
       data: (json['data'] as List<dynamic>?)
-          ?.map((e) => Datum.fromJson(e as Map<String, dynamic>))
+          ?.map((e) => ReportTypeItem.fromJson(e as Map<String, dynamic>))
           .toList(),
       message: const SafeStringConverter().fromJson(json['message']),
     );
@@ -18,6 +18,38 @@ Map<String, dynamic> _$GetReportTypeModelToJson(_GetReportTypeModel instance) =>
     <String, dynamic>{
       'data': instance.data,
       'message': const SafeStringConverter().toJson(instance.message),
+    };
+
+_ReportTypeItem _$ReportTypeItemFromJson(Map<String, dynamic> json) =>
+    _ReportTypeItem(
+      reportType: json['reportType'] == null
+          ? null
+          : ReportType.fromJson(json['reportType'] as Map<String, dynamic>),
+      competencyReports: (json['competencyReports'] as List<dynamic>?)
+          ?.map((e) => CompetencyReport.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      reportTypeDates: (json['reportTypeDates'] as List<dynamic>?)
+          ?.map((e) => ReportTypeDate.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      statusRuleReports: (json['statusRuleReports'] as List<dynamic>?)
+          ?.map((e) => StatusRuleReport.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      reportFields: (json['reportFields'] as List<dynamic>?)
+          ?.map((e) => ReportField.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      actionReports: (json['actionReports'] as List<dynamic>?)
+          ?.map((e) => ActionReport.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+
+Map<String, dynamic> _$ReportTypeItemToJson(_ReportTypeItem instance) =>
+    <String, dynamic>{
+      'reportType': instance.reportType,
+      'competencyReports': instance.competencyReports,
+      'reportTypeDates': instance.reportTypeDates,
+      'statusRuleReports': instance.statusRuleReports,
+      'reportFields': instance.reportFields,
+      'actionReports': instance.actionReports,
     };
 
 _Datum _$DatumFromJson(Map<String, dynamic> json) => _Datum(

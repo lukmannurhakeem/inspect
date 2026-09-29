@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$JobModel {
 
- int? get count; List<Datum> get data; bool? get success;
+ int? get count; List<JobItem> get data; bool? get success;
 /// Create a copy of JobModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $JobModelCopyWith<$Res>  {
   factory $JobModelCopyWith(JobModel value, $Res Function(JobModel) _then) = _$JobModelCopyWithImpl;
 @useResult
 $Res call({
- int? count, List<Datum> data, bool? success
+ int? count, List<JobItem> data, bool? success
 });
 
 
@@ -69,7 +69,7 @@ class _$JobModelCopyWithImpl<$Res>
   return _then(_self.copyWith(
 count: freezed == count ? _self.count : count // ignore: cast_nullable_to_non_nullable
 as int?,data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
-as List<Datum>,success: freezed == success ? _self.success : success // ignore: cast_nullable_to_non_nullable
+as List<JobItem>,success: freezed == success ? _self.success : success // ignore: cast_nullable_to_non_nullable
 as bool?,
   ));
 }
@@ -155,7 +155,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? count,  List<Datum> data,  bool? success)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? count,  List<JobItem> data,  bool? success)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _JobModel() when $default != null:
 return $default(_that.count,_that.data,_that.success);case _:
@@ -176,7 +176,7 @@ return $default(_that.count,_that.data,_that.success);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? count,  List<Datum> data,  bool? success)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? count,  List<JobItem> data,  bool? success)  $default,) {final _that = this;
 switch (_that) {
 case _JobModel():
 return $default(_that.count,_that.data,_that.success);case _:
@@ -196,7 +196,7 @@ return $default(_that.count,_that.data,_that.success);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? count,  List<Datum> data,  bool? success)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? count,  List<JobItem> data,  bool? success)?  $default,) {final _that = this;
 switch (_that) {
 case _JobModel() when $default != null:
 return $default(_that.count,_that.data,_that.success);case _:
@@ -211,12 +211,12 @@ return $default(_that.count,_that.data,_that.success);case _:
 @JsonSerializable()
 
 class _JobModel implements JobModel {
-  const _JobModel({this.count, final  List<Datum> data = const [], this.success}): _data = data;
+  const _JobModel({this.count, final  List<JobItem> data = const [], this.success}): _data = data;
   factory _JobModel.fromJson(Map<String, dynamic> json) => _$JobModelFromJson(json);
 
 @override final  int? count;
- final  List<Datum> _data;
-@override@JsonKey() List<Datum> get data {
+ final  List<JobItem> _data;
+@override@JsonKey() List<JobItem> get data {
   if (_data is EqualUnmodifiableListView) return _data;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_data);
@@ -257,7 +257,7 @@ abstract mixin class _$JobModelCopyWith<$Res> implements $JobModelCopyWith<$Res>
   factory _$JobModelCopyWith(_JobModel value, $Res Function(_JobModel) _then) = __$JobModelCopyWithImpl;
 @override @useResult
 $Res call({
- int? count, List<Datum> data, bool? success
+ int? count, List<JobItem> data, bool? success
 });
 
 
@@ -278,7 +278,7 @@ class __$JobModelCopyWithImpl<$Res>
   return _then(_JobModel(
 count: freezed == count ? _self.count : count // ignore: cast_nullable_to_non_nullable
 as int?,data: null == data ? _self._data : data // ignore: cast_nullable_to_non_nullable
-as List<Datum>,success: freezed == success ? _self.success : success // ignore: cast_nullable_to_non_nullable
+as List<JobItem>,success: freezed == success ? _self.success : success // ignore: cast_nullable_to_non_nullable
 as bool?,
   ));
 }
@@ -288,22 +288,22 @@ as bool?,
 
 
 /// @nodoc
-mixin _$Datum {
+mixin _$JobItem {
 
 @JsonKey(name: 'jobID') String? get jobId; String? get jobNo; String? get customerid; String? get customerName;@JsonKey(name: 'siteID') String? get siteId; String? get siteName; DateTime? get createdDate; String? get purchaseOrderNo; String? get procedureNo;@JsonKey(name: 'divisionID') String? get divisionId; int? get allocatedDuration; DateTime? get estimatedStartDate; DateTime? get estimatedEndDate; bool? get isEngineerComplete; String? get offshoreLocation; String? get authenticator; String? get issuingAuthName; String? get issuingAuthSignature; String? get clientName; String? get clientSignature; bool? get startJobNow;
-/// Create a copy of Datum
+/// Create a copy of JobItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-$DatumCopyWith<Datum> get copyWith => _$DatumCopyWithImpl<Datum>(this as Datum, _$identity);
+$JobItemCopyWith<JobItem> get copyWith => _$JobItemCopyWithImpl<JobItem>(this as JobItem, _$identity);
 
-  /// Serializes this Datum to a JSON map.
+  /// Serializes this JobItem to a JSON map.
   Map<String, dynamic> toJson();
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Datum&&(identical(other.jobId, jobId) || other.jobId == jobId)&&(identical(other.jobNo, jobNo) || other.jobNo == jobNo)&&(identical(other.customerid, customerid) || other.customerid == customerid)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.siteId, siteId) || other.siteId == siteId)&&(identical(other.siteName, siteName) || other.siteName == siteName)&&(identical(other.createdDate, createdDate) || other.createdDate == createdDate)&&(identical(other.purchaseOrderNo, purchaseOrderNo) || other.purchaseOrderNo == purchaseOrderNo)&&(identical(other.procedureNo, procedureNo) || other.procedureNo == procedureNo)&&(identical(other.divisionId, divisionId) || other.divisionId == divisionId)&&(identical(other.allocatedDuration, allocatedDuration) || other.allocatedDuration == allocatedDuration)&&(identical(other.estimatedStartDate, estimatedStartDate) || other.estimatedStartDate == estimatedStartDate)&&(identical(other.estimatedEndDate, estimatedEndDate) || other.estimatedEndDate == estimatedEndDate)&&(identical(other.isEngineerComplete, isEngineerComplete) || other.isEngineerComplete == isEngineerComplete)&&(identical(other.offshoreLocation, offshoreLocation) || other.offshoreLocation == offshoreLocation)&&(identical(other.authenticator, authenticator) || other.authenticator == authenticator)&&(identical(other.issuingAuthName, issuingAuthName) || other.issuingAuthName == issuingAuthName)&&(identical(other.issuingAuthSignature, issuingAuthSignature) || other.issuingAuthSignature == issuingAuthSignature)&&(identical(other.clientName, clientName) || other.clientName == clientName)&&(identical(other.clientSignature, clientSignature) || other.clientSignature == clientSignature)&&(identical(other.startJobNow, startJobNow) || other.startJobNow == startJobNow));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is JobItem&&(identical(other.jobId, jobId) || other.jobId == jobId)&&(identical(other.jobNo, jobNo) || other.jobNo == jobNo)&&(identical(other.customerid, customerid) || other.customerid == customerid)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.siteId, siteId) || other.siteId == siteId)&&(identical(other.siteName, siteName) || other.siteName == siteName)&&(identical(other.createdDate, createdDate) || other.createdDate == createdDate)&&(identical(other.purchaseOrderNo, purchaseOrderNo) || other.purchaseOrderNo == purchaseOrderNo)&&(identical(other.procedureNo, procedureNo) || other.procedureNo == procedureNo)&&(identical(other.divisionId, divisionId) || other.divisionId == divisionId)&&(identical(other.allocatedDuration, allocatedDuration) || other.allocatedDuration == allocatedDuration)&&(identical(other.estimatedStartDate, estimatedStartDate) || other.estimatedStartDate == estimatedStartDate)&&(identical(other.estimatedEndDate, estimatedEndDate) || other.estimatedEndDate == estimatedEndDate)&&(identical(other.isEngineerComplete, isEngineerComplete) || other.isEngineerComplete == isEngineerComplete)&&(identical(other.offshoreLocation, offshoreLocation) || other.offshoreLocation == offshoreLocation)&&(identical(other.authenticator, authenticator) || other.authenticator == authenticator)&&(identical(other.issuingAuthName, issuingAuthName) || other.issuingAuthName == issuingAuthName)&&(identical(other.issuingAuthSignature, issuingAuthSignature) || other.issuingAuthSignature == issuingAuthSignature)&&(identical(other.clientName, clientName) || other.clientName == clientName)&&(identical(other.clientSignature, clientSignature) || other.clientSignature == clientSignature)&&(identical(other.startJobNow, startJobNow) || other.startJobNow == startJobNow));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -312,15 +312,15 @@ int get hashCode => Object.hashAll([runtimeType,jobId,jobNo,customerid,customerN
 
 @override
 String toString() {
-  return 'Datum(jobId: $jobId, jobNo: $jobNo, customerid: $customerid, customerName: $customerName, siteId: $siteId, siteName: $siteName, createdDate: $createdDate, purchaseOrderNo: $purchaseOrderNo, procedureNo: $procedureNo, divisionId: $divisionId, allocatedDuration: $allocatedDuration, estimatedStartDate: $estimatedStartDate, estimatedEndDate: $estimatedEndDate, isEngineerComplete: $isEngineerComplete, offshoreLocation: $offshoreLocation, authenticator: $authenticator, issuingAuthName: $issuingAuthName, issuingAuthSignature: $issuingAuthSignature, clientName: $clientName, clientSignature: $clientSignature, startJobNow: $startJobNow)';
+  return 'JobItem(jobId: $jobId, jobNo: $jobNo, customerid: $customerid, customerName: $customerName, siteId: $siteId, siteName: $siteName, createdDate: $createdDate, purchaseOrderNo: $purchaseOrderNo, procedureNo: $procedureNo, divisionId: $divisionId, allocatedDuration: $allocatedDuration, estimatedStartDate: $estimatedStartDate, estimatedEndDate: $estimatedEndDate, isEngineerComplete: $isEngineerComplete, offshoreLocation: $offshoreLocation, authenticator: $authenticator, issuingAuthName: $issuingAuthName, issuingAuthSignature: $issuingAuthSignature, clientName: $clientName, clientSignature: $clientSignature, startJobNow: $startJobNow)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class $DatumCopyWith<$Res>  {
-  factory $DatumCopyWith(Datum value, $Res Function(Datum) _then) = _$DatumCopyWithImpl;
+abstract mixin class $JobItemCopyWith<$Res>  {
+  factory $JobItemCopyWith(JobItem value, $Res Function(JobItem) _then) = _$JobItemCopyWithImpl;
 @useResult
 $Res call({
 @JsonKey(name: 'jobID') String? jobId, String? jobNo, String? customerid, String? customerName,@JsonKey(name: 'siteID') String? siteId, String? siteName, DateTime? createdDate, String? purchaseOrderNo, String? procedureNo,@JsonKey(name: 'divisionID') String? divisionId, int? allocatedDuration, DateTime? estimatedStartDate, DateTime? estimatedEndDate, bool? isEngineerComplete, String? offshoreLocation, String? authenticator, String? issuingAuthName, String? issuingAuthSignature, String? clientName, String? clientSignature, bool? startJobNow
@@ -331,14 +331,14 @@ $Res call({
 
 }
 /// @nodoc
-class _$DatumCopyWithImpl<$Res>
-    implements $DatumCopyWith<$Res> {
-  _$DatumCopyWithImpl(this._self, this._then);
+class _$JobItemCopyWithImpl<$Res>
+    implements $JobItemCopyWith<$Res> {
+  _$JobItemCopyWithImpl(this._self, this._then);
 
-  final Datum _self;
-  final $Res Function(Datum) _then;
+  final JobItem _self;
+  final $Res Function(JobItem) _then;
 
-/// Create a copy of Datum
+/// Create a copy of JobItem
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? jobId = freezed,Object? jobNo = freezed,Object? customerid = freezed,Object? customerName = freezed,Object? siteId = freezed,Object? siteName = freezed,Object? createdDate = freezed,Object? purchaseOrderNo = freezed,Object? procedureNo = freezed,Object? divisionId = freezed,Object? allocatedDuration = freezed,Object? estimatedStartDate = freezed,Object? estimatedEndDate = freezed,Object? isEngineerComplete = freezed,Object? offshoreLocation = freezed,Object? authenticator = freezed,Object? issuingAuthName = freezed,Object? issuingAuthSignature = freezed,Object? clientName = freezed,Object? clientSignature = freezed,Object? startJobNow = freezed,}) {
   return _then(_self.copyWith(
@@ -370,8 +370,8 @@ as bool?,
 }
 
 
-/// Adds pattern-matching-related methods to [Datum].
-extension DatumPatterns on Datum {
+/// Adds pattern-matching-related methods to [JobItem].
+extension JobItemPatterns on JobItem {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
 /// It is equivalent to doing:
@@ -384,10 +384,10 @@ extension DatumPatterns on Datum {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _Datum value)?  $default,{required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _JobItem value)?  $default,{required TResult orElse(),}){
 final _that = this;
 switch (_that) {
-case _Datum() when $default != null:
+case _JobItem() when $default != null:
 return $default(_that);case _:
   return orElse();
 
@@ -406,10 +406,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _Datum value)  $default,){
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _JobItem value)  $default,){
 final _that = this;
 switch (_that) {
-case _Datum():
+case _JobItem():
 return $default(_that);case _:
   throw StateError('Unexpected subclass');
 
@@ -427,10 +427,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _Datum value)?  $default,){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _JobItem value)?  $default,){
 final _that = this;
 switch (_that) {
-case _Datum() when $default != null:
+case _JobItem() when $default != null:
 return $default(_that);case _:
   return null;
 
@@ -450,7 +450,7 @@ return $default(_that);case _:
 
 @optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'jobID')  String? jobId,  String? jobNo,  String? customerid,  String? customerName, @JsonKey(name: 'siteID')  String? siteId,  String? siteName,  DateTime? createdDate,  String? purchaseOrderNo,  String? procedureNo, @JsonKey(name: 'divisionID')  String? divisionId,  int? allocatedDuration,  DateTime? estimatedStartDate,  DateTime? estimatedEndDate,  bool? isEngineerComplete,  String? offshoreLocation,  String? authenticator,  String? issuingAuthName,  String? issuingAuthSignature,  String? clientName,  String? clientSignature,  bool? startJobNow)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
-case _Datum() when $default != null:
+case _JobItem() when $default != null:
 return $default(_that.jobId,_that.jobNo,_that.customerid,_that.customerName,_that.siteId,_that.siteName,_that.createdDate,_that.purchaseOrderNo,_that.procedureNo,_that.divisionId,_that.allocatedDuration,_that.estimatedStartDate,_that.estimatedEndDate,_that.isEngineerComplete,_that.offshoreLocation,_that.authenticator,_that.issuingAuthName,_that.issuingAuthSignature,_that.clientName,_that.clientSignature,_that.startJobNow);case _:
   return orElse();
 
@@ -471,7 +471,7 @@ return $default(_that.jobId,_that.jobNo,_that.customerid,_that.customerName,_tha
 
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'jobID')  String? jobId,  String? jobNo,  String? customerid,  String? customerName, @JsonKey(name: 'siteID')  String? siteId,  String? siteName,  DateTime? createdDate,  String? purchaseOrderNo,  String? procedureNo, @JsonKey(name: 'divisionID')  String? divisionId,  int? allocatedDuration,  DateTime? estimatedStartDate,  DateTime? estimatedEndDate,  bool? isEngineerComplete,  String? offshoreLocation,  String? authenticator,  String? issuingAuthName,  String? issuingAuthSignature,  String? clientName,  String? clientSignature,  bool? startJobNow)  $default,) {final _that = this;
 switch (_that) {
-case _Datum():
+case _JobItem():
 return $default(_that.jobId,_that.jobNo,_that.customerid,_that.customerName,_that.siteId,_that.siteName,_that.createdDate,_that.purchaseOrderNo,_that.procedureNo,_that.divisionId,_that.allocatedDuration,_that.estimatedStartDate,_that.estimatedEndDate,_that.isEngineerComplete,_that.offshoreLocation,_that.authenticator,_that.issuingAuthName,_that.issuingAuthSignature,_that.clientName,_that.clientSignature,_that.startJobNow);case _:
   throw StateError('Unexpected subclass');
 
@@ -491,7 +491,7 @@ return $default(_that.jobId,_that.jobNo,_that.customerid,_that.customerName,_tha
 
 @optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'jobID')  String? jobId,  String? jobNo,  String? customerid,  String? customerName, @JsonKey(name: 'siteID')  String? siteId,  String? siteName,  DateTime? createdDate,  String? purchaseOrderNo,  String? procedureNo, @JsonKey(name: 'divisionID')  String? divisionId,  int? allocatedDuration,  DateTime? estimatedStartDate,  DateTime? estimatedEndDate,  bool? isEngineerComplete,  String? offshoreLocation,  String? authenticator,  String? issuingAuthName,  String? issuingAuthSignature,  String? clientName,  String? clientSignature,  bool? startJobNow)?  $default,) {final _that = this;
 switch (_that) {
-case _Datum() when $default != null:
+case _JobItem() when $default != null:
 return $default(_that.jobId,_that.jobNo,_that.customerid,_that.customerName,_that.siteId,_that.siteName,_that.createdDate,_that.purchaseOrderNo,_that.procedureNo,_that.divisionId,_that.allocatedDuration,_that.estimatedStartDate,_that.estimatedEndDate,_that.isEngineerComplete,_that.offshoreLocation,_that.authenticator,_that.issuingAuthName,_that.issuingAuthSignature,_that.clientName,_that.clientSignature,_that.startJobNow);case _:
   return null;
 
@@ -503,9 +503,9 @@ return $default(_that.jobId,_that.jobNo,_that.customerid,_that.customerName,_tha
 /// @nodoc
 @JsonSerializable()
 
-class _Datum implements Datum {
-  const _Datum({@JsonKey(name: 'jobID') this.jobId, this.jobNo, this.customerid, this.customerName, @JsonKey(name: 'siteID') this.siteId, this.siteName, this.createdDate, this.purchaseOrderNo, this.procedureNo, @JsonKey(name: 'divisionID') this.divisionId, this.allocatedDuration, this.estimatedStartDate, this.estimatedEndDate, this.isEngineerComplete, this.offshoreLocation, this.authenticator, this.issuingAuthName, this.issuingAuthSignature, this.clientName, this.clientSignature, this.startJobNow});
-  factory _Datum.fromJson(Map<String, dynamic> json) => _$DatumFromJson(json);
+class _JobItem implements JobItem {
+  const _JobItem({@JsonKey(name: 'jobID') this.jobId, this.jobNo, this.customerid, this.customerName, @JsonKey(name: 'siteID') this.siteId, this.siteName, this.createdDate, this.purchaseOrderNo, this.procedureNo, @JsonKey(name: 'divisionID') this.divisionId, this.allocatedDuration, this.estimatedStartDate, this.estimatedEndDate, this.isEngineerComplete, this.offshoreLocation, this.authenticator, this.issuingAuthName, this.issuingAuthSignature, this.clientName, this.clientSignature, this.startJobNow});
+  factory _JobItem.fromJson(Map<String, dynamic> json) => _$JobItemFromJson(json);
 
 @override@JsonKey(name: 'jobID') final  String? jobId;
 @override final  String? jobNo;
@@ -529,20 +529,20 @@ class _Datum implements Datum {
 @override final  String? clientSignature;
 @override final  bool? startJobNow;
 
-/// Create a copy of Datum
+/// Create a copy of JobItem
 /// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-_$DatumCopyWith<_Datum> get copyWith => __$DatumCopyWithImpl<_Datum>(this, _$identity);
+_$JobItemCopyWith<_JobItem> get copyWith => __$JobItemCopyWithImpl<_JobItem>(this, _$identity);
 
 @override
 Map<String, dynamic> toJson() {
-  return _$DatumToJson(this, );
+  return _$JobItemToJson(this, );
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Datum&&(identical(other.jobId, jobId) || other.jobId == jobId)&&(identical(other.jobNo, jobNo) || other.jobNo == jobNo)&&(identical(other.customerid, customerid) || other.customerid == customerid)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.siteId, siteId) || other.siteId == siteId)&&(identical(other.siteName, siteName) || other.siteName == siteName)&&(identical(other.createdDate, createdDate) || other.createdDate == createdDate)&&(identical(other.purchaseOrderNo, purchaseOrderNo) || other.purchaseOrderNo == purchaseOrderNo)&&(identical(other.procedureNo, procedureNo) || other.procedureNo == procedureNo)&&(identical(other.divisionId, divisionId) || other.divisionId == divisionId)&&(identical(other.allocatedDuration, allocatedDuration) || other.allocatedDuration == allocatedDuration)&&(identical(other.estimatedStartDate, estimatedStartDate) || other.estimatedStartDate == estimatedStartDate)&&(identical(other.estimatedEndDate, estimatedEndDate) || other.estimatedEndDate == estimatedEndDate)&&(identical(other.isEngineerComplete, isEngineerComplete) || other.isEngineerComplete == isEngineerComplete)&&(identical(other.offshoreLocation, offshoreLocation) || other.offshoreLocation == offshoreLocation)&&(identical(other.authenticator, authenticator) || other.authenticator == authenticator)&&(identical(other.issuingAuthName, issuingAuthName) || other.issuingAuthName == issuingAuthName)&&(identical(other.issuingAuthSignature, issuingAuthSignature) || other.issuingAuthSignature == issuingAuthSignature)&&(identical(other.clientName, clientName) || other.clientName == clientName)&&(identical(other.clientSignature, clientSignature) || other.clientSignature == clientSignature)&&(identical(other.startJobNow, startJobNow) || other.startJobNow == startJobNow));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _JobItem&&(identical(other.jobId, jobId) || other.jobId == jobId)&&(identical(other.jobNo, jobNo) || other.jobNo == jobNo)&&(identical(other.customerid, customerid) || other.customerid == customerid)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.siteId, siteId) || other.siteId == siteId)&&(identical(other.siteName, siteName) || other.siteName == siteName)&&(identical(other.createdDate, createdDate) || other.createdDate == createdDate)&&(identical(other.purchaseOrderNo, purchaseOrderNo) || other.purchaseOrderNo == purchaseOrderNo)&&(identical(other.procedureNo, procedureNo) || other.procedureNo == procedureNo)&&(identical(other.divisionId, divisionId) || other.divisionId == divisionId)&&(identical(other.allocatedDuration, allocatedDuration) || other.allocatedDuration == allocatedDuration)&&(identical(other.estimatedStartDate, estimatedStartDate) || other.estimatedStartDate == estimatedStartDate)&&(identical(other.estimatedEndDate, estimatedEndDate) || other.estimatedEndDate == estimatedEndDate)&&(identical(other.isEngineerComplete, isEngineerComplete) || other.isEngineerComplete == isEngineerComplete)&&(identical(other.offshoreLocation, offshoreLocation) || other.offshoreLocation == offshoreLocation)&&(identical(other.authenticator, authenticator) || other.authenticator == authenticator)&&(identical(other.issuingAuthName, issuingAuthName) || other.issuingAuthName == issuingAuthName)&&(identical(other.issuingAuthSignature, issuingAuthSignature) || other.issuingAuthSignature == issuingAuthSignature)&&(identical(other.clientName, clientName) || other.clientName == clientName)&&(identical(other.clientSignature, clientSignature) || other.clientSignature == clientSignature)&&(identical(other.startJobNow, startJobNow) || other.startJobNow == startJobNow));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -551,15 +551,15 @@ int get hashCode => Object.hashAll([runtimeType,jobId,jobNo,customerid,customerN
 
 @override
 String toString() {
-  return 'Datum(jobId: $jobId, jobNo: $jobNo, customerid: $customerid, customerName: $customerName, siteId: $siteId, siteName: $siteName, createdDate: $createdDate, purchaseOrderNo: $purchaseOrderNo, procedureNo: $procedureNo, divisionId: $divisionId, allocatedDuration: $allocatedDuration, estimatedStartDate: $estimatedStartDate, estimatedEndDate: $estimatedEndDate, isEngineerComplete: $isEngineerComplete, offshoreLocation: $offshoreLocation, authenticator: $authenticator, issuingAuthName: $issuingAuthName, issuingAuthSignature: $issuingAuthSignature, clientName: $clientName, clientSignature: $clientSignature, startJobNow: $startJobNow)';
+  return 'JobItem(jobId: $jobId, jobNo: $jobNo, customerid: $customerid, customerName: $customerName, siteId: $siteId, siteName: $siteName, createdDate: $createdDate, purchaseOrderNo: $purchaseOrderNo, procedureNo: $procedureNo, divisionId: $divisionId, allocatedDuration: $allocatedDuration, estimatedStartDate: $estimatedStartDate, estimatedEndDate: $estimatedEndDate, isEngineerComplete: $isEngineerComplete, offshoreLocation: $offshoreLocation, authenticator: $authenticator, issuingAuthName: $issuingAuthName, issuingAuthSignature: $issuingAuthSignature, clientName: $clientName, clientSignature: $clientSignature, startJobNow: $startJobNow)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class _$DatumCopyWith<$Res> implements $DatumCopyWith<$Res> {
-  factory _$DatumCopyWith(_Datum value, $Res Function(_Datum) _then) = __$DatumCopyWithImpl;
+abstract mixin class _$JobItemCopyWith<$Res> implements $JobItemCopyWith<$Res> {
+  factory _$JobItemCopyWith(_JobItem value, $Res Function(_JobItem) _then) = __$JobItemCopyWithImpl;
 @override @useResult
 $Res call({
 @JsonKey(name: 'jobID') String? jobId, String? jobNo, String? customerid, String? customerName,@JsonKey(name: 'siteID') String? siteId, String? siteName, DateTime? createdDate, String? purchaseOrderNo, String? procedureNo,@JsonKey(name: 'divisionID') String? divisionId, int? allocatedDuration, DateTime? estimatedStartDate, DateTime? estimatedEndDate, bool? isEngineerComplete, String? offshoreLocation, String? authenticator, String? issuingAuthName, String? issuingAuthSignature, String? clientName, String? clientSignature, bool? startJobNow
@@ -570,17 +570,17 @@ $Res call({
 
 }
 /// @nodoc
-class __$DatumCopyWithImpl<$Res>
-    implements _$DatumCopyWith<$Res> {
-  __$DatumCopyWithImpl(this._self, this._then);
+class __$JobItemCopyWithImpl<$Res>
+    implements _$JobItemCopyWith<$Res> {
+  __$JobItemCopyWithImpl(this._self, this._then);
 
-  final _Datum _self;
-  final $Res Function(_Datum) _then;
+  final _JobItem _self;
+  final $Res Function(_JobItem) _then;
 
-/// Create a copy of Datum
+/// Create a copy of JobItem
 /// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? jobId = freezed,Object? jobNo = freezed,Object? customerid = freezed,Object? customerName = freezed,Object? siteId = freezed,Object? siteName = freezed,Object? createdDate = freezed,Object? purchaseOrderNo = freezed,Object? procedureNo = freezed,Object? divisionId = freezed,Object? allocatedDuration = freezed,Object? estimatedStartDate = freezed,Object? estimatedEndDate = freezed,Object? isEngineerComplete = freezed,Object? offshoreLocation = freezed,Object? authenticator = freezed,Object? issuingAuthName = freezed,Object? issuingAuthSignature = freezed,Object? clientName = freezed,Object? clientSignature = freezed,Object? startJobNow = freezed,}) {
-  return _then(_Datum(
+  return _then(_JobItem(
 jobId: freezed == jobId ? _self.jobId : jobId // ignore: cast_nullable_to_non_nullable
 as String?,jobNo: freezed == jobNo ? _self.jobNo : jobNo // ignore: cast_nullable_to_non_nullable
 as String?,customerid: freezed == customerid ? _self.customerid : customerid // ignore: cast_nullable_to_non_nullable

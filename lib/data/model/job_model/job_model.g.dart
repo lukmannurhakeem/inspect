@@ -10,7 +10,7 @@ _JobModel _$JobModelFromJson(Map<String, dynamic> json) => _JobModel(
   count: (json['count'] as num?)?.toInt(),
   data:
       (json['data'] as List<dynamic>?)
-          ?.map((e) => Datum.fromJson(e as Map<String, dynamic>))
+          ?.map((e) => JobItem.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const [],
   success: json['success'] as bool?,
@@ -22,7 +22,7 @@ Map<String, dynamic> _$JobModelToJson(_JobModel instance) => <String, dynamic>{
   'success': instance.success,
 };
 
-_Datum _$DatumFromJson(Map<String, dynamic> json) => _Datum(
+_JobItem _$JobItemFromJson(Map<String, dynamic> json) => _JobItem(
   jobId: json['jobID'] as String?,
   jobNo: json['jobNo'] as String?,
   customerid: json['customerid'] as String?,
@@ -52,7 +52,7 @@ _Datum _$DatumFromJson(Map<String, dynamic> json) => _Datum(
   startJobNow: json['startJobNow'] as bool?,
 );
 
-Map<String, dynamic> _$DatumToJson(_Datum instance) => <String, dynamic>{
+Map<String, dynamic> _$JobItemToJson(_JobItem instance) => <String, dynamic>{
   'jobID': instance.jobId,
   'jobNo': instance.jobNo,
   'customerid': instance.customerid,

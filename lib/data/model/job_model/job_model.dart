@@ -7,7 +7,7 @@ part 'job_model.g.dart';
 abstract class JobModel with _$JobModel {
   const factory JobModel({
     int? count,
-    @Default([]) List<Datum> data,
+    @Default([]) List<JobItem> data,
     bool? success,
   }) = _JobModel;
 
@@ -16,8 +16,8 @@ abstract class JobModel with _$JobModel {
 }
 
 @freezed
-abstract class Datum with _$Datum {
-  const factory Datum({
+abstract class JobItem with _$JobItem {
+  const factory JobItem({
     @JsonKey(name: 'jobID') String? jobId,
     String? jobNo,
     String? customerid,
@@ -39,8 +39,8 @@ abstract class Datum with _$Datum {
     String? clientName,
     String? clientSignature,
     bool? startJobNow,
-  }) = _Datum;
+  }) = _JobItem;
 
-  factory Datum.fromJson(Map<String, dynamic> json) =>
-      _$DatumFromJson(json);
+  factory JobItem.fromJson(Map<String, dynamic> json) =>
+      _$JobItemFromJson(json);
 }

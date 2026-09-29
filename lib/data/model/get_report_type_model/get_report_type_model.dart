@@ -90,16 +90,30 @@ return double.tryParse(value.toString());
 @override
 dynamic toJson(double? value) => value;
 }
-
 @freezed
 abstract class GetReportTypeModel with _$GetReportTypeModel {
-const factory GetReportTypeModel({
-List<Datum>? data,
-@SafeStringConverter() String? message,
-}) = _GetReportTypeModel;
+  const factory GetReportTypeModel({
+    List<ReportTypeItem>? data,
+    @SafeStringConverter() String? message,
+  }) = _GetReportTypeModel;
 
-factory GetReportTypeModel.fromJson(Map<String, dynamic> json) =>
-_$GetReportTypeModelFromJson(json);
+  factory GetReportTypeModel.fromJson(Map<String, dynamic> json) =>
+      _$GetReportTypeModelFromJson(json);
+}
+
+@freezed
+abstract class ReportTypeItem with _$ReportTypeItem {
+  const factory ReportTypeItem({
+    ReportType? reportType,
+    List<CompetencyReport>? competencyReports,
+    List<ReportTypeDate>? reportTypeDates,
+    List<StatusRuleReport>? statusRuleReports,
+    List<ReportField>? reportFields,
+    List<ActionReport>? actionReports,
+  }) = _ReportTypeItem;
+
+  factory ReportTypeItem.fromJson(Map<String, dynamic> json) =>
+      _$ReportTypeItemFromJson(json);
 }
 
 @freezed

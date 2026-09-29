@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$GetReportTypeModel {
 
- List<Datum>? get data;@SafeStringConverter() String? get message;
+ List<ReportTypeItem>? get data;@SafeStringConverter() String? get message;
 /// Create a copy of GetReportTypeModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $GetReportTypeModelCopyWith<$Res>  {
   factory $GetReportTypeModelCopyWith(GetReportTypeModel value, $Res Function(GetReportTypeModel) _then) = _$GetReportTypeModelCopyWithImpl;
 @useResult
 $Res call({
- List<Datum>? data,@SafeStringConverter() String? message
+ List<ReportTypeItem>? data,@SafeStringConverter() String? message
 });
 
 
@@ -68,7 +68,7 @@ class _$GetReportTypeModelCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') @override $Res call({Object? data = freezed,Object? message = freezed,}) {
   return _then(_self.copyWith(
 data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
-as List<Datum>?,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as List<ReportTypeItem>?,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -154,7 +154,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<Datum>? data, @SafeStringConverter()  String? message)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<ReportTypeItem>? data, @SafeStringConverter()  String? message)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _GetReportTypeModel() when $default != null:
 return $default(_that.data,_that.message);case _:
@@ -175,7 +175,7 @@ return $default(_that.data,_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<Datum>? data, @SafeStringConverter()  String? message)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<ReportTypeItem>? data, @SafeStringConverter()  String? message)  $default,) {final _that = this;
 switch (_that) {
 case _GetReportTypeModel():
 return $default(_that.data,_that.message);case _:
@@ -195,7 +195,7 @@ return $default(_that.data,_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<Datum>? data, @SafeStringConverter()  String? message)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<ReportTypeItem>? data, @SafeStringConverter()  String? message)?  $default,) {final _that = this;
 switch (_that) {
 case _GetReportTypeModel() when $default != null:
 return $default(_that.data,_that.message);case _:
@@ -210,11 +210,11 @@ return $default(_that.data,_that.message);case _:
 @JsonSerializable()
 
 class _GetReportTypeModel implements GetReportTypeModel {
-  const _GetReportTypeModel({final  List<Datum>? data, @SafeStringConverter() this.message}): _data = data;
+  const _GetReportTypeModel({final  List<ReportTypeItem>? data, @SafeStringConverter() this.message}): _data = data;
   factory _GetReportTypeModel.fromJson(Map<String, dynamic> json) => _$GetReportTypeModelFromJson(json);
 
- final  List<Datum>? _data;
-@override List<Datum>? get data {
+ final  List<ReportTypeItem>? _data;
+@override List<ReportTypeItem>? get data {
   final value = _data;
   if (value == null) return null;
   if (_data is EqualUnmodifiableListView) return _data;
@@ -257,7 +257,7 @@ abstract mixin class _$GetReportTypeModelCopyWith<$Res> implements $GetReportTyp
   factory _$GetReportTypeModelCopyWith(_GetReportTypeModel value, $Res Function(_GetReportTypeModel) _then) = __$GetReportTypeModelCopyWithImpl;
 @override @useResult
 $Res call({
- List<Datum>? data,@SafeStringConverter() String? message
+ List<ReportTypeItem>? data,@SafeStringConverter() String? message
 });
 
 
@@ -277,12 +277,354 @@ class __$GetReportTypeModelCopyWithImpl<$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? data = freezed,Object? message = freezed,}) {
   return _then(_GetReportTypeModel(
 data: freezed == data ? _self._data : data // ignore: cast_nullable_to_non_nullable
-as List<Datum>?,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as List<ReportTypeItem>?,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
 
 
+}
+
+
+/// @nodoc
+mixin _$ReportTypeItem {
+
+ ReportType? get reportType; List<CompetencyReport>? get competencyReports; List<ReportTypeDate>? get reportTypeDates; List<StatusRuleReport>? get statusRuleReports; List<ReportField>? get reportFields; List<ActionReport>? get actionReports;
+/// Create a copy of ReportTypeItem
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ReportTypeItemCopyWith<ReportTypeItem> get copyWith => _$ReportTypeItemCopyWithImpl<ReportTypeItem>(this as ReportTypeItem, _$identity);
+
+  /// Serializes this ReportTypeItem to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReportTypeItem&&(identical(other.reportType, reportType) || other.reportType == reportType)&&const DeepCollectionEquality().equals(other.competencyReports, competencyReports)&&const DeepCollectionEquality().equals(other.reportTypeDates, reportTypeDates)&&const DeepCollectionEquality().equals(other.statusRuleReports, statusRuleReports)&&const DeepCollectionEquality().equals(other.reportFields, reportFields)&&const DeepCollectionEquality().equals(other.actionReports, actionReports));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,reportType,const DeepCollectionEquality().hash(competencyReports),const DeepCollectionEquality().hash(reportTypeDates),const DeepCollectionEquality().hash(statusRuleReports),const DeepCollectionEquality().hash(reportFields),const DeepCollectionEquality().hash(actionReports));
+
+@override
+String toString() {
+  return 'ReportTypeItem(reportType: $reportType, competencyReports: $competencyReports, reportTypeDates: $reportTypeDates, statusRuleReports: $statusRuleReports, reportFields: $reportFields, actionReports: $actionReports)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ReportTypeItemCopyWith<$Res>  {
+  factory $ReportTypeItemCopyWith(ReportTypeItem value, $Res Function(ReportTypeItem) _then) = _$ReportTypeItemCopyWithImpl;
+@useResult
+$Res call({
+ ReportType? reportType, List<CompetencyReport>? competencyReports, List<ReportTypeDate>? reportTypeDates, List<StatusRuleReport>? statusRuleReports, List<ReportField>? reportFields, List<ActionReport>? actionReports
+});
+
+
+$ReportTypeCopyWith<$Res>? get reportType;
+
+}
+/// @nodoc
+class _$ReportTypeItemCopyWithImpl<$Res>
+    implements $ReportTypeItemCopyWith<$Res> {
+  _$ReportTypeItemCopyWithImpl(this._self, this._then);
+
+  final ReportTypeItem _self;
+  final $Res Function(ReportTypeItem) _then;
+
+/// Create a copy of ReportTypeItem
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? reportType = freezed,Object? competencyReports = freezed,Object? reportTypeDates = freezed,Object? statusRuleReports = freezed,Object? reportFields = freezed,Object? actionReports = freezed,}) {
+  return _then(_self.copyWith(
+reportType: freezed == reportType ? _self.reportType : reportType // ignore: cast_nullable_to_non_nullable
+as ReportType?,competencyReports: freezed == competencyReports ? _self.competencyReports : competencyReports // ignore: cast_nullable_to_non_nullable
+as List<CompetencyReport>?,reportTypeDates: freezed == reportTypeDates ? _self.reportTypeDates : reportTypeDates // ignore: cast_nullable_to_non_nullable
+as List<ReportTypeDate>?,statusRuleReports: freezed == statusRuleReports ? _self.statusRuleReports : statusRuleReports // ignore: cast_nullable_to_non_nullable
+as List<StatusRuleReport>?,reportFields: freezed == reportFields ? _self.reportFields : reportFields // ignore: cast_nullable_to_non_nullable
+as List<ReportField>?,actionReports: freezed == actionReports ? _self.actionReports : actionReports // ignore: cast_nullable_to_non_nullable
+as List<ActionReport>?,
+  ));
+}
+/// Create a copy of ReportTypeItem
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ReportTypeCopyWith<$Res>? get reportType {
+    if (_self.reportType == null) {
+    return null;
+  }
+
+  return $ReportTypeCopyWith<$Res>(_self.reportType!, (value) {
+    return _then(_self.copyWith(reportType: value));
+  });
+}
+}
+
+
+/// Adds pattern-matching-related methods to [ReportTypeItem].
+extension ReportTypeItemPatterns on ReportTypeItem {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ReportTypeItem value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _ReportTypeItem() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ReportTypeItem value)  $default,){
+final _that = this;
+switch (_that) {
+case _ReportTypeItem():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ReportTypeItem value)?  $default,){
+final _that = this;
+switch (_that) {
+case _ReportTypeItem() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ReportType? reportType,  List<CompetencyReport>? competencyReports,  List<ReportTypeDate>? reportTypeDates,  List<StatusRuleReport>? statusRuleReports,  List<ReportField>? reportFields,  List<ActionReport>? actionReports)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _ReportTypeItem() when $default != null:
+return $default(_that.reportType,_that.competencyReports,_that.reportTypeDates,_that.statusRuleReports,_that.reportFields,_that.actionReports);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ReportType? reportType,  List<CompetencyReport>? competencyReports,  List<ReportTypeDate>? reportTypeDates,  List<StatusRuleReport>? statusRuleReports,  List<ReportField>? reportFields,  List<ActionReport>? actionReports)  $default,) {final _that = this;
+switch (_that) {
+case _ReportTypeItem():
+return $default(_that.reportType,_that.competencyReports,_that.reportTypeDates,_that.statusRuleReports,_that.reportFields,_that.actionReports);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ReportType? reportType,  List<CompetencyReport>? competencyReports,  List<ReportTypeDate>? reportTypeDates,  List<StatusRuleReport>? statusRuleReports,  List<ReportField>? reportFields,  List<ActionReport>? actionReports)?  $default,) {final _that = this;
+switch (_that) {
+case _ReportTypeItem() when $default != null:
+return $default(_that.reportType,_that.competencyReports,_that.reportTypeDates,_that.statusRuleReports,_that.reportFields,_that.actionReports);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _ReportTypeItem implements ReportTypeItem {
+  const _ReportTypeItem({this.reportType, final  List<CompetencyReport>? competencyReports, final  List<ReportTypeDate>? reportTypeDates, final  List<StatusRuleReport>? statusRuleReports, final  List<ReportField>? reportFields, final  List<ActionReport>? actionReports}): _competencyReports = competencyReports,_reportTypeDates = reportTypeDates,_statusRuleReports = statusRuleReports,_reportFields = reportFields,_actionReports = actionReports;
+  factory _ReportTypeItem.fromJson(Map<String, dynamic> json) => _$ReportTypeItemFromJson(json);
+
+@override final  ReportType? reportType;
+ final  List<CompetencyReport>? _competencyReports;
+@override List<CompetencyReport>? get competencyReports {
+  final value = _competencyReports;
+  if (value == null) return null;
+  if (_competencyReports is EqualUnmodifiableListView) return _competencyReports;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(value);
+}
+
+ final  List<ReportTypeDate>? _reportTypeDates;
+@override List<ReportTypeDate>? get reportTypeDates {
+  final value = _reportTypeDates;
+  if (value == null) return null;
+  if (_reportTypeDates is EqualUnmodifiableListView) return _reportTypeDates;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(value);
+}
+
+ final  List<StatusRuleReport>? _statusRuleReports;
+@override List<StatusRuleReport>? get statusRuleReports {
+  final value = _statusRuleReports;
+  if (value == null) return null;
+  if (_statusRuleReports is EqualUnmodifiableListView) return _statusRuleReports;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(value);
+}
+
+ final  List<ReportField>? _reportFields;
+@override List<ReportField>? get reportFields {
+  final value = _reportFields;
+  if (value == null) return null;
+  if (_reportFields is EqualUnmodifiableListView) return _reportFields;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(value);
+}
+
+ final  List<ActionReport>? _actionReports;
+@override List<ActionReport>? get actionReports {
+  final value = _actionReports;
+  if (value == null) return null;
+  if (_actionReports is EqualUnmodifiableListView) return _actionReports;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(value);
+}
+
+
+/// Create a copy of ReportTypeItem
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ReportTypeItemCopyWith<_ReportTypeItem> get copyWith => __$ReportTypeItemCopyWithImpl<_ReportTypeItem>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$ReportTypeItemToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReportTypeItem&&(identical(other.reportType, reportType) || other.reportType == reportType)&&const DeepCollectionEquality().equals(other._competencyReports, _competencyReports)&&const DeepCollectionEquality().equals(other._reportTypeDates, _reportTypeDates)&&const DeepCollectionEquality().equals(other._statusRuleReports, _statusRuleReports)&&const DeepCollectionEquality().equals(other._reportFields, _reportFields)&&const DeepCollectionEquality().equals(other._actionReports, _actionReports));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,reportType,const DeepCollectionEquality().hash(_competencyReports),const DeepCollectionEquality().hash(_reportTypeDates),const DeepCollectionEquality().hash(_statusRuleReports),const DeepCollectionEquality().hash(_reportFields),const DeepCollectionEquality().hash(_actionReports));
+
+@override
+String toString() {
+  return 'ReportTypeItem(reportType: $reportType, competencyReports: $competencyReports, reportTypeDates: $reportTypeDates, statusRuleReports: $statusRuleReports, reportFields: $reportFields, actionReports: $actionReports)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ReportTypeItemCopyWith<$Res> implements $ReportTypeItemCopyWith<$Res> {
+  factory _$ReportTypeItemCopyWith(_ReportTypeItem value, $Res Function(_ReportTypeItem) _then) = __$ReportTypeItemCopyWithImpl;
+@override @useResult
+$Res call({
+ ReportType? reportType, List<CompetencyReport>? competencyReports, List<ReportTypeDate>? reportTypeDates, List<StatusRuleReport>? statusRuleReports, List<ReportField>? reportFields, List<ActionReport>? actionReports
+});
+
+
+@override $ReportTypeCopyWith<$Res>? get reportType;
+
+}
+/// @nodoc
+class __$ReportTypeItemCopyWithImpl<$Res>
+    implements _$ReportTypeItemCopyWith<$Res> {
+  __$ReportTypeItemCopyWithImpl(this._self, this._then);
+
+  final _ReportTypeItem _self;
+  final $Res Function(_ReportTypeItem) _then;
+
+/// Create a copy of ReportTypeItem
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? reportType = freezed,Object? competencyReports = freezed,Object? reportTypeDates = freezed,Object? statusRuleReports = freezed,Object? reportFields = freezed,Object? actionReports = freezed,}) {
+  return _then(_ReportTypeItem(
+reportType: freezed == reportType ? _self.reportType : reportType // ignore: cast_nullable_to_non_nullable
+as ReportType?,competencyReports: freezed == competencyReports ? _self._competencyReports : competencyReports // ignore: cast_nullable_to_non_nullable
+as List<CompetencyReport>?,reportTypeDates: freezed == reportTypeDates ? _self._reportTypeDates : reportTypeDates // ignore: cast_nullable_to_non_nullable
+as List<ReportTypeDate>?,statusRuleReports: freezed == statusRuleReports ? _self._statusRuleReports : statusRuleReports // ignore: cast_nullable_to_non_nullable
+as List<StatusRuleReport>?,reportFields: freezed == reportFields ? _self._reportFields : reportFields // ignore: cast_nullable_to_non_nullable
+as List<ReportField>?,actionReports: freezed == actionReports ? _self._actionReports : actionReports // ignore: cast_nullable_to_non_nullable
+as List<ActionReport>?,
+  ));
+}
+
+/// Create a copy of ReportTypeItem
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ReportTypeCopyWith<$Res>? get reportType {
+    if (_self.reportType == null) {
+    return null;
+  }
+
+  return $ReportTypeCopyWith<$Res>(_self.reportType!, (value) {
+    return _then(_self.copyWith(reportType: value));
+  });
+}
 }
 
 
