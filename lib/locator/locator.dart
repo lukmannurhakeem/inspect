@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'package:inspect/data/repository/cycle/cycle_impl.dart';
+import 'package:inspect/data/repository/cycle/cycle_repository.dart';
 import 'package:inspect/data/repository/user/user_impl.dart';
 import 'package:inspect/data/repository/user/user_repository.dart';
 import 'package:inspect/network/api_client.dart';
@@ -18,6 +20,7 @@ class ServiceLocator {
   late final TokenStorage tokenStorage;
   late final ApiClient apiClient;
   late final UserRepository userRepository;
+  late final CycleRepository cycleRepository;
 
   bool get isInitialized => _initialized;
 
@@ -33,6 +36,7 @@ class ServiceLocator {
       onSessionExpired: () => _onSessionExpired?.call(),
     );
     userRepository = UserImpl(apiClient);
+    cycleRepository = CycleImpl(apiClient);
 
     _initialized = true;
   }

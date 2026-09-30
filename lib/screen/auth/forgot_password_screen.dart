@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:inspect/core/extension/theme_extension.dart';
-import 'package:inspect/core/service/navigation_service.dart';
-import 'package:inspect/core/utils/validators.dart';
-import 'package:inspect/providers/authenticate_provider.dart';
-import 'package:inspect/widget/auth_scaffold.dart';
+import 'package:inspect/navigation/navigation_service.dart';
+import 'package:inspect/provider/auth_provider.dart';
+import 'package:inspect/screen/auth/auth_scaffold.dart';
+import 'package:inspect/screen/auth/validators.dart';
 import 'package:inspect/widget/common_button.dart';
 import 'package:inspect/widget/common_textfield.dart';
 import 'package:provider/provider.dart';
