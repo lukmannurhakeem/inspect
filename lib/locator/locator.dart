@@ -1,0 +1,43 @@
+import 'package:flutter/foundation.dart';
+import 'package:inspect/data/repository/user/user_impl.dart';
+import 'package:inspect/data/repository/user/user_repository.dart';
+import 'package:inspect/network/api_client.dart';
+import 'package:inspect/storage/local_storage.dart';
+import 'package:inspect/storage/token_storage.dart';
+
+class ServiceLocator {
+  ServiceLocator._();
+
+  static final ServiceLocator _instance = ServiceLocator._();
+
+  factory ServiceLocator() => _instance;
+
+  bool _initialized = false;
+  VoidCallback? _onSessionExpired;
+
+  late final TokenStorage tokenStorage;
+  late final ApiClient apiClient;
+  late final UserRepository userRepository;
+
+  bool get isInitialized => _initialized;
+
+  Future<void> init({String? baseUrl}) async {
+    if (_initialized) return;
+
+    await LocalStorage.init();
+
+    tokenStorage = TokenStorage();
+    apiClient = ApiClient(
+      baseUrl: baseUrl,
+      tokenStorage: tokenStorage,
+      onSessionExpired: () => _onSessionExpired?.call(),
+    );
+    userRepository = UserImpl(apiClient);
+
+    _initialized = true;
+  }
+
+  void setSessionExpiredHandler(VoidCallback handler) {
+    _onSessionExpired = handler;
+  }
+}
