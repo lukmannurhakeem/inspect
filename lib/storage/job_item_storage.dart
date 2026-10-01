@@ -153,6 +153,30 @@ class JobItemStorage {
     return saveJobItems(jobId, items);
   }
 
+  static Future<bool> clearJobDrafts(String jobId) async {
+    try {
+      final indexKey = _draftIndexKey(jobId);
+
+      for (final id in _readIndex(indexKey)) {
+        await deleteDraft(id);
+      }
+
+      return await LocalStorage.remove(indexKey);
+    } catch (e) {
+      debugPrint('clearJobDrafts error: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> clearJobItems(String jobId) async {
+    try {
+      return await LocalStorage.remove(_itemsKey(jobId));
+    } catch (e) {
+      debugPrint('clearJobItems error: $e');
+      return false;
+    }
+  }
+
   static Future<bool> saveCompletedItem(
     String jobId,
     Map<String, dynamic> data,

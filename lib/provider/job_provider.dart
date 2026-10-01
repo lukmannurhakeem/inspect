@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ import 'package:inspect/data/repository/job/job_repository.dart';
 import 'package:inspect/locator/locator.dart';
 import 'package:inspect/navigation/navigation_service.dart';
 import 'package:inspect/storage/job_item_storage.dart';
+import 'package:inspect/storage/job_storage.dart';
 import 'package:inspect/storage/local_storage.dart';
 import 'package:inspect/storage/local_storage_constant.dart';
 import 'package:inspect/widget/common_snackbar.dart';
@@ -21,6 +23,7 @@ enum SearchColumnType { customer, jobNo, site, status }
 
 class JobProvider extends ChangeNotifier {
   static const _jobRegisterKey = 'job_register_data';
+  static const _completedStatuses = {'submitted', 'completed', 'approved'};
 
   final CustomerRepository _customerRepository =
       ServiceLocator().customerRepository;
@@ -87,7 +90,7 @@ class JobProvider extends ChangeNotifier {
 
   JobModel? get jobModel => _jobModel;
   JobRegisterModel? get jobRegisterModel => _jobRegisterModel;
-  List<Item> get jobItems => _jobRegisterModel?.items ?? [];
+  List<Item> get jobItems => _jobRegisterModel?.items ?? const [];
   Item? get currentItem => _currentItem;
 
   List<JobLocationItem> get jobLocations => _jobLocations;
@@ -112,17 +115,19 @@ class JobProvider extends ChangeNotifier {
       _pendingReportApprovals != null || _approvedReportApprovals != null;
 
   List<ReportApprovalData> get pendingReports =>
-      _pendingReportApprovals?.data ?? [];
+      _pendingReportApprovals?.data ?? const [];
 
   List<ReportApprovalData> get approvedReports =>
-      _approvedReportApprovals?.data ?? [];
+      _approvedReportApprovals?.data ?? const [];
 
   List<ReportApprovalData> get reportApprovals =>
       _approvalsFor(_currentApprovalFilter);
 
-  bool get _hasJobs => _jobModel?.data?.isNotEmpty ?? false;
+  List<JobItem> get _jobs => _jobModel?.data ?? const [];
 
-  bool get _hasRegisterItems => _jobRegisterModel?.items?.isNotEmpty ?? false;
+  bool get _hasJobs => _jobs.isNotEmpty;
+
+  bool get _hasRegisterItems => jobItems.isNotEmpty;
 
   List<ReportApprovalData> _approvalsFor(String filter) => switch (filter) {
     'approved' => approvedReports,
@@ -166,15 +171,25 @@ class JobProvider extends ChangeNotifier {
     }
   }
 
-  static bool _wasQueued(dynamic result) =>
-      result is Map && result['queued'] == true;
+  Future<T> _safe<T>(Future<T> Function() action, T fallback) async {
+    try {
+      return await action();
+    } catch (_) {
+      return fallback;
+    }
+  }
 
-  static bool _isConnectionError(DioException e) => const {
-    DioExceptionType.connectionTimeout,
-    DioExceptionType.receiveTimeout,
-    DioExceptionType.sendTimeout,
-    DioExceptionType.connectionError,
-  }.contains(e.type);
+  static bool _wasQueued(Map<String, dynamic> result) =>
+      result['queued'] == true;
+
+  static bool _isConnectionError(Object e) =>
+      e is DioException &&
+          const {
+            DioExceptionType.connectionTimeout,
+            DioExceptionType.receiveTimeout,
+            DioExceptionType.sendTimeout,
+            DioExceptionType.connectionError,
+          }.contains(e.type);
 
   String _parseDioError(DioException e) {
     final data = e.response?.data;
@@ -200,7 +215,15 @@ class JobProvider extends ChangeNotifier {
   }
 
   String _describe(Object error) =>
-      error is DioException ? _parseDioError(error) : error.toString();
+      error is DioException
+          ? _parseDioError(error)
+          : error.toString().replaceFirst('Exception: ', '');
+
+  String _fail(BuildContext context, Object error, {bool silent = false}) {
+    final message = _error = _describe(error);
+    if (!silent) _showError(context, message);
+    return message;
+  }
 
   Map<String, dynamic> _success({
     required bool queued,
@@ -217,7 +240,7 @@ class JobProvider extends ChangeNotifier {
     'error': _describe(error),
   };
 
-  Map<String, dynamic> _submitResult(dynamic result) =>
+  Map<String, dynamic> _submitResult(Map<String, dynamic> result) =>
       _wasQueued(result)
           ? {
         'success': true,
@@ -260,262 +283,6 @@ class JobProvider extends ChangeNotifier {
 
   void triggerItemReportRefresh() {
     _itemReportRefreshCount++;
-    notifyListeners();
-  }
-
-  Future<Map<String, dynamic>?> fetchJobItemDetail(
-      BuildContext context,
-      String itemId,
-      ) async {
-    try {
-      return await _jobRepository.fetchJobItemDetail(itemId);
-    } catch (e) {
-      debugPrint('JobProvider.fetchJobItemDetail: ${_describe(e)}');
-      return null;
-    }
-  }
-
-  String? _text(Map<String, dynamic> updates, String key, String? fallback) =>
-      updates[key]?.toString() ?? fallback;
-
-  Future<void> _applyItemUpdates(
-      String itemId,
-      Map<String, dynamic> updates,
-      ) async {
-    final items = _jobRegisterModel?.items;
-    final index = items?.indexWhere((item) => item.itemId == itemId) ?? -1;
-    if (items == null || index == -1) return;
-
-    final existing = items[index];
-    items[index] = Item(
-      itemId: existing.itemId,
-      itemNo: _text(updates, 'itemNo', existing.itemNo),
-      description: _text(updates, 'description', existing.description),
-      categoryId: _text(updates, 'categoryID', existing.categoryId),
-      locationId: _text(updates, 'locationID', existing.locationId),
-      detailedLocation: _text(
-        updates,
-        'detailedLocation',
-        existing.detailedLocation,
-      ),
-      rfidNo: _text(updates, 'rfidNo', existing.rfidNo),
-      manufacturer: _text(updates, 'manufacturer', existing.manufacturer),
-      swl: _text(updates, 'swl', existing.swl),
-      status: updates['status']?.toString() ?? existing.status,
-      archived: existing.archived,
-      customFields: existing.customFields,
-    );
-    await _saveJobRegisterToLocalStorage();
-    notifyListeners();
-  }
-
-  Future<Map<String, dynamic>> updateJobItem(
-      BuildContext context,
-      String itemId,
-      Map<String, dynamic> updates,
-      ) async {
-    try {
-      final queued = _wasQueued(
-        await _jobRepository.updateJobItem(itemId, updates),
-      );
-      if (!queued) await _applyItemUpdates(itemId, updates);
-
-      return _success(
-        queued: queued,
-        queuedMessage: 'Update saved locally. Will sync when online.',
-        doneMessage: 'Item updated successfully.',
-      );
-    } catch (e) {
-      return _failure(e);
-    }
-  }
-
-  Future<Map<String, dynamic>> deleteJobItem(
-      BuildContext context,
-      String itemId,
-      ) async {
-    try {
-      final queued = _wasQueued(await _jobRepository.deleteJobItem(itemId));
-      if (!queued && _jobRegisterModel?.items != null) {
-        _jobRegisterModel!.items!.removeWhere((item) => item.itemId == itemId);
-        await _saveJobRegisterToLocalStorage();
-        notifyListeners();
-      }
-
-      return _success(
-        queued: queued,
-        queuedMessage: 'Delete queued locally. Will sync when online.',
-        doneMessage: 'Item deleted successfully.',
-      );
-    } catch (e) {
-      return _failure(e);
-    }
-  }
-
-  Future<void> fetchReportApprovals(
-      BuildContext context,
-      String jobId, {
-        bool fetchBoth = true,
-      }) => _withLoading(clearError: true, () async {
-    try {
-      if (fetchBoth) {
-        final results = await Future.wait([
-          _jobRepository.fetchReportApprovals(jobId, false),
-          _jobRepository.fetchReportApprovals(jobId, true),
-        ]);
-        _pendingReportApprovals = results[0];
-        _approvedReportApprovals = results[1];
-      } else if (_currentApprovalFilter == 'pending') {
-        _pendingReportApprovals = await _jobRepository.fetchReportApprovals(
-          jobId,
-          false,
-        );
-      } else if (_currentApprovalFilter == 'approved') {
-        _approvedReportApprovals = await _jobRepository.fetchReportApprovals(
-          jobId,
-          true,
-        );
-      }
-    } catch (e) {
-      _error = _describe(e);
-      _showError(context, _error!);
-    } finally {
-      _hasAttemptedFetch = true;
-    }
-  });
-
-  Future<List<Map<String, dynamic>>> loadLocalDraftReports() async {
-    final drafts = <Map<String, dynamic>>[];
-
-    for (final item in jobItems) {
-      final itemId = item.itemId ?? '';
-      if (itemId.isEmpty) continue;
-
-      try {
-        final reports = await JobItemStorage.getItemReports(itemId);
-        for (final report in reports) {
-          if (report['isPending'] != true) continue;
-          drafts.add({
-            ...report,
-            '_itemId': itemId,
-            '_itemNo': item.itemNo ?? '',
-            '_isLocalDraft': true,
-          });
-        }
-      } catch (e) {
-        debugPrint('JobProvider.loadLocalDraftReports: $itemId: $e');
-      }
-    }
-    return drafts;
-  }
-
-  Map<String, int> getApprovalStats({int localDraftCount = 0}) {
-    final pending = pendingReports.length;
-    final approved = approvedReports.length;
-    return {
-      'total': pending + approved + localDraftCount,
-      'pending': pending + localDraftCount,
-      'approved': approved,
-      'rejected': 0,
-    };
-  }
-
-  bool hasPendingApprovals() => pendingReports.isNotEmpty;
-
-  int getPendingApprovalsCount() => pendingReports.length;
-
-  List<ReportApprovalData> filterReportsByStatus(String status) =>
-      switch (status.toLowerCase()) {
-        'pending' => pendingReports,
-        'approved' => approvedReports,
-        'rejected' => [],
-        _ => reportApprovals,
-      };
-
-  List<ReportApprovalData> searchReports(String query, String view) {
-    final source = view == 'pending' ? pendingReports : approvedReports;
-    if (query.isEmpty) return source;
-
-    final q = query.toLowerCase();
-    return source
-        .where(
-          (report) =>
-      (report.reportName?.toLowerCase().contains(q) ?? false) ||
-          (report.itemNo?.toLowerCase().contains(q) ?? false) ||
-          report.displayInspector.toLowerCase().contains(q),
-    )
-        .toList();
-  }
-
-  void clearReportApprovals() {
-    _pendingReportApprovals = null;
-    _approvedReportApprovals = null;
-    _currentApprovalFilter = 'pending';
-    _hasAttemptedFetch = false;
-    notifyListeners();
-  }
-
-  void reset() {
-    _jobModel = null;
-    _jobRegisterModel = null;
-    _pendingReportApprovals = null;
-    _approvedReportApprovals = null;
-    _currentApprovalFilter = 'pending';
-    _hasAttemptedFetch = false;
-    _getCustomerModel = null;
-    _customers = [];
-    _isLoading = false;
-    _error = null;
-    sortColumnIndex = null;
-    sortAscending = true;
-    _selectedSearchColumn = null;
-    _selectedSearchValue = null;
-    _currentJobId = null;
-    _currentItem = null;
-    _isSyncing = false;
-    _lastSyncTime = null;
-    _isLoadedFromCache = false;
-    _jobLocations = [];
-    _isLoadingLocations = false;
-    _hasFetchedLocations = false;
-    notifyListeners();
-  }
-
-  String _approvalMessage(String status) => switch (status) {
-    'approved' => 'Report approved successfully',
-    'rejected' => 'Report rejected',
-    _ => 'Status updated to $status',
-  };
-
-  Future<Map<String, dynamic>?> updateReportApprovalStatus(
-      BuildContext context,
-      String reportId,
-      String approvalStatus,
-      ) async {
-    _isUpdatingApproval = true;
-    _approvalError = null;
-    notifyListeners();
-
-    try {
-      final queued = _wasQueued(
-        await _jobRepository.updateApprovalStatus(reportId, approvalStatus),
-      );
-      return _success(
-        queued: queued,
-        queuedMessage: 'Saved locally. Will sync when online.',
-        doneMessage: _approvalMessage(approvalStatus),
-      );
-    } catch (e) {
-      _approvalError = _describe(e);
-      return {'success': false, 'error': _approvalError};
-    } finally {
-      _isUpdatingApproval = false;
-      notifyListeners();
-    }
-  }
-
-  void clearApprovalError() {
-    _approvalError = null;
     notifyListeners();
   }
 
@@ -566,6 +333,282 @@ class JobProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void clearApprovalError() {
+    _approvalError = null;
+    notifyListeners();
+  }
+
+  void reset() {
+    _jobModel = null;
+    _jobRegisterModel = null;
+    _pendingReportApprovals = null;
+    _approvedReportApprovals = null;
+    _currentApprovalFilter = 'pending';
+    _hasAttemptedFetch = false;
+    _isUpdatingApproval = false;
+    _approvalError = null;
+    _itemReportRefreshCount = 0;
+    _getCustomerModel = null;
+    _customers = [];
+    _isLoading = false;
+    _isSyncing = false;
+    _error = null;
+    _lastSyncTime = null;
+    _isLoadedFromCache = false;
+    sortColumnIndex = null;
+    sortAscending = true;
+    _selectedSearchColumn = null;
+    _selectedSearchValue = null;
+    _currentJobId = null;
+    _currentItem = null;
+    _jobLocations = [];
+    _isLoadingLocations = false;
+    _hasFetchedLocations = false;
+    notifyListeners();
+  }
+
+  Future<Map<String, dynamic>?> fetchJobItemDetail(
+      BuildContext context,
+      String itemId,
+      ) async {
+    try {
+      return await _jobRepository.fetchJobItemDetail(itemId);
+    } catch (e) {
+      debugPrint('JobProvider.fetchJobItemDetail: ${_describe(e)}');
+      return null;
+    }
+  }
+
+  String? _pick(Map<String, dynamic> updates, String key, String? fallback) =>
+      updates[key]?.toString() ?? fallback;
+
+  Future<void> _updateItems(
+      List<Item> Function(List<Item> items) transform,
+      ) async {
+    final model = _jobRegisterModel;
+    if (model == null) return;
+
+    _jobRegisterModel = model.copyWith(items: transform([...?model.items]));
+
+    final currentId = _currentItem?.itemId;
+    if (currentId != null) _currentItem = getItemById(currentId);
+
+    await _saveJobRegisterToLocalStorage();
+    notifyListeners();
+  }
+
+  Future<void> _applyItemUpdates(
+      String itemId,
+      Map<String, dynamic> updates,
+      ) => _updateItems(
+        (items) => [
+      for (final item in items)
+        item.itemId == itemId
+            ? item.copyWith(
+          itemNo: _pick(updates, 'itemNo', item.itemNo),
+          description: _pick(updates, 'description', item.description),
+          categoryId: _pick(updates, 'categoryID', item.categoryId),
+          locationId: _pick(updates, 'locationID', item.locationId),
+          detailedLocation: _pick(
+            updates,
+            'detailedLocation',
+            item.detailedLocation,
+          ),
+          rfidNo: _pick(updates, 'rfidNo', item.rfidNo),
+          manufacturer: _pick(updates, 'manufacturer', item.manufacturer),
+          swl: _pick(updates, 'swl', item.swl),
+          status: _pick(updates, 'status', item.status),
+        )
+            : item,
+    ],
+  );
+
+  Future<void> updateItemInRegister(Item updatedItem) async {
+    if (!jobItems.any((item) => item.itemId == updatedItem.itemId)) return;
+
+    await _updateItems(
+          (items) => [
+        for (final item in items)
+          item.itemId == updatedItem.itemId ? updatedItem : item,
+      ],
+    );
+  }
+
+  Future<Map<String, dynamic>> updateJobItem(
+      BuildContext context,
+      String itemId,
+      Map<String, dynamic> updates,
+      ) async {
+    try {
+      final result = await _jobRepository.updateJobItem(itemId, updates);
+      await _applyItemUpdates(itemId, updates);
+
+      return _success(
+        queued: _wasQueued(result),
+        queuedMessage: 'Update saved locally. Will sync when online.',
+        doneMessage: 'Item updated successfully.',
+      );
+    } catch (e) {
+      return _failure(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> deleteJobItem(
+      BuildContext context,
+      String itemId,
+      ) async {
+    try {
+      final result = await _jobRepository.deleteJobItem(itemId);
+      await _updateItems(
+            (items) => items.where((item) => item.itemId != itemId).toList(),
+      );
+
+      return _success(
+        queued: _wasQueued(result),
+        queuedMessage: 'Delete queued locally. Will sync when online.',
+        doneMessage: 'Item deleted successfully.',
+      );
+    } catch (e) {
+      return _failure(e);
+    }
+  }
+
+  Future<void> fetchReportApprovals(
+      BuildContext context,
+      String jobId, {
+        bool fetchBoth = true,
+      }) => _withLoading(clearError: true, () async {
+    try {
+      if (fetchBoth) {
+        final results = await Future.wait([
+          _jobRepository.fetchReportApprovals(jobId, false),
+          _jobRepository.fetchReportApprovals(jobId, true),
+        ]);
+        _pendingReportApprovals = results[0];
+        _approvedReportApprovals = results[1];
+      } else if (_currentApprovalFilter == 'pending') {
+        _pendingReportApprovals = await _jobRepository.fetchReportApprovals(
+          jobId,
+          false,
+        );
+      } else if (_currentApprovalFilter == 'approved') {
+        _approvedReportApprovals = await _jobRepository.fetchReportApprovals(
+          jobId,
+          true,
+        );
+      }
+    } catch (e) {
+      _fail(context, e);
+    } finally {
+      _hasAttemptedFetch = true;
+    }
+  });
+
+  Future<List<Map<String, dynamic>>> loadLocalDraftReports() async {
+    final drafts = <Map<String, dynamic>>[];
+
+    for (final item in jobItems) {
+      final itemId = item.itemId ?? '';
+      if (itemId.isEmpty) continue;
+
+      try {
+        final reports = await JobItemStorage.getItemReports(itemId);
+        for (final report in reports) {
+          if (report['isPending'] != true) continue;
+          drafts.add({
+            ...report,
+            '_itemId': itemId,
+            '_itemNo': item.itemNo ?? '',
+            '_isLocalDraft': true,
+          });
+        }
+      } catch (e) {
+        debugPrint('JobProvider.loadLocalDraftReports: $itemId: $e');
+      }
+    }
+    return drafts;
+  }
+
+  Map<String, int> getApprovalStats({int localDraftCount = 0}) {
+    final pending = pendingReports.length;
+    final approved = approvedReports.length;
+    return {
+      'total': pending + approved + localDraftCount,
+      'pending': pending + localDraftCount,
+      'approved': approved,
+      'rejected': 0,
+    };
+  }
+
+  bool hasPendingApprovals() => pendingReports.isNotEmpty;
+
+  int getPendingApprovalsCount() => pendingReports.length;
+
+  List<ReportApprovalData> filterReportsByStatus(String status) =>
+      switch (status.toLowerCase()) {
+        'pending' => pendingReports,
+        'approved' => approvedReports,
+        'rejected' => const [],
+        _ => reportApprovals,
+      };
+
+  List<ReportApprovalData> searchReports(String query, String view) {
+    final source = view == 'pending' ? pendingReports : approvedReports;
+    if (query.isEmpty) return source;
+
+    final q = query.toLowerCase();
+    return source
+        .where(
+          (report) =>
+      (report.reportName?.toLowerCase().contains(q) ?? false) ||
+          (report.itemNo?.toLowerCase().contains(q) ?? false) ||
+          report.displayInspector.toLowerCase().contains(q),
+    )
+        .toList();
+  }
+
+  void clearReportApprovals() {
+    _pendingReportApprovals = null;
+    _approvedReportApprovals = null;
+    _currentApprovalFilter = 'pending';
+    _hasAttemptedFetch = false;
+    notifyListeners();
+  }
+
+  String _approvalMessage(String status) => switch (status) {
+    'approved' => 'Report approved successfully',
+    'rejected' => 'Report rejected',
+    _ => 'Status updated to $status',
+  };
+
+  Future<Map<String, dynamic>> updateReportApprovalStatus(
+      BuildContext context,
+      String reportId,
+      String approvalStatus,
+      ) async {
+    _isUpdatingApproval = true;
+    _approvalError = null;
+    notifyListeners();
+
+    try {
+      final result = await _jobRepository.updateApprovalStatus(
+        reportId,
+        approvalStatus,
+      );
+      return _success(
+        queued: _wasQueued(result),
+        queuedMessage: 'Saved locally. Will sync when online.',
+        doneMessage: _approvalMessage(approvalStatus),
+      );
+    } catch (e) {
+      _approvalError = _describe(e);
+      return {'success': false, 'error': _approvalError};
+    } finally {
+      _isUpdatingApproval = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> _queueJob(
       BuildContext context,
       Map<String, dynamic> jobData,
@@ -604,7 +647,7 @@ class JobProvider extends ChangeNotifier {
         );
         NavigationService().goBack();
       }
-    } on DioException catch (e) {
+    } catch (e) {
       if (_isConnectionError(e)) {
         await _queueJob(
           context,
@@ -614,12 +657,7 @@ class JobProvider extends ChangeNotifier {
         );
         return;
       }
-      _error = _parseDioError(e);
-      if (!silent) _showError(context, _error!);
-      rethrow;
-    } catch (_) {
-      _error = 'An unexpected error occurred';
-      if (!silent) _showError(context, _error!);
+      _fail(context, e, silent: silent);
       rethrow;
     }
   });
@@ -632,26 +670,18 @@ class JobProvider extends ChangeNotifier {
       }) => _withLoading(clearError: true, () async {
     try {
       final result = await _jobRepository.updateJob(jobId, jobData);
-      final queued = _wasQueued(result);
-
       await fetchJobModel(context);
 
       if (!silent && context.mounted) {
         final message =
-        queued
+        _wasQueued(result)
             ? 'Job update queued (offline). Will sync when online.'
-            : (result is Map ? result['message']?.toString() : null) ??
-            'Job updated successfully';
+            : result['message']?.toString() ?? 'Job updated successfully';
         CommonSnackbar.showSuccess(context, message);
         NavigationService().goBack();
       }
-    } on DioException catch (e) {
-      _error = _parseDioError(e);
-      if (!silent) _showError(context, _error!);
-      rethrow;
-    } catch (_) {
-      _error = 'An unexpected error occurred';
-      if (!silent) _showError(context, _error!);
+    } catch (e) {
+      _fail(context, e, silent: silent);
       rethrow;
     }
   });
@@ -659,15 +689,20 @@ class JobProvider extends ChangeNotifier {
   Future<void> deleteJobFromList(BuildContext context, String jobId) =>
       _withLoading(() async {
         try {
-          final queued = _wasQueued(await _jobRepository.deleteJob(jobId));
+          final result = await _jobRepository.deleteJob(jobId);
 
-          _jobModel?.data?.removeWhere((job) => job.jobId == jobId);
-          notifyListeners();
-          await _saveJobsToLocalStorage();
+          final model = _jobModel;
+          if (model != null) {
+            _jobModel = model.copyWith(
+              data: model.data.where((job) => job.jobId != jobId).toList(),
+            );
+            notifyListeners();
+            await _saveJobsToLocalStorage();
+          }
 
           _showSuccess(
             context,
-            queued
+            _wasQueued(result)
                 ? 'Delete queued (offline). Will sync when online.'
                 : 'Job deleted successfully',
           );
@@ -676,13 +711,12 @@ class JobProvider extends ChangeNotifier {
         }
       });
 
-  List<Datum> getFilteredJobs() {
-    final jobs = _jobModel?.data ?? [];
+  List<JobItem> getFilteredJobs() {
     final column = _selectedSearchColumn;
     final value = _selectedSearchValue;
-    if (column == null || value == null) return jobs;
+    if (column == null || value == null) return _jobs;
 
-    return jobs
+    return _jobs
         .where(
           (job) => switch (column) {
         SearchColumnType.customer => job.customerName == value,
@@ -694,18 +728,16 @@ class JobProvider extends ChangeNotifier {
         .toList();
   }
 
-  Future<void> fetchCustomers(BuildContext context) =>
-      _withLoading(() async {
-        try {
-          final model = await _customerRepository.fetchCustomer();
-          _getCustomerModel = model;
-          _customers = model.customers ?? [];
-          _error = null;
-        } catch (e) {
-          _error = _describe(e);
-          _showError(context, _error!);
-        }
-      });
+  Future<void> fetchCustomers(BuildContext context) => _withLoading(() async {
+    try {
+      final model = await _customerRepository.fetchCustomer();
+      _getCustomerModel = model;
+      _customers = model.customers ?? [];
+      _error = null;
+    } catch (e) {
+      _fail(context, e);
+    }
+  });
 
   Future<void> createCustomer(BuildContext context) => _withLoading(() async {
     try {
@@ -740,13 +772,13 @@ class JobProvider extends ChangeNotifier {
   }
 
   Future<void> _saveJobsToLocalStorage() async {
-    final jobs = _jobModel?.data;
-    if (jobs == null) return;
+    final model = _jobModel;
+    if (model == null) return;
 
     try {
       await LocalStorage.setJsonList(
         LocalStorageConstant.cachedJobs,
-        jobs.map((job) => job.toJson()).toList(),
+        model.data.map((job) => job.toJson()).toList(),
       );
       _lastSyncTime = DateTime.now();
       await LocalStorage.setString(
@@ -760,12 +792,10 @@ class JobProvider extends ChangeNotifier {
 
   Future<void> _loadJobsFromLocalStorage() async {
     try {
-      final cached = LocalStorage.getJsonList(
-        LocalStorageConstant.cachedJobs,
-      );
+      final cached = LocalStorage.getJsonList(LocalStorageConstant.cachedJobs);
       if (cached.isEmpty) return;
 
-      _jobModel = JobModel(data: cached.map(Datum.fromJson).toList());
+      _jobModel = JobModel(data: cached.map(JobItem.fromJson).toList());
 
       final lastSync = LocalStorage.getString(
         LocalStorageConstant.lastJobSyncTimestamp,
@@ -778,41 +808,46 @@ class JobProvider extends ChangeNotifier {
   }
 
   Future<void> _refreshJobsFromServer() async {
-    _jobModel = await _jobRepository.fetchJobModel();
+    final model = await _jobRepository.fetchJobModel();
+
+    if (model.data.isNotEmpty) {
+      sortColumnIndex = 0;
+      sortAscending = true;
+      _jobModel = model.copyWith(data: _sortedJobs(model.data, 0, true));
+    } else {
+      _jobModel = model;
+    }
+
     _error = null;
     _isLoadedFromCache = false;
-
-    if (_hasJobs) sortJobData(0, true);
-    if (_jobModel?.data != null) await _saveJobsToLocalStorage();
+    await _saveJobsToLocalStorage();
   }
 
-  Future<void> fetchJobModel(
-      BuildContext context, {
-        bool forceSync = false,
-      }) => _withLoading(() async {
-    _isLoadedFromCache = false;
-    try {
-      if (!await _isOnline() && !forceSync) {
-        await _loadJobsFromLocalStorage();
-        if (!_hasJobs) {
-          _error = 'No cached data available. Please sync when online.';
+  Future<void> fetchJobModel(BuildContext context, {bool forceSync = false}) =>
+      _withLoading(() async {
+        _isLoadedFromCache = false;
+        try {
+          if (!forceSync && !await _isOnline()) {
+            await _loadJobsFromLocalStorage();
+            if (!_hasJobs) {
+              _error = 'No cached data available. Please sync when online.';
+            }
+            return;
+          }
+          await _refreshJobsFromServer();
+        } catch (e) {
+          _error = _describe(e);
+          await _loadJobsFromLocalStorage();
+          _notifyCacheFallback(
+            context,
+            hasCache: _hasJobs,
+            emptyMessage:
+            e is DioException
+                ? _error!
+                : 'Failed to load jobs. No cached data available.',
+          );
         }
-        return;
-      }
-      await _refreshJobsFromServer();
-    } catch (e) {
-      _error = _describe(e);
-      await _loadJobsFromLocalStorage();
-      _notifyCacheFallback(
-        context,
-        hasCache: _hasJobs,
-        emptyMessage:
-        e is DioException
-            ? _error!
-            : 'Failed to load jobs. No cached data available.',
-      );
-    }
-  });
+      });
 
   Future<void> syncJobs(BuildContext context) => _withSyncing(() async {
     if (!await _isOnline()) {
@@ -830,10 +865,8 @@ class JobProvider extends ChangeNotifier {
 
   Future<void> clearCachedJobs() async {
     try {
-      await LocalStorageService.remove(LocalStorageConstant.cachedJobs);
-      await LocalStorageService.remove(
-        LocalStorageConstant.lastJobSyncTimestamp,
-      );
+      await LocalStorage.remove(LocalStorageConstant.cachedJobs);
+      await LocalStorage.remove(LocalStorageConstant.lastJobSyncTimestamp);
       _lastSyncTime = null;
       _isLoadedFromCache = false;
       notifyListeners();
@@ -849,31 +882,37 @@ class JobProvider extends ChangeNotifier {
     return a.compareTo(b);
   }
 
-  int _compareJobs(Datum a, Datum b, int column) => switch (column) {
+  static int _bit(bool? value) => (value ?? false) ? 1 : 0;
+
+  static int _compareJobs(JobItem a, JobItem b, int column) => switch (column) {
     0 => (a.jobId ?? '').compareTo(b.jobId ?? ''),
     1 => (a.customerName ?? '').compareTo(b.customerName ?? ''),
     2 => (a.siteName ?? '').compareTo(b.siteName ?? ''),
-    3 => (a.startJobNow ?? false) == (b.startJobNow ?? false)
-        ? 0
-        : (a.startJobNow ?? false)
-        ? 1
-        : -1,
+    3 => _bit(a.startJobNow).compareTo(_bit(b.startJobNow)),
     4 => _compareNullsLast(a.estimatedStartDate, b.estimatedStartDate),
     5 => _compareNullsLast(a.estimatedEndDate, b.estimatedEndDate),
     _ => 0,
   };
 
+  static List<JobItem> _sortedJobs(
+      List<JobItem> jobs,
+      int column,
+      bool ascending,
+      ) =>
+      [...jobs]..sort((a, b) {
+        final compare = _compareJobs(a, b, column);
+        return ascending ? compare : -compare;
+      });
+
   void sortJobData(int columnIndex, bool ascending) {
-    final jobs = _jobModel?.data;
-    if (jobs == null || jobs.isEmpty) return;
+    final model = _jobModel;
+    if (model == null || model.data.isEmpty) return;
 
     sortColumnIndex = columnIndex;
     sortAscending = ascending;
-
-    jobs.sort((a, b) {
-      final compare = _compareJobs(a, b, columnIndex);
-      return ascending ? compare : -compare;
-    });
+    _jobModel = model.copyWith(
+      data: _sortedJobs(model.data, columnIndex, ascending),
+    );
     notifyListeners();
   }
 
@@ -883,7 +922,7 @@ class JobProvider extends ChangeNotifier {
         bool forceSync = false,
       }) => _withLoading(clearError: true, () async {
     try {
-      if (!await _isOnline() && !forceSync) {
+      if (!forceSync && !await _isOnline()) {
         await _loadJobRegisterFromLocalStorage();
         if (!_hasRegisterItems) {
           _error = 'No cached data available. Please sync when online.';
@@ -914,7 +953,7 @@ class JobProvider extends ChangeNotifier {
     if (model == null) return;
 
     try {
-      await LocalStorageService.setString(_jobRegisterKey, model.toRawJson());
+      await LocalStorage.setString(_jobRegisterKey, jsonEncode(model.toJson()));
     } catch (e) {
       debugPrint('JobProvider: could not save job register: $e');
     }
@@ -922,7 +961,7 @@ class JobProvider extends ChangeNotifier {
 
   Future<void> _loadJobRegisterFromLocalStorage() async {
     try {
-      final raw = LocalStorageService.getString(_jobRegisterKey);
+      final raw = LocalStorage.getString(_jobRegisterKey);
       if (raw.isEmpty) return;
       _jobRegisterModel = JobRegisterModel.fromJson(
         jsonDecode(raw) as Map<String, dynamic>,
@@ -944,6 +983,7 @@ class JobProvider extends ChangeNotifier {
 
         try {
           _jobRegisterModel = await _jobRepository.fetchJobRegisterModel(jobId);
+          _currentJobId = jobId;
           _error = null;
           await _saveJobRegisterToLocalStorage();
           _showSuccess(context, 'Job register synced successfully');
@@ -955,7 +995,7 @@ class JobProvider extends ChangeNotifier {
 
   Future<void> clearCachedJobRegister() async {
     try {
-      await LocalStorageService.remove(_jobRegisterKey);
+      await LocalStorage.remove(_jobRegisterKey);
       _jobRegisterModel = null;
       _currentJobId = null;
       _currentItem = null;
@@ -965,30 +1005,20 @@ class JobProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> updateItemInRegister(Item updatedItem) async {
-    final items = _jobRegisterModel?.items;
-    final index = items?.indexWhere((i) => i.itemId == updatedItem.itemId) ?? -1;
-    if (items == null || index == -1) return;
-
-    try {
-      items[index] = updatedItem;
-      await _saveJobRegisterToLocalStorage();
-      _currentItem = updatedItem;
-      notifyListeners();
-    } catch (e) {
-      debugPrint('JobProvider: error updating item in register: $e');
-    }
-  }
-
   List<Item> getFilteredItems(int tabIndex) => switch (tabIndex) {
     2 =>
         jobItems
             .where(
               (item) =>
-          item.status?.toLowerCase() == 'pending' || item.status == null,
+          item.status == null || item.status!.toLowerCase() == 'pending',
         )
             .toList(),
-    3 => jobItems.where((item) => item.status == true).toList(),
+    3 =>
+        jobItems
+            .where(
+              (item) => _completedStatuses.contains(item.status?.toLowerCase()),
+        )
+            .toList(),
     _ => jobItems,
   };
 
@@ -1092,35 +1122,26 @@ class JobProvider extends ChangeNotifier {
         }
       });
 
-  Future<T> _orElse<T>(Future<T> Function() action, T fallback) async {
-    try {
-      return await action();
-    } catch (_) {
-      return fallback;
-    }
-  }
-
   Future<int> getPendingJobItemsCount(String jobId) =>
-      _orElse(() => JobItemStorage.getPendingItemCount(jobId), 0);
+      _safe(() => JobItemStorage.getPendingItemCount(jobId), 0);
 
-  Future<List<Map<String, dynamic>>> getPendingJobItems(String jobId) =>
-      _orElse(
-            () => JobItemStorage.getPendingItems(jobId),
-        <Map<String, dynamic>>[],
-      );
+  Future<List<Map<String, dynamic>>> getPendingJobItems(String jobId) => _safe(
+        () => JobItemStorage.getPendingItems(jobId),
+    <Map<String, dynamic>>[],
+  );
 
   Future<List<Map<String, dynamic>>> getCompletedJobItems(String jobId) =>
-      _orElse(
+      _safe(
             () => JobItemStorage.getJobItems(jobId),
         <Map<String, dynamic>>[],
       );
 
-  Future<List<Map<String, dynamic>>> getDraftJobItems(String jobId) => _orElse(
+  Future<List<Map<String, dynamic>>> getDraftJobItems(String jobId) => _safe(
         () => JobItemStorage.getJobDrafts(jobId),
     <Map<String, dynamic>>[],
   );
 
-  Future<Map<String, dynamic>> getJobItemStorageStats(String jobId) => _orElse(
+  Future<Map<String, dynamic>> getJobItemStorageStats(String jobId) => _safe(
         () => JobItemStorage.getStorageStats(jobId),
     <String, dynamic>{},
   );
