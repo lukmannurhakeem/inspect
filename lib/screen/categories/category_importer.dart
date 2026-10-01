@@ -5,6 +5,7 @@ import 'package:excel/excel.dart' hide Border;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:inspect/data/model/field_model/field_model.dart';
+import 'package:inspect/provider/category_provider.dart';
 import 'package:inspect/provider/customer_provider.dart';
 import 'package:inspect/widget/common_snackbar.dart';
 import 'package:provider/provider.dart';

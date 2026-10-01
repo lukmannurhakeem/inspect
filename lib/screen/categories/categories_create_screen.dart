@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:inspect/core/extension/theme_extension.dart';
 import 'package:inspect/navigation/navigation_service.dart';
+import 'package:inspect/provider/category_provider.dart';
 import 'package:inspect/provider/customer_provider.dart';
 import 'package:inspect/screen/categories/add_field_dialog.dart';
 import 'package:inspect/widget/common_button.dart';

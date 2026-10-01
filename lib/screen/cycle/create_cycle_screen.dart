@@ -1,15 +1,16 @@
-import 'package:INSPECT/core/extension/theme_extension.dart';
-import 'package:INSPECT/core/service/navigation_service.dart';
-import 'package:INSPECT/providers/category_provider.dart';
-import 'package:INSPECT/providers/customer_provider.dart';
-import 'package:INSPECT/providers/cycle_provider.dart';
-import 'package:INSPECT/providers/site_provider.dart';
-import 'package:INSPECT/providers/system_provider.dart';
-import 'package:INSPECT/widget/common_button.dart';
-import 'package:INSPECT/widget/common_dropdown.dart';
-import 'package:INSPECT/widget/common_snackbar.dart';
-import 'package:INSPECT/widget/common_textfield.dart';
+
 import 'package:flutter/material.dart';
+import 'package:inspect/core/extension/theme_extension.dart';
+import 'package:inspect/navigation/navigation_service.dart';
+import 'package:inspect/provider/category_provider.dart';
+import 'package:inspect/provider/customer_provider.dart';
+import 'package:inspect/provider/cycle_provider.dart';
+import 'package:inspect/provider/site_provider.dart';
+import 'package:inspect/provider/system_provider.dart';
+import 'package:inspect/widget/common_button.dart';
+import 'package:inspect/widget/common_dropdown.dart';
+import 'package:inspect/widget/common_snackbar.dart';
+import 'package:inspect/widget/common_textfield.dart';
 import 'package:provider/provider.dart';
 
 class CreateCycleScreen extends StatefulWidget {

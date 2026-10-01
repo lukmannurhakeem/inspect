@@ -13,6 +13,13 @@ class AgentProvider extends ChangeNotifier {
   final notesController = TextEditingController();
   final addressController = TextEditingController();
 
+  late final List<TextEditingController> _controllers = [
+    agentnameController,
+    accountcodeController,
+    notesController,
+    addressController,
+  ];
+
   GetAgentModel? _model;
   List<Agent> _agents = [];
   bool _isFetching = false;
@@ -22,15 +29,17 @@ class AgentProvider extends ChangeNotifier {
   List<Agent> get agents => _agents;
   bool get isFetching => _isFetching;
   bool get isSaving => _isSaving;
+  bool get isLoading => _isFetching || _isSaving;
 
   Future<void> fetchAgents(BuildContext context) async {
     _isFetching = true;
     notifyListeners();
     try {
-      _model = await _repository.fetchAgents();
-      _agents = _model!.agents;
+      final result = await _repository.fetchAgents();
+      _model = result;
+      _agents = result.agents;
     } catch (e) {
-      if (context.mounted) CommonSnackbar.showError(context, e.toString());
+      _showError(context, e);
     } finally {
       _isFetching = false;
       notifyListeners();
@@ -40,7 +49,8 @@ class AgentProvider extends ChangeNotifier {
   Future<void> createAgent(BuildContext context) => _save(
     context,
     successMessage: 'Agent created successfully',
-    action: () => _repository.createAgent(
+    action:
+        () => _repository.createAgent(
       agentname: agentnameController.text,
       accountcode: accountcodeController.text,
       notes: _nullIfEmpty(notesController.text),
@@ -48,14 +58,12 @@ class AgentProvider extends ChangeNotifier {
     ),
   );
 
-  Future<void> updateAgent(
-      BuildContext context, {
-        required String agentId,
-      }) =>
+  Future<void> updateAgent(BuildContext context, {required String agentId}) =>
       _save(
         context,
         successMessage: 'Agent updated successfully',
-        action: () => _repository.updateAgent(
+        action:
+            () => _repository.updateAgent(
           agentId: agentId,
           agentname: agentnameController.text,
           accountcode: accountcodeController.text,
@@ -73,7 +81,7 @@ class AgentProvider extends ChangeNotifier {
         CommonSnackbar.showSuccess(context, 'Agent deleted successfully');
       }
     } catch (e) {
-      if (context.mounted) CommonSnackbar.showError(context, e.toString());
+      _showError(context, e);
     }
   }
 
@@ -93,28 +101,30 @@ class AgentProvider extends ChangeNotifier {
         CommonSnackbar.showSuccess(context, successMessage);
       }
     } catch (e) {
-      if (context.mounted) CommonSnackbar.showError(context, e.toString());
+      _showError(context, e);
     } finally {
       _isSaving = false;
       notifyListeners();
     }
   }
 
+  void _showError(BuildContext context, Object error) {
+    if (context.mounted) CommonSnackbar.showError(context, error.toString());
+  }
+
   String? _nullIfEmpty(String value) => value.isEmpty ? null : value;
 
   void clearControllers() {
-    agentnameController.clear();
-    accountcodeController.clear();
-    notesController.clear();
-    addressController.clear();
+    for (final controller in _controllers) {
+      controller.clear();
+    }
   }
 
   @override
   void dispose() {
-    agentnameController.dispose();
-    accountcodeController.dispose();
-    notesController.dispose();
-    addressController.dispose();
+    for (final controller in _controllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 }

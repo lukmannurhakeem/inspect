@@ -1,6 +1,9 @@
 import 'package:flutter/foundation.dart';
+import 'package:inspect/data/repository/customer/customer_repository.dart';
 import 'package:inspect/data/repository/cycle/cycle_impl.dart';
 import 'package:inspect/data/repository/cycle/cycle_repository.dart';
+import 'package:inspect/data/repository/site/site_repository.dart';
+import 'package:inspect/data/repository/system/system_repository.dart';
 import 'package:inspect/data/repository/user/user_impl.dart';
 import 'package:inspect/data/repository/user/user_repository.dart';
 import 'package:inspect/network/api_client.dart';
@@ -21,6 +24,9 @@ class ServiceLocator {
   late final ApiClient apiClient;
   late final UserRepository userRepository;
   late final CycleRepository cycleRepository;
+  late final SiteRepository siteRepository;
+  late final SystemRepository systemRepository;
+  late final CustomerRepository customerRepository;
 
   bool get isInitialized => _initialized;
 

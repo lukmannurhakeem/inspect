@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:inspect/core/extension/theme_extension.dart';
 import 'package:inspect/data/model/field_model/field_model.dart';
+import 'package:inspect/provider/category_provider.dart';
 import 'package:inspect/provider/customer_provider.dart';
 import 'package:inspect/widget/common__checklist_tile.dart';
 import 'package:inspect/widget/common_button.dart';

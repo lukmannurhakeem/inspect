@@ -1,13 +1,14 @@
-import 'package:INSPECT/core/extension/theme_extension.dart';
-import 'package:INSPECT/core/service/navigation_service.dart';
-import 'package:INSPECT/model/cycle_model.dart';
-import 'package:INSPECT/providers/cycle_provider.dart';
-import 'package:INSPECT/route/route.dart';
-import 'package:INSPECT/widget/common_button.dart';
-import 'package:INSPECT/widget/common_dialog.dart';
-import 'package:INSPECT/widget/common_dropdown.dart';
-import 'package:INSPECT/widget/common_textfield.dart';
+
 import 'package:flutter/material.dart';
+import 'package:inspect/core/extension/theme_extension.dart';
+import 'package:inspect/data/model/cycle_model/cycle_model.dart';
+import 'package:inspect/navigation/navigation_route.dart';
+import 'package:inspect/navigation/navigation_service.dart';
+import 'package:inspect/provider/cycle_provider.dart';
+import 'package:inspect/widget/common_button.dart';
+import 'package:inspect/widget/common_dialog.dart';
+import 'package:inspect/widget/common_dropdown.dart';
+import 'package:inspect/widget/common_textfield.dart';
 import 'package:provider/provider.dart';
 
 enum CycleSearchColumn {
@@ -111,10 +112,10 @@ class _CycleScreenState extends State<CycleScreen>
     if (mounted) _fadeController.forward();
   }
 
-  void _openCreate() => NavigationService().navigateTo(AppRoutes.createCycle);
+  void _openCreate() => NavigationService().navigateTo(NavigationRoutes.createCycle);
 
   void _openEdit(CycleData cycle) => NavigationService().navigateTo(
-    AppRoutes.createCycle,
+    NavigationRoutes.createCycle,
     arguments: {'cycleId': cycle.cycleId},
   );
 
