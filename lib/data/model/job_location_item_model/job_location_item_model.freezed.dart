@@ -486,8 +486,8 @@ return $default(_that.locationId,_that.itemId,_that.name,_that.code,_that.parent
 /// @nodoc
 @JsonSerializable()
 
-class _JobLocationItem implements JobLocationItem {
-  const _JobLocationItem({@JsonKey(name: 'locationID') this.locationId, @JsonKey(name: 'itemID') this.itemId, this.name, this.code, @JsonKey(name: 'parentID') this.parentId});
+class _JobLocationItem extends JobLocationItem {
+  const _JobLocationItem({@JsonKey(name: 'locationID') this.locationId, @JsonKey(name: 'itemID') this.itemId, this.name, this.code, @JsonKey(name: 'parentID') this.parentId}): super._();
   factory _JobLocationItem.fromJson(Map<String, dynamic> json) => _$JobLocationItemFromJson(json);
 
 @override@JsonKey(name: 'locationID') final  String? locationId;

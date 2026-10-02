@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:inspect/core/utils/camera_web_helper.dart'
-if (dart.library.html) 'package:INSPECT/core/utils/camera_web_helper_web.dart';
+    if (dart.library.html) 'package:inspect/core/utils/camera_web_helper_web.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -9,12 +9,20 @@ import 'package:image_picker/image_picker.dart';
 import 'package:inspect/core/extension/theme_extension.dart';
 
 class FileUploadController extends ChangeNotifier {
-  static const _imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
+  static const _imageExtensions = [
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.gif',
+    '.webp',
+    '.bmp',
+  ];
 
   PlatformFile? _pickedFile;
   File? _imageFile;
 
   PlatformFile? get pickedFile => _pickedFile;
+
   File? get imageFile => _imageFile;
 
   bool get hasFile => _pickedFile != null || _imageFile != null;
@@ -51,15 +59,13 @@ class FileUploadController extends ChangeNotifier {
   void setImageFile(File? file) => _update(image: file);
 
   void setWebImage(Uint8List? bytes, String? name) => _update(
-    picked:
-    bytes == null
+    picked: bytes == null
         ? null
         : PlatformFile(
-      name:
-      name ?? 'image_${DateTime.now().millisecondsSinceEpoch}.jpg',
-      size: bytes.length,
-      bytes: bytes,
-    ),
+            name: name ?? 'image_${DateTime.now().millisecondsSinceEpoch}.jpg',
+            size: bytes.length,
+            bytes: bytes,
+          ),
   );
 
   void clear() => _update();
@@ -126,8 +132,7 @@ class _CommonFileUploadInputState extends State<CommonFileUploadInput> {
 
   Future<void> _pickPhoto(ImageSource source) async {
     if (kIsWeb) {
-      final (bytes, name) =
-      source == ImageSource.camera
+      final (bytes, name) = source == ImageSource.camera
           ? await pickImageFromCamera()
           : await pickImageFromGallery();
       if (bytes != null) _controller.setWebImage(bytes, name);
@@ -144,9 +149,9 @@ class _CommonFileUploadInputState extends State<CommonFileUploadInput> {
   void _showPickerOptions() {
     final options = [
       (
-      Icons.photo_library,
-      'Choose from Gallery',
-          () => _pickPhoto(ImageSource.gallery),
+        Icons.photo_library,
+        'Choose from Gallery',
+        () => _pickPhoto(ImageSource.gallery),
       ),
       (Icons.camera_alt, 'Take Photo', () => _pickPhoto(ImageSource.camera)),
       (Icons.insert_drive_file, 'Choose File', _pickFile),
@@ -157,8 +162,7 @@ class _CommonFileUploadInputState extends State<CommonFileUploadInput> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder:
-          (sheetContext) => SafeArea(
+      builder: (sheetContext) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 20),
           child: Column(

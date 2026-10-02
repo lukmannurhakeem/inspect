@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:inspect/data/model/get_agent_model/get_agent_model.dart';
 import 'package:inspect/data/repository/agent/agent_repository.dart';
+import 'package:inspect/locator/locator.dart';
 import 'package:inspect/widget/common_snackbar.dart';
 
 class AgentProvider extends ChangeNotifier {
-  AgentProvider(this._repository);
-
-  final AgentRepository _repository;
+  final AgentRepository _repository = ServiceLocator().agentRepository;
 
   final agentnameController = TextEditingController();
   final accountcodeController = TextEditingController();
@@ -26,9 +25,13 @@ class AgentProvider extends ChangeNotifier {
   bool _isSaving = false;
 
   GetAgentModel? get model => _model;
+
   List<Agent> get agents => _agents;
+
   bool get isFetching => _isFetching;
+
   bool get isSaving => _isSaving;
+
   bool get isLoading => _isFetching || _isSaving;
 
   Future<void> fetchAgents(BuildContext context) async {
@@ -49,8 +52,7 @@ class AgentProvider extends ChangeNotifier {
   Future<void> createAgent(BuildContext context) => _save(
     context,
     successMessage: 'Agent created successfully',
-    action:
-        () => _repository.createAgent(
+    action: () => _repository.createAgent(
       agentname: agentnameController.text,
       accountcode: accountcodeController.text,
       notes: _nullIfEmpty(notesController.text),
@@ -62,8 +64,7 @@ class AgentProvider extends ChangeNotifier {
       _save(
         context,
         successMessage: 'Agent updated successfully',
-        action:
-            () => _repository.updateAgent(
+        action: () => _repository.updateAgent(
           agentId: agentId,
           agentname: agentnameController.text,
           accountcode: accountcodeController.text,
@@ -86,10 +87,10 @@ class AgentProvider extends ChangeNotifier {
   }
 
   Future<void> _save(
-      BuildContext context, {
-        required Future<void> Function() action,
-        required String successMessage,
-      }) async {
+    BuildContext context, {
+    required Future<void> Function() action,
+    required String successMessage,
+  }) async {
     _isSaving = true;
     notifyListeners();
     try {

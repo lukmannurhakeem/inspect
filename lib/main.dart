@@ -1,122 +1,202 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:inspect/core/theme/app_theme.dart';
+import 'package:inspect/core/utils/pwa_install_helper.dart';
+import 'package:inspect/core/utils/web_deep_link_helper.dart';
+import 'package:inspect/locator/locator.dart';
+import 'package:inspect/navigation/navigation_route.dart';
+import 'package:inspect/navigation/navigation_service.dart';
+import 'package:inspect/provider/agent_provider.dart';
+import 'package:inspect/provider/auth_provider.dart';
+import 'package:inspect/provider/category_provider.dart';
+import 'package:inspect/provider/customer_provider.dart';
+import 'package:inspect/provider/cycle_provider.dart';
+import 'package:inspect/provider/job_provider.dart';
+import 'package:inspect/provider/job_sync_manager_provider.dart';
+import 'package:inspect/provider/personnel_provider.dart';
+import 'package:inspect/provider/planner_provider.dart';
+import 'package:inspect/provider/report_sync_manager_provider.dart';
+import 'package:inspect/provider/site_provider.dart';
+import 'package:inspect/provider/system_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:provider/single_child_widget.dart';
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await ServiceLocator().init();
+  runApp(MultiProvider(providers: _providers, child: const MyApp()));
 }
+
+final List<SingleChildWidget> _providers = [
+  ChangeNotifierProvider(create: (_) => AuthenticateProvider()),
+  ChangeNotifierProvider(create: (_) => PlannerProvider()),
+  ChangeNotifierProvider(create: (_) => CycleProvider()),
+  ChangeNotifierProvider(create: (_) => SiteProvider()),
+  ChangeNotifierProvider(create: (_) => CustomerProvider()),
+  ChangeNotifierProvider(create: (_) => SystemProvider()),
+  ChangeNotifierProvider(create: (_) => JobProvider()),
+  ChangeNotifierProvider(create: (_) => CategoryProvider()),
+  ChangeNotifierProvider(create: (_) => PersonnelProvider()),
+  ChangeNotifierProvider(create: (_) => AgentProvider()),
+  ChangeNotifierProvider(create: (_) => JobSyncManagerProvider()),
+  ChangeNotifierProvider(create: (_) => ReportSyncManagerProvider()),
+];
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    final navigationService = NavigationService();
+
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      title: 'INSPECT - NDT Inspection System',
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.lightTheme,
+      themeMode: ThemeMode.system,
+      navigatorKey: navigationService.navigatorKey,
+      onGenerateRoute: navigationService.generateRoute,
+      initialRoute: NavigationRoutes.splash,
+      navigatorObservers: [RouteObserver()],
+      home: const PWALandingScreen(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class PWALandingScreen extends StatefulWidget {
+  const PWALandingScreen({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<PWALandingScreen> createState() => _PWALandingScreenState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _PWALandingScreenState extends State<PWALandingScreen> {
+  bool _isInstalled = false;
+  bool _canInstall = false;
+  bool _showLanding = false;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+  @override
+  void initState() {
+    super.initState();
+
+    if (!kIsWeb) {
+      _scheduleEnterApp();
+      return;
+    }
+
+    _isInstalled = isPwaStandalone();
+
+    if (_isInstalled || WebDeepLinkHandler.isResetPasswordUrl()) {
+      _scheduleEnterApp();
+      return;
+    }
+
+    _showLanding = true;
+
+    listenInstallPrompt(() => setState(() => _canInstall = true));
+    listenAppInstalled(() {
+      setState(() {
+        _isInstalled = true;
+        _canInstall = false;
+      });
+      Future.delayed(const Duration(milliseconds: 500), _enterApp);
     });
+  }
+
+  void _scheduleEnterApp() {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _enterApp());
+  }
+
+  void _enterApp() {
+    if (!mounted) return;
+    Navigator.of(context).pushReplacementNamed(NavigationRoutes.splash);
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    if (!_showLanding) return const SizedBox.shrink();
+
+    final primary = Theme.of(context).primaryColor;
+    const buttonPadding = EdgeInsets.symmetric(horizontal: 32, vertical: 16);
+    const buttonText = TextStyle(fontSize: 18, fontWeight: FontWeight.bold);
+
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [primary, primary.withValues(alpha: 0.7)],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.assessment_outlined,
+                    size: 80,
+                    color: Colors.white,
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Welcome to INSPECT',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'NDT Inspection System - Work anywhere, anytime',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16, color: Colors.white70),
+                  ),
+                  const SizedBox(height: 48),
+                  if (_canInstall && !_isInstalled) ...[
+                    ElevatedButton.icon(
+                      onPressed: triggerInstall,
+                      icon: const Icon(Icons.download),
+                      label: const Text('Install App'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: primary,
+                        padding: buttonPadding,
+                        textStyle: buttonText,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  OutlinedButton.icon(
+                    onPressed: _enterApp,
+                    icon: const Icon(Icons.arrow_forward),
+                    label: Text(_isInstalled ? 'Open App' : 'Continue to App'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Colors.white, width: 2),
+                      padding: buttonPadding,
+                      textStyle: buttonText,
+                    ),
+                  ),
+                  if (!_canInstall && !_isInstalled) ...[
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Install option will appear on supported browsers',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12, color: Colors.white60),
+                    ),
+                  ],
+                ],
+              ),
             ),
-          ],
+          ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }

@@ -6,6 +6,7 @@ import 'package:inspect/data/model/create_category_model/create_category_model.d
 import 'package:inspect/data/model/field_model/field_model.dart';
 import 'package:inspect/data/model/get_category_model/get_category_model.dart';
 import 'package:inspect/data/repository/category/category_repository.dart';
+import 'package:inspect/locator/locator.dart';
 import 'package:inspect/storage/local_category_storage_service.dart';
 import 'package:inspect/storage/local_storage.dart';
 
@@ -44,9 +45,7 @@ class CategoryItem {
 }
 
 class CategoryProvider extends ChangeNotifier {
-  CategoryProvider(this._repository);
-
-  final CategoryRepository _repository;
+  final CategoryRepository _repository = ServiceLocator().categoryRepository;
 
   static const _kCategoryListKey = 'cached_category_list';
   static const _pageLimit = 50;

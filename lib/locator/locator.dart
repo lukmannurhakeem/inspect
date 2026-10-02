@@ -1,4 +1,6 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show VoidCallback;
+import 'package:inspect/data/repository/agent/agent_repository.dart';
+import 'package:inspect/data/repository/category/category_repository.dart';
 import 'package:inspect/data/repository/customer/customer_repository.dart';
 import 'package:inspect/data/repository/cycle/cycle_impl.dart';
 import 'package:inspect/data/repository/cycle/cycle_repository.dart';
@@ -20,13 +22,15 @@ class ServiceLocator {
 
   factory ServiceLocator() => _instance;
 
-  bool _initialized = false;
   VoidCallback? _onSessionExpired;
+  bool _initialized = false;
 
   late final TokenStorage tokenStorage;
   late final ApiClient apiClient;
   late final UserRepository userRepository;
+  late final AgentRepository agentRepository;
   late final CycleRepository cycleRepository;
+  late final CategoryRepository categoryRepository;
   late final SiteRepository siteRepository;
   late final SystemRepository systemRepository;
   late final CustomerRepository customerRepository;
@@ -35,6 +39,11 @@ class ServiceLocator {
   late final PlannerRepository plannerRepository;
 
   bool get isInitialized => _initialized;
+
+  // ignore: use_setters_to_change_properties
+  void setSessionExpiredHandler(VoidCallback handler) {
+    _onSessionExpired = handler;
+  }
 
   Future<void> init({String? baseUrl}) async {
     if (_initialized) return;
@@ -51,9 +60,5 @@ class ServiceLocator {
     cycleRepository = CycleImpl(apiClient);
 
     _initialized = true;
-  }
-
-  void setSessionExpiredHandler(VoidCallback handler) {
-    _onSessionExpired = handler;
   }
 }

@@ -16,6 +16,8 @@ abstract class JobLocationItemModel with _$JobLocationItemModel {
 
 @freezed
 abstract class JobLocationItem with _$JobLocationItem {
+  const JobLocationItem._();
+
   const factory JobLocationItem({
     @JsonKey(name: 'locationID') String? locationId,
     @JsonKey(name: 'itemID') String? itemId,
@@ -23,6 +25,13 @@ abstract class JobLocationItem with _$JobLocationItem {
     String? code,
     @JsonKey(name: 'parentID') String? parentId,
   }) = _JobLocationItem;
+
+  String get displayLabel {
+    final n = name?.trim() ?? '';
+    final c = code?.trim() ?? '';
+    if (n.isEmpty) return c;
+    return c.isEmpty ? n : '$n ($c)';
+  }
 
   factory JobLocationItem.fromJson(Map<String, dynamic> json) =>
       _$JobLocationItemFromJson(json);
