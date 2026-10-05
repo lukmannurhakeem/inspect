@@ -15,6 +15,7 @@ import 'package:inspect/provider/job_provider.dart';
 import 'package:inspect/provider/job_sync_manager_provider.dart';
 import 'package:inspect/provider/personnel_provider.dart';
 import 'package:inspect/provider/planner_provider.dart';
+import 'package:inspect/provider/report_form_provider.dart';
 import 'package:inspect/provider/report_sync_manager_provider.dart';
 import 'package:inspect/provider/site_provider.dart';
 import 'package:inspect/provider/system_provider.dart';
@@ -40,6 +41,10 @@ final List<SingleChildWidget> _providers = [
   ChangeNotifierProvider(create: (_) => AgentProvider()),
   ChangeNotifierProvider(create: (_) => JobSyncManagerProvider()),
   ChangeNotifierProvider(create: (_) => ReportSyncManagerProvider()),
+  ChangeNotifierProxyProvider<SystemProvider, ReportFormProvider>(
+    create: (ctx) => ReportFormProvider(ctx.read<SystemProvider>()),
+    update: (_, system, previous) => previous ?? ReportFormProvider(system),
+  ),
 ];
 
 class MyApp extends StatelessWidget {

@@ -499,6 +499,7 @@ class CategoryProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   List<CategoryItem> get filteredCategories => _filteredCategories;
+  List<CategoryItem> get allCategories => _allCategories;
 
   bool _isLoadingMore = false;
   bool get isLoadingMore => _isLoadingMore;

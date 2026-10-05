@@ -1,6 +1,7 @@
+import 'dart:async';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:inspect/core/extension/theme_extension.dart';
 import 'package:inspect/core/services/picker_storage_service.dart';
@@ -17,17 +18,31 @@ import 'package:inspect/widget/common_textfield.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+const _dateFormat = 'yyyy-MM-dd';
+
+const List<String> _procedureNoPresets = [
+  'API 510 – Pressure Vessel Inspection',
+  'API 570 – Piping Inspection',
+  'API 571 – Damage Mechanisms',
+  'API 580 – Risk-Based Inspection',
+  'API 653 – Aboveground Storage Tanks',
+  'ASME B31.3 – Process Piping',
+  'ASME B31.8 – Gas Transmission',
+  'ASME Section VIII – Pressure Vessels',
+  'BS PD 5500 – Unfired Fusion Welded Vessels',
+  'EN 13445 – Unfired Pressure Vessels',
+  'ISO 9001 – Quality Management',
+  'ISO 14001 – Environmental Management',
+  'NACE MR0175 – Sulphide Stress Cracking',
+  'OSHA 1910.119 – Process Safety Management',
+];
+
 class JobAddNewDetailsScreen extends StatefulWidget {
   final String customerId;
   final String customerName;
   final String siteId;
   final String siteName;
-
-  // ── Edit mode ──────────────────────────────────────────────────────────────
   final bool isEditMode;
-
-  /// The existing job object passed from JobScreen when editing.
-  /// Typed as [dynamic] to avoid hard coupling to the model import here.
   final dynamic job;
 
   const JobAddNewDetailsScreen({
@@ -44,617 +59,369 @@ class JobAddNewDetailsScreen extends StatefulWidget {
   State<JobAddNewDetailsScreen> createState() => _JobAddNewDetailsScreenState();
 }
 
-class _JobAddNewDetailsScreenState extends State<JobAddNewDetailsScreen>
-    with TickerProviderStateMixin {
-  String? selectedDivisionId;
-  String? selectedAuthenticatorId;
+class _JobAddNewDetailsScreenState extends State<JobAddNewDetailsScreen> {
+  final _jobNo = TextEditingController();
+  final _createdDate = TextEditingController();
+  final _po = TextEditingController();
+  final _procedure = TextEditingController();
+  final _notes = TextEditingController();
+  final _division = TextEditingController();
+  final _address = TextEditingController();
+  final _allocatedDuration = TextEditingController();
+  final _estInspectionDuration = TextEditingController();
+  final _estStartDate = TextEditingController();
+  final _estEndDate = TextEditingController();
+  final _engineerComplete = TextEditingController();
+  final _offshoreLocation = TextEditingController();
+  final _location = TextEditingController();
+  final _issuingAuthName = TextEditingController();
+  final _clientName = TextEditingController();
 
-  late TextEditingController jobNoController;
-  late TextEditingController createdDateController;
-  late TextEditingController poController;
-  late TextEditingController procedureController;
-  late TextEditingController notesController;
-  late TextEditingController divisionController;
-  late TextEditingController addressController;
-  late TextEditingController allocatedDurationController;
-  late TextEditingController estInspectionDurationController;
-  late TextEditingController estStartDateController;
-  late TextEditingController estEndDateController;
-  late TextEditingController engineerCompleteController;
-  late TextEditingController offshoreLocationController;
-  late TextEditingController locationController;
-  late TextEditingController issuingAuthNameController;
-  late TextEditingController clientNameController;
-  late TextEditingController issuingAuthNameSignatureController;
-  late TextEditingController clientSignatureController;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
 
+  String? _divisionId;
+  String? _authenticatorId;
   PlatformFile? _issuingAuthSignatureFile;
   PlatformFile? _clientSignatureFile;
 
   bool _isLoading = false;
   bool _isOffline = false;
 
-  // ── Helpers to safely read from dynamic job object ─────────────────────────
+  bool get _isEdit => widget.isEditMode && widget.job != null;
 
-  String _jobStr(String key) {
+  List<TextEditingController> get _controllers => [
+    _jobNo,
+    _createdDate,
+    _po,
+    _procedure,
+    _notes,
+    _division,
+    _address,
+    _allocatedDuration,
+    _estInspectionDuration,
+    _estStartDate,
+    _estEndDate,
+    _engineerComplete,
+    _offshoreLocation,
+    _location,
+    _issuingAuthName,
+    _clientName,
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _initConnectivity();
+    _prefill();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadReferenceData());
+  }
+
+  @override
+  void dispose() {
+    _connectivitySub?.cancel();
+    for (final c in _controllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _initConnectivity() async {
+    _updateOffline(await Connectivity().checkConnectivity());
+    _connectivitySub = Connectivity().onConnectivityChanged.listen(
+      _updateOffline,
+    );
+  }
+
+  void _updateOffline(List<ConnectivityResult> results) {
+    if (!mounted) return;
+    setState(() {
+      _isOffline = results.every((r) => r == ConnectivityResult.none);
+    });
+  }
+
+  String _jobValue(String Function(dynamic job) read) {
     if (widget.job == null) return '';
     try {
-      final val = widget.job as dynamic;
-      switch (key) {
-        case 'jobNo':
-          return val.jobNo?.toString() ?? val.jobId?.toString() ?? '';
-        case 'createdDate':
-          return _isoToDate(val.createdDate?.toString() ?? '');
-        case 'purchaseOrderNo':
-          return val.purchaseOrderNo?.toString() ?? '';
-        case 'procedureNo':
-          return val.procedureNo?.toString() ?? '';
-        case 'notes':
-          return val.notes?.toString() ?? '';
-        case 'divisionId':
-          return val.divisionId?.toString() ?? val.divisionID?.toString() ?? '';
-        case 'address':
-          return val.address?.toString() ?? '';
-        case 'allocatedDuration':
-          return val.allocatedDuration?.toString() ?? '';
-        case 'estimatedInspectionDuration':
-          return val.estimatedInspectionDuration?.toString() ?? '';
-        case 'estimatedStartDate':
-          return _isoToDate(val.estimatedStartDate?.toString() ?? '');
-        case 'estimatedEndDate':
-          return _isoToDate(val.estimatedEndDate?.toString() ?? '');
-        case 'offshoreLocation':
-          return val.offshoreLocation?.toString() ?? '';
-        case 'location':
-          return val.location?.toString() ?? '';
-        case 'issuingAuthName':
-          return val.issuingAuthName?.toString() ?? '';
-        case 'clientName':
-          return val.clientName?.toString() ?? '';
-        case 'authenticator':
-          return val.authenticator?.toString() ?? '';
-        default:
-          return '';
-      }
+      return read(widget.job);
     } catch (_) {
       return '';
     }
   }
 
-  /// Converts ISO date string → 'yyyy-MM-dd' for the text field.
-  String _isoToDate(String iso) {
+  String _toDate(String iso) {
     if (iso.isEmpty) return '';
     try {
-      final dt = DateTime.parse(iso);
-      return DateFormat('yyyy-MM-dd').format(dt);
+      return DateFormat(_dateFormat).format(DateTime.parse(iso));
     } catch (_) {
       return iso;
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _checkConnectivity();
-    Connectivity().onConnectivityChanged.listen((results) {
-      if (mounted) {
-        setState(() {
-          _isOffline = results.every((r) => r == ConnectivityResult.none);
-        });
-      }
-    });
-    _initializeControllers();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final systemProvider = Provider.of<SystemProvider>(
-        context,
-        listen: false,
-      );
-      if (systemProvider.divisions.isEmpty) systemProvider.fetchDivision();
-
-      final personnelProvider = Provider.of<PersonnelProvider>(
-        context,
-        listen: false,
-      );
-      if (personnelProvider.activePersonnel.isEmpty) {
-        personnelProvider.fetchPersonnel();
-      }
-
-      // Pre-select dropdowns after providers have loaded
-      if (widget.isEditMode && widget.job != null) {
-        final divId = _jobStr('divisionId');
-        if (divId.isNotEmpty) {
-          setState(() {
-            selectedDivisionId = divId;
-            divisionController.text = divId;
-          });
-        }
-        final authId = _jobStr('authenticator');
-        if (authId.isNotEmpty) {
-          setState(() => selectedAuthenticatorId = authId);
-        }
-      }
-    });
-  }
-
-  void _initializeControllers() {
-    final isEdit = widget.isEditMode && widget.job != null;
-
-    jobNoController = TextEditingController(
-      text: isEdit ? _jobStr('jobNo') : '',
-    );
-    createdDateController = TextEditingController(
-      text:
-          isEdit
-              ? _jobStr('createdDate')
-              : DateFormat('yyyy-MM-dd').format(DateTime.now()),
-    );
-    poController = TextEditingController(
-      text: isEdit ? _jobStr('purchaseOrderNo') : '',
-    );
-    procedureController = TextEditingController(
-      text: isEdit ? _jobStr('procedureNo') : '',
-    );
-    notesController = TextEditingController(
-      text: isEdit ? _jobStr('notes') : '',
-    );
-    divisionController = TextEditingController(
-      text: isEdit ? _jobStr('divisionId') : '',
-    );
-    addressController = TextEditingController(
-      text: isEdit ? _jobStr('address') : '',
-    );
-    allocatedDurationController = TextEditingController(
-      text: isEdit ? _jobStr('allocatedDuration') : '',
-    );
-    estInspectionDurationController = TextEditingController(
-      text: isEdit ? _jobStr('estimatedInspectionDuration') : '',
-    );
-    estStartDateController = TextEditingController(
-      text: isEdit ? _jobStr('estimatedStartDate') : '',
-    );
-    estEndDateController = TextEditingController(
-      text: isEdit ? _jobStr('estimatedEndDate') : '',
-    );
-    engineerCompleteController = TextEditingController();
-    offshoreLocationController = TextEditingController(
-      text: isEdit ? _jobStr('offshoreLocation') : '',
-    );
-    locationController = TextEditingController(
-      text: isEdit ? _jobStr('location') : '',
-    );
-    issuingAuthNameController = TextEditingController(
-      text: isEdit ? _jobStr('issuingAuthName') : '',
-    );
-    clientNameController = TextEditingController(
-      text: isEdit ? _jobStr('clientName') : '',
-    );
-    issuingAuthNameSignatureController = TextEditingController();
-    clientSignatureController = TextEditingController();
-  }
-
-  Future<void> _checkConnectivity() async {
-    final results = await Connectivity().checkConnectivity();
-    if (mounted) {
-      setState(() {
-        _isOffline = results.every((r) => r == ConnectivityResult.none);
-      });
+  void _prefill() {
+    if (!_isEdit) {
+      _createdDate.text = DateFormat(_dateFormat).format(DateTime.now());
+      return;
     }
+
+    String s(dynamic v) => v?.toString() ?? '';
+
+    _jobNo.text = _jobValue((j) => s(j.jobNo ?? j.jobId));
+    _createdDate.text = _toDate(_jobValue((j) => s(j.createdDate)));
+    _po.text = _jobValue((j) => s(j.purchaseOrderNo));
+    _procedure.text = _jobValue((j) => s(j.procedureNo));
+    _notes.text = _jobValue((j) => s(j.notes));
+    _division.text = _jobValue((j) => s(j.divisionId ?? j.divisionID));
+    _address.text = _jobValue((j) => s(j.address));
+    _allocatedDuration.text = _jobValue((j) => s(j.allocatedDuration));
+    _estInspectionDuration.text = _jobValue(
+          (j) => s(j.estimatedInspectionDuration),
+    );
+    _estStartDate.text = _toDate(_jobValue((j) => s(j.estimatedStartDate)));
+    _estEndDate.text = _toDate(_jobValue((j) => s(j.estimatedEndDate)));
+    _offshoreLocation.text = _jobValue((j) => s(j.offshoreLocation));
+    _location.text = _jobValue((j) => s(j.location));
+    _issuingAuthName.text = _jobValue((j) => s(j.issuingAuthName));
+    _clientName.text = _jobValue((j) => s(j.clientName));
+
+    _divisionId = _division.text.isEmpty ? null : _division.text;
+    final authId = _jobValue((j) => s(j.authenticator));
+    _authenticatorId = authId.isEmpty ? null : authId;
   }
 
-  @override
-  void dispose() {
-    jobNoController.dispose();
-    createdDateController.dispose();
-    poController.dispose();
-    procedureController.dispose();
-    notesController.dispose();
-    divisionController.dispose();
-    addressController.dispose();
-    allocatedDurationController.dispose();
-    estInspectionDurationController.dispose();
-    estStartDateController.dispose();
-    estEndDateController.dispose();
-    engineerCompleteController.dispose();
-    offshoreLocationController.dispose();
-    locationController.dispose();
-    issuingAuthNameController.dispose();
-    clientNameController.dispose();
-    issuingAuthNameSignatureController.dispose();
-    clientSignatureController.dispose();
-    super.dispose();
+  void _loadReferenceData() {
+    final system = context.read<SystemProvider>();
+    if (system.divisions.isEmpty) system.fetchDivision();
+
+    final personnel = context.read<PersonnelProvider>();
+    if (personnel.activePersonnel.isEmpty) personnel.fetchPersonnel();
   }
 
-  // ── Job ID Generator ───────────────────────────────────────────────────────
+  String _abbreviateSiteName(String name) {
+    final words = name.trim().split(RegExp(r'\s+'));
+    if (words.isEmpty) return name.toUpperCase();
 
-  String _abbreviateSiteName(String siteName) {
-    final words = siteName.trim().split(RegExp(r'\s+'));
-    if (words.isEmpty) return siteName.toUpperCase();
-
-    final firstWord = words[0];
+    final first = words.first;
     if (words.length == 1) {
-      return firstWord.length >= 3
-          ? firstWord.substring(0, 3).toUpperCase()
-          : firstWord.toUpperCase();
+      return (first.length >= 3 ? first.substring(0, 3) : first).toUpperCase();
     }
 
-    final firstTwo =
-        firstWord.length >= 2
-            ? firstWord.substring(0, 2).toUpperCase()
-            : firstWord.toUpperCase();
-
-    final secondInitial = words[1][0].toUpperCase();
-    return '$firstTwo$secondInitial';
+    final prefix = (first.length >= 2 ? first.substring(0, 2) : first)
+        .toUpperCase();
+    return '$prefix${words[1][0].toUpperCase()}';
   }
 
   String _generateJobId() {
-    final customerPrefix =
-        widget.customerName.length >= 3
-            ? widget.customerName.substring(0, 3).toUpperCase()
-            : widget.customerName.toUpperCase();
-
-    final siteCode = _abbreviateSiteName(widget.siteName);
-
+    final name = widget.customerName;
+    final customer = (name.length >= 3 ? name.substring(0, 3) : name)
+        .toUpperCase();
+    final site = _abbreviateSiteName(widget.siteName);
     final year =
-        createdDateController.text.isNotEmpty
-            ? createdDateController.text.substring(0, 4)
-            : DateTime.now().year.toString();
-
-    final jobNoPadded = (int.tryParse(jobNoController.text.trim()) ?? 0)
-        .toString()
-        .padLeft(5, '0');
-
-    return '$customerPrefix/$siteCode/$year/$jobNoPadded';
-  }
-
-  // ── Location pickers ───────────────────────────────────────────────────────
-
-  void _openOffshoreLocationPicker() {
-    showLocationPickerDialog(
-      context: context,
-      controller: offshoreLocationController,
-      storageKey: PickerStorageKey.offshoreLocation,
-      dialogTitle: 'Select Inspection Location',
-      emptyHint: 'Select or enter Inspection Location',
-      fieldDefinedLocations: const [],
-    ).then((_) {
-      if (mounted) setState(() {});
-    });
-  }
-
-  void _openLocationPicker() {
-    showLocationPickerDialog(
-      context: context,
-      controller: locationController,
-      storageKey: PickerStorageKey.jobLocation,
-      dialogTitle: 'Select Location',
-      emptyHint: 'Select or enter location',
-      fieldDefinedLocations: const [],
-    ).then((_) {
-      if (mounted) setState(() {});
-    });
-  }
-
-  Widget _buildLocationField(BuildContext context) {
-    return _buildPickerChipRow(
-      context,
-      label: 'Location',
-      icon: Icons.location_on_outlined,
-      controller: locationController,
-      hint: 'Select or enter location',
-      onTap: _openLocationPicker,
+    _createdDate.text.length >= 4
+        ? _createdDate.text.substring(0, 4)
+        : DateTime.now().year.toString();
+    final number = (int.tryParse(_jobNo.text.trim()) ?? 0).toString().padLeft(
+      5,
+      '0',
     );
+    return '$customer/$site/$year/$number';
   }
 
-  static const List<String> _procedureNoPresets = [
-    'API 510 – Pressure Vessel Inspection',
-    'API 570 – Piping Inspection',
-    'API 571 – Damage Mechanisms',
-    'API 580 – Risk-Based Inspection',
-    'API 653 – Aboveground Storage Tanks',
-    'ASME B31.3 – Process Piping',
-    'ASME B31.8 – Gas Transmission',
-    'ASME Section VIII – Pressure Vessels',
-    'BS PD 5500 – Unfired Fusion Welded Vessels',
-    'EN 13445 – Unfired Pressure Vessels',
-    'ISO 9001 – Quality Management',
-    'ISO 14001 – Environmental Management',
-    'NACE MR0175 – Sulphide Stress Cracking',
-    'OSHA 1910.119 – Process Safety Management',
-  ];
-
-  void _openProcedureNoPicker() {
-    showLocationPickerDialog(
-      context: context,
-      controller: procedureController,
-      storageKey: PickerStorageKey.applicableCode,
-      dialogTitle: 'Select Procedure No',
-      emptyHint: 'Select or enter procedure no',
-      fieldDefinedLocations: _procedureNoPresets,
-    ).then((_) {
-      if (mounted) setState(() {});
-    });
-  }
-
-  Widget _buildProcedureNoField(BuildContext context) {
-    return _buildPickerChipRow(
-      context,
-      label: 'Procedure No',
-      icon: Icons.description_outlined,
-      controller: procedureController,
-      hint: 'Select or enter procedure no',
-      onTap: _openProcedureNoPicker,
-    );
-  }
-
-  Widget _buildOffshoreLocationField(BuildContext context) {
-    return _buildPickerChipRow(
-      context,
-      label: 'Inspection Location',
-      icon: Icons.water,
-      controller: offshoreLocationController,
-      hint: 'Select or enter inspection location',
-      onTap: _openOffshoreLocationPicker,
-    );
-  }
-
-  Widget _buildPickerChipRow(
-    BuildContext context, {
-    required String label,
-    required IconData icon,
-    required TextEditingController controller,
-    required String hint,
-    required VoidCallback onTap,
-    bool isRequired = false,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(
-          flex: 2,
-          child: Row(
-            children: [
-              Icon(
-                icon,
-                size: 16,
-                color: context.colors.primary.withOpacity(0.7),
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  label + (isRequired ? ' *' : ''),
-                  style: context.topology.textTheme.titleSmall?.copyWith(
-                    color: context.colors.primary,
-                    fontWeight:
-                        isRequired ? FontWeight.w600 : FontWeight.normal,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        context.hS,
-        Expanded(
-          flex: 3,
-          child: GestureDetector(
-            onTap: onTap,
-            child: ValueListenableBuilder<TextEditingValue>(
-              valueListenable: controller,
-              builder: (_, value, __) {
-                final hasValue = value.text.trim().isNotEmpty;
-                return Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color:
-                          hasValue
-                              ? context.colors.primary
-                              : context.colors.primary.withOpacity(0.3),
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                    color:
-                        hasValue
-                            ? context.colors.primary.withOpacity(0.05)
-                            : Colors.transparent,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.location_on_outlined,
-                        size: 16,
-                        color:
-                            hasValue
-                                ? context.colors.primary
-                                : context.colors.primary.withOpacity(0.4),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          hasValue ? value.text : hint,
-                          style: context.topology.textTheme.bodySmall?.copyWith(
-                            color:
-                                hasValue
-                                    ? context.colors.primary
-                                    : context.colors.primary.withOpacity(0.4),
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (hasValue)
-                        GestureDetector(
-                          onTap: () => setState(() => controller.clear()),
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 4),
-                            child: Icon(
-                              Icons.close,
-                              size: 15,
-                              color: context.colors.primary.withOpacity(0.5),
-                            ),
-                          ),
-                        ),
-                      if (!hasValue)
-                        Icon(
-                          Icons.arrow_drop_down,
-                          color: context.colors.primary.withOpacity(0.6),
-                        ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ── Validation & Data ──────────────────────────────────────────────────────
-
-  String _formatDateToIso(String dateString) {
-    if (dateString.isEmpty) return '';
+  String _toIso(String value) {
+    if (value.isEmpty) return '';
     try {
-      final date = DateFormat('yyyy-MM-dd').parse(dateString);
-      return '${date.toIso8601String()}Z';
+      return '${DateFormat(_dateFormat).parse(value).toIso8601String()}Z';
     } catch (e) {
       debugPrint('Date format error: $e');
       return '';
     }
   }
 
-  bool _validateForm() {
-    if (jobNoController.text.trim().isEmpty) {
-      CommonSnackbar.showError(context, 'Job No is required');
-      return false;
+  String? _validate() {
+    if (_jobNo.text.trim().isEmpty) return 'Job No is required';
+    if (_divisionId == null || _divisionId!.isEmpty) {
+      return 'Division is required';
     }
-    if (selectedDivisionId == null || selectedDivisionId!.isEmpty) {
-      CommonSnackbar.showError(context, 'Division is required');
-      return false;
+    if (_estStartDate.text.trim().isEmpty) {
+      return 'Estimated Start Date is required';
     }
-    if (estStartDateController.text.trim().isEmpty) {
-      CommonSnackbar.showError(context, 'Estimated Start Date is required');
-      return false;
-    }
-    if (estEndDateController.text.trim().isEmpty) {
-      CommonSnackbar.showError(context, 'Estimated End Date is required');
-      return false;
+    if (_estEndDate.text.trim().isEmpty) {
+      return 'Estimated End Date is required';
     }
     try {
-      final startDate = DateFormat(
-        'yyyy-MM-dd',
-      ).parse(estStartDateController.text);
-      final endDate = DateFormat('yyyy-MM-dd').parse(estEndDateController.text);
-      if (endDate.isBefore(startDate)) {
-        CommonSnackbar.showError(context, 'End date must be after start date');
-        return false;
-      }
-    } catch (e) {
-      CommonSnackbar.showError(context, 'Invalid date format');
-      return false;
+      final format = DateFormat(_dateFormat);
+      final start = format.parse(_estStartDate.text);
+      final end = format.parse(_estEndDate.text);
+      if (end.isBefore(start)) return 'End date must be after start date';
+    } catch (_) {
+      return 'Invalid date format';
     }
-    if (selectedAuthenticatorId == null || selectedAuthenticatorId!.isEmpty) {
-      CommonSnackbar.showError(context, 'Authenticator is required');
-      return false;
+    if (_authenticatorId == null || _authenticatorId!.isEmpty) {
+      return 'Authenticator is required';
     }
-    return true;
+    if (widget.customerId.isEmpty) return 'Customer ID is missing';
+    if (widget.siteId.isEmpty) return 'Site ID is missing';
+    return null;
   }
 
-  Map<String, dynamic> _buildJobData() {
-    return {
-      'jobID': _generateJobId(),
-      'customerid': widget.customerId,
-      'jobno': jobNoController.text,
-      'siteID': widget.siteId,
-      'createdDate': _formatDateToIso(createdDateController.text),
-      'purchaseOrderNo': poController.text,
-      'procedureNo': procedureController.text,
-      'notes': notesController.text,
-      'divisionID': divisionController.text,
-      'address': addressController.text,
-      'allocatedDuration': int.tryParse(allocatedDurationController.text) ?? 0,
-      'estimatedInspectionDuration':
-          int.tryParse(estInspectionDurationController.text) ?? 0,
-      'estimatedStartDate': _formatDateToIso(estStartDateController.text),
-      'estimatedEndDate': _formatDateToIso(estEndDateController.text),
-      'isEngineerComplete':
-          engineerCompleteController.text.toLowerCase() == 'yes',
-      'offshoreLocation': offshoreLocationController.text,
-      'location': locationController.text,
-      'authenticator': selectedAuthenticatorId ?? '',
-      'issuingAuthName': issuingAuthNameController.text,
-      'issuingAuthSignature': _issuingAuthSignatureFile?.name ?? '',
-      'clientName': clientNameController.text,
-      'clientSignature': _clientSignatureFile?.name ?? '',
-      'startJobNow': true,
-    };
-  }
+  Map<String, dynamic> _buildJobData() => {
+    'jobID': _generateJobId(),
+    'customerid': widget.customerId,
+    'jobno': _jobNo.text,
+    'siteID': widget.siteId,
+    'createdDate': _toIso(_createdDate.text),
+    'purchaseOrderNo': _po.text,
+    'procedureNo': _procedure.text,
+    'notes': _notes.text,
+    'divisionID': _division.text,
+    'address': _address.text,
+    'allocatedDuration': int.tryParse(_allocatedDuration.text) ?? 0,
+    'estimatedInspectionDuration':
+    int.tryParse(_estInspectionDuration.text) ?? 0,
+    'estimatedStartDate': _toIso(_estStartDate.text),
+    'estimatedEndDate': _toIso(_estEndDate.text),
+    'isEngineerComplete': _engineerComplete.text.toLowerCase() == 'yes',
+    'offshoreLocation': _offshoreLocation.text,
+    'location': _location.text,
+    'authenticator': _authenticatorId ?? '',
+    'issuingAuthName': _issuingAuthName.text,
+    'issuingAuthSignature': _issuingAuthSignatureFile?.name ?? '',
+    'clientName': _clientName.text,
+    'clientSignature': _clientSignatureFile?.name ?? '',
+    'startJobNow': true,
+  };
 
-  // ── Create / Update Job ────────────────────────────────────────────────────
-
-  Future<void> _submitJob() async {
-    if (!_validateForm()) return;
+  Future<void> _submit() async {
+    final error = _validate();
+    if (error != null) {
+      CommonSnackbar.showError(context, error);
+      return;
+    }
 
     setState(() => _isLoading = true);
 
     try {
-      final jobData = _buildJobData();
+      final data = _buildJobData();
+      final provider = context.read<JobProvider>();
 
-      if (jobData['customerid'].toString().isEmpty) {
-        CommonSnackbar.showError(context, 'Customer ID is missing');
-        return;
-      }
-      if (jobData['siteID'].toString().isEmpty) {
-        CommonSnackbar.showError(context, 'Site ID is missing');
-        return;
-      }
-
-      if (!mounted) return;
-
-      final jobProvider = Provider.of<JobProvider>(context, listen: false);
-
-      if (widget.isEditMode && widget.job != null) {
-        final jobId =
-            widget.job.jobId?.toString() ?? widget.job.jobID?.toString() ?? '';
-        debugPrint('✏️ Updating job: $jobId');
-        await jobProvider.updateJobFromDetails(context, jobId, jobData);
+      if (_isEdit) {
+        final job = widget.job;
+        final id = job.jobId?.toString() ?? job.jobID?.toString() ?? '';
+        await provider.updateJobFromDetails(context, id, data);
       } else {
-        debugPrint('📋 Job ID: ${jobData['jobID']}');
-        await jobProvider.createJobFromDetails(context, jobData);
+        await provider.createJobFromDetails(context, data);
       }
     } catch (_) {
-      // Errors are already handled and snackbarred in the provider.
-      // We just need the finally block to run.
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  // ── UI helpers ─────────────────────────────────────────────────────────────
+  Future<void> _pickSignature({required bool isClient}) async {
+    try {
+      final result = await FilePicker.pickFiles();
+      if (result == null || !mounted) return;
+      setState(() {
+        if (isClient) {
+          _clientSignatureFile = result.files.first;
+        } else {
+          _issuingAuthSignatureFile = result.files.first;
+        }
+      });
+    } catch (e) {
+      debugPrint('Error picking signature: $e');
+      if (mounted) CommonSnackbar.showError(context, 'Failed to pick file');
+    }
+  }
 
-  Widget _buildSectionHeader(
-    BuildContext context,
-    String title,
-    IconData icon,
-  ) {
+  Future<void> _openPicker({
+    required TextEditingController controller,
+    required String storageKey,
+    required String title,
+    required String hint,
+    List<String> presets = const [],
+  }) async {
+    await showLocationPickerDialog(
+      context: context,
+      controller: controller,
+      storageKey: storageKey,
+      dialogTitle: title,
+      emptyHint: hint,
+      fieldDefinedLocations: presets,
+    );
+    if (mounted) setState(() {});
+  }
+
+  String get _submitLabel {
+    if (_isOffline) return 'Save Offline';
+    if (_isLoading) return widget.isEditMode ? 'Saving...' : 'Creating...';
+    return widget.isEditMode ? 'Save Changes' : 'Create Job';
+  }
+
+  Widget _label(
+      BuildContext context,
+      String text, {
+        IconData? icon,
+        bool required = false,
+      }) {
+    final color = context.colors.primary;
+    return Expanded(
+      flex: 2,
+      child: Row(
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 16, color: color.withOpacity(0.7)),
+            const SizedBox(width: 6),
+          ],
+          Expanded(
+            child: Text(
+              required ? '$text *' : text,
+              style: context.topology.textTheme.titleSmall?.copyWith(
+                color: color,
+                fontWeight: required ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _field(
+      BuildContext context, {
+        required String label,
+        required Widget child,
+        IconData? icon,
+        bool required = false,
+        CrossAxisAlignment alignment = CrossAxisAlignment.start,
+      }) {
+    return Row(
+      crossAxisAlignment: alignment,
+      children: [
+        _label(context, label, icon: icon, required: required),
+        context.hS,
+        Expanded(flex: 3, child: child),
+      ],
+    );
+  }
+
+  Widget _sectionHeader(BuildContext context, String title, IconData icon) {
+    final color = context.colors.primary;
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
-        color: context.colors.primary.withOpacity(0.05),
+        color: color.withOpacity(0.05),
         borderRadius: BorderRadius.circular(8),
-        border: Border(
-          left: BorderSide(color: context.colors.primary, width: 3),
-        ),
+        border: Border(left: BorderSide(color: color, width: 3)),
       ),
       child: Row(
         children: [
-          Icon(icon, color: context.colors.primary, size: 20),
+          Icon(icon, color: color, size: 20),
           const SizedBox(width: 8),
           Text(
             title,
             style: context.topology.textTheme.titleMedium?.copyWith(
-              color: context.colors.primary,
+              color: color,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -663,674 +430,568 @@ class _JobAddNewDetailsScreenState extends State<JobAddNewDetailsScreen>
     );
   }
 
-  Widget _buildDateField(
-    BuildContext context,
-    String label,
-    TextEditingController controller, {
-    IconData? icon,
-    bool isRequired = false,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          flex: 2,
-          child: Row(
-            children: [
-              if (icon != null) ...[
-                Icon(
-                  icon,
-                  size: 16,
-                  color: context.colors.primary.withOpacity(0.7),
-                ),
-                const SizedBox(width: 6),
-              ],
-              Expanded(
-                child: Text(
-                  label + (isRequired ? ' *' : ''),
-                  style: context.topology.textTheme.titleSmall?.copyWith(
-                    color: context.colors.primary,
-                    fontWeight:
-                        isRequired ? FontWeight.w600 : FontWeight.normal,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        context.hS,
-        Expanded(
-          flex: 3,
-          child: CommonDatePickerInput(label: '', controller: controller),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRow(
-    BuildContext context,
-    String title, {
-    TextEditingController? controller,
-    bool isRequired = false,
-    IconData? icon,
-    int minLines = 1,
-    int maxLines = 1,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          flex: 2,
-          child: Row(
-            children: [
-              if (icon != null) ...[
-                Icon(
-                  icon,
-                  size: 16,
-                  color: context.colors.primary.withOpacity(0.7),
-                ),
-                const SizedBox(width: 6),
-              ],
-              Expanded(
-                child: Text(
-                  title + (isRequired ? ' *' : ''),
-                  style: context.topology.textTheme.titleSmall?.copyWith(
-                    color: context.colors.primary,
-                    fontWeight:
-                        isRequired ? FontWeight.w600 : FontWeight.normal,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        context.hS,
-        Expanded(
-          flex: 3,
-          child: CommonTextField(
-            controller: controller,
-            minLines: minLines,
-            maxLines: maxLines,
-            style: context.topology.textTheme.bodySmall?.copyWith(
-              color: context.colors.primary,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDivisionDropdown(BuildContext context, {IconData? icon}) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          flex: 2,
-          child: Row(
-            children: [
-              if (icon != null) ...[
-                Icon(
-                  icon,
-                  size: 16,
-                  color: context.colors.primary.withOpacity(0.7),
-                ),
-                const SizedBox(width: 6),
-              ],
-              Expanded(
-                child: Text(
-                  'Division Name *',
-                  style: context.topology.textTheme.titleSmall?.copyWith(
-                    color: context.colors.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        context.hS,
-        Expanded(
-          flex: 3,
-          child: Consumer<SystemProvider>(
-            builder: (context, systemProvider, child) {
-              if (systemProvider.isLoading) {
-                return const Center(
-                  child: SizedBox(
-                    height: 24,
-                    width: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                );
-              }
-
-              return CommonDropdown<String>(
-                value: selectedDivisionId,
-                items:
-                    systemProvider.divisions.map((division) {
-                      return DropdownMenuItem<String>(
-                        value: division.divisionid,
-                        child: Text(
-                          division.divisionname ?? 'Unknown',
-                          style: context.topology.textTheme.bodySmall,
-                        ),
-                      );
-                    }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    selectedDivisionId = value;
-                    divisionController.text = value ?? '';
-                    if (value != null) {
-                      final selectedDivision = systemProvider.divisions
-                          .firstWhere(
-                            (d) => d.divisionid == value,
-                            orElse: () => systemProvider.divisions.first,
-                          );
-                      addressController.text = selectedDivision.address ?? '';
-                    } else {
-                      addressController.text = '';
-                    }
-                  });
-                },
-                borderColor: context.colors.primary,
-                textStyle: context.topology.textTheme.bodySmall?.copyWith(
-                  color: context.colors.primary,
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAuthenticatorDropdown(BuildContext context, {IconData? icon}) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          flex: 2,
-          child: Row(
-            children: [
-              if (icon != null) ...[
-                Icon(
-                  icon,
-                  size: 16,
-                  color: context.colors.primary.withOpacity(0.7),
-                ),
-                const SizedBox(width: 6),
-              ],
-              Expanded(
-                child: Text(
-                  'Authenticator *',
-                  style: context.topology.textTheme.titleSmall?.copyWith(
-                    color: context.colors.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        context.hS,
-        Expanded(
-          flex: 3,
-          child: Consumer<PersonnelProvider>(
-            builder: (context, personnelProvider, child) {
-              if (personnelProvider.isLoading) {
-                return const Center(
-                  child: SizedBox(
-                    height: 24,
-                    width: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                );
-              }
-
-              final personnelList = personnelProvider.activePersonnel;
-
-              return CommonDropdown<String>(
-                value: selectedAuthenticatorId,
-                items: [
-                  DropdownMenuItem<String>(
-                    value: null,
-                    child: Text(
-                      'Select authenticator',
-                      style: context.topology.textTheme.bodySmall?.copyWith(
-                        color: context.colors.primary.withOpacity(0.5),
-                      ),
-                    ),
-                  ),
-                  ...personnelList.map((personnelData) {
-                    return DropdownMenuItem<String>(
-                      value: personnelData.personnel.personnelID,
-                      child: Text(
-                        personnelData.displayName,
-                        style: context.topology.textTheme.bodySmall,
-                      ),
-                    );
-                  }),
-                ],
-                onChanged: (value) {
-                  setState(() => selectedAuthenticatorId = value);
-                },
-                borderColor: context.colors.primary,
-                textStyle: context.topology.textTheme.bodySmall?.copyWith(
-                  color: context.colors.primary,
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFileUploadRow(
-    BuildContext context,
-    String label,
-    PlatformFile? pickedFile,
-    Function() onPickFile,
-  ) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          flex: 2,
-          child: Row(
-            children: [
-              Icon(
-                Icons.upload_file,
-                size: 16,
-                color: context.colors.primary.withOpacity(0.7),
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  label,
-                  style: context.topology.textTheme.titleSmall?.copyWith(
-                    color: context.colors.primary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        context.hS,
-        Expanded(
-          flex: 3,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              InkWell(
-                onTap: onPickFile,
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: context.colors.secondary,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: context.colors.primary.withOpacity(0.2),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.attach_file,
-                        color: context.colors.primary,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Choose File',
-                        style: context.topology.textTheme.titleSmall?.copyWith(
-                          color: context.colors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              if (pickedFile != null) ...[
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: Colors.green.withOpacity(0.3)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.check_circle,
-                        color: Colors.green,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          pickedFile.name,
-                          style: context.topology.textTheme.bodySmall?.copyWith(
-                            color: Colors.green[700],
-                            fontWeight: FontWeight.w500,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _pickIssuingAuthSignature() async {
-    try {
-      final result = await FilePicker.pickFiles();
-      if (result != null && mounted) {
-        setState(() {
-          _issuingAuthSignatureFile = result.files.first;
-          issuingAuthNameSignatureController.text = result.files.first.name;
-        });
-      }
-    } catch (e) {
-      debugPrint('❌ Error picking issuing auth signature: $e');
-      if (mounted) CommonSnackbar.showError(context, 'Failed to pick file');
-    }
-  }
-
-  Future<void> _pickClientSignature() async {
-    try {
-      final result = await FilePicker.pickFiles();
-      if (result != null && mounted) {
-        setState(() {
-          _clientSignatureFile = result.files.first;
-          clientSignatureController.text = result.files.first.name;
-        });
-      }
-    } catch (e) {
-      debugPrint('❌ Error picking client signature: $e');
-      if (mounted) CommonSnackbar.showError(context, 'Failed to pick file');
-    }
-  }
-
-  // ── Button label / title helpers ───────────────────────────────────────────
-
-  String get _submitLabel {
-    if (_isOffline) return 'Save Offline';
-    if (_isLoading) return widget.isEditMode ? 'Saving...' : 'Creating...';
-    return widget.isEditMode ? 'Save Changes' : 'Create Job';
-  }
-
-  String get _appBarTitle =>
-      widget.isEditMode ? 'Edit Job Details' : 'New Job Details';
-
-  // ── Layouts ────────────────────────────────────────────────────────────────
-
-  Widget _buildTabletLayout(BuildContext context) {
-    return Expanded(
-      child: Padding(
-        padding: context.paddingHorizontal,
-        child: Column(
-          children: [
-            Expanded(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildSectionHeader(
-                            context,
-                            'Job Information',
-                            Icons.work_outline,
-                          ),
-                          context.vM,
-                          _buildRow(
-                            context,
-                            'Job No',
-                            controller: jobNoController,
-                            isRequired: true,
-                            icon: Icons.tag,
-                          ),
-                          context.vS,
-                          _buildRow(
-                            context,
-                            'Created Date',
-                            controller: createdDateController,
-                            icon: Icons.calendar_today,
-                          ),
-                          context.vS,
-                          _buildRow(
-                            context,
-                            'Purchase Order No',
-                            controller: poController,
-                            icon: Icons.shopping_cart,
-                          ),
-                          context.vS,
-                          _buildProcedureNoField(context),
-                          context.vS,
-                          _buildRow(
-                            context,
-                            'Notes',
-                            controller: notesController,
-                            icon: Icons.notes,
-                          ),
-                          context.vL,
-                          _buildSectionHeader(
-                            context,
-                            'Duration & Schedule',
-                            Icons.schedule,
-                          ),
-                          context.vM,
-                          _buildDateField(
-                            context,
-                            'Est. Start Date',
-                            estStartDateController,
-                            icon: Icons.event,
-                            isRequired: true,
-                          ),
-                          context.vS,
-                          _buildDateField(
-                            context,
-                            'Est. End Date',
-                            estEndDateController,
-                            icon: Icons.event_available,
-                            isRequired: true,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  context.hXl,
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildSectionHeader(
-                            context,
-                            'Location Details',
-                            Icons.location_on,
-                          ),
-                          context.vM,
-                          _buildDivisionDropdown(context, icon: Icons.business),
-                          context.vS,
-                          _buildRow(
-                            context,
-                            'Address',
-                            controller: addressController,
-                            icon: Icons.home,
-                            minLines: 3,
-                            maxLines: 5,
-                          ),
-                          context.vS,
-                          _buildLocationField(context),
-                          context.vS,
-                          _buildOffshoreLocationField(context),
-                          context.vS,
-                          context.vL,
-                          _buildSectionHeader(
-                            context,
-                            'Authorization',
-                            Icons.verified_user,
-                          ),
-                          context.vM,
-                          _buildAuthenticatorDropdown(
-                            context,
-                            icon: Icons.admin_panel_settings,
-                          ),
-                          context.vS,
-                          _buildRow(
-                            context,
-                            'Client Name',
-                            controller: clientNameController,
-                            icon: Icons.person_outline,
-                          ),
-                          context.vS,
-                          _buildFileUploadRow(
-                            context,
-                            'Client Signature',
-                            _clientSignatureFile,
-                            _pickClientSignature,
-                          ),
-                          context.vS,
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            context.vL,
-            SizedBox(
-              width: 200,
-              child: CommonButton(
-                text: _submitLabel,
-                onPressed: _isLoading ? null : _submitJob,
-              ),
-            ),
-            context.vM,
-          ],
+  Widget _textRow(
+      BuildContext context,
+      String label,
+      TextEditingController controller, {
+        IconData? icon,
+        bool required = false,
+        int minLines = 1,
+        int maxLines = 1,
+      }) {
+    return _field(
+      context,
+      label: label,
+      icon: icon,
+      required: required,
+      child: CommonTextField(
+        controller: controller,
+        minLines: minLines,
+        maxLines: maxLines,
+        style: context.topology.textTheme.bodySmall?.copyWith(
+          color: context.colors.primary,
         ),
       ),
     );
   }
 
-  Widget _buildMobileLayout(BuildContext context) {
-    return Expanded(
-      child: SingleChildScrollView(
-        padding: context.paddingHorizontal,
-        child: Column(
-          children: [
-            context.vM,
-            _buildSectionHeader(context, 'Job Information', Icons.work_outline),
-            context.vM,
-            _buildRow(
-              context,
-              'Job No',
-              controller: jobNoController,
-              isRequired: true,
-              icon: Icons.tag,
-            ),
-            context.vS,
-            _buildRow(
-              context,
-              'Created Date',
-              controller: createdDateController,
-              icon: Icons.calendar_today,
-            ),
-            context.vS,
-            _buildRow(
-              context,
-              'Purchase Order No',
-              controller: poController,
-              icon: Icons.shopping_cart,
-            ),
-            context.vS,
-            _buildProcedureNoField(context),
-            context.vS,
-            _buildRow(
-              context,
-              'Notes',
-              controller: notesController,
-              icon: Icons.notes,
-            ),
-            context.vL,
-            _buildSectionHeader(context, 'Location Details', Icons.location_on),
-            context.vM,
-            _buildDivisionDropdown(context, icon: Icons.business),
-            context.vS,
-            _buildRow(
-              context,
-              'Address',
-              controller: addressController,
-              icon: Icons.home,
-              minLines: 3,
-              maxLines: 5,
-            ),
-            context.vS,
-            _buildLocationField(context),
-            context.vS,
-            _buildOffshoreLocationField(context),
-            context.vL,
-            _buildSectionHeader(context, 'Duration & Schedule', Icons.schedule),
-            context.vM,
-            _buildDateField(
-              context,
-              'Est. Start Date',
-              estStartDateController,
-              icon: Icons.event,
-              isRequired: true,
-            ),
-            context.vS,
-            _buildDateField(
-              context,
-              'Est. End Date',
-              estEndDateController,
-              icon: Icons.event_available,
-              isRequired: true,
-            ),
-            context.vL,
-            _buildSectionHeader(context, 'Authorization', Icons.verified_user),
-            context.vM,
-            _buildAuthenticatorDropdown(
-              context,
-              icon: Icons.admin_panel_settings,
-            ),
-            context.vS,
-            _buildRow(
-              context,
-              'Client Name',
-              controller: clientNameController,
-              icon: Icons.person_outline,
-            ),
-            context.vS,
-            _buildFileUploadRow(
-              context,
-              'Client Signature',
-              _clientSignatureFile,
-              _pickClientSignature,
-            ),
-            context.vL,
-            CommonButton(
-              text: _submitLabel,
-              onPressed: _isLoading ? null : _submitJob,
-            ),
-            context.vL,
-          ],
+  Widget _dateRow(
+      BuildContext context,
+      String label,
+      TextEditingController controller, {
+        IconData? icon,
+        bool required = false,
+      }) {
+    return _field(
+      context,
+      label: label,
+      icon: icon,
+      required: required,
+      child: CommonDatePickerInput(label: '', controller: controller),
+    );
+  }
+
+  Widget _pickerRow(
+      BuildContext context, {
+        required String label,
+        required IconData icon,
+        required TextEditingController controller,
+        required String hint,
+        required VoidCallback onTap,
+      }) {
+    final color = context.colors.primary;
+    return _field(
+      context,
+      label: label,
+      icon: icon,
+      alignment: CrossAxisAlignment.center,
+      child: GestureDetector(
+        onTap: onTap,
+        child: ValueListenableBuilder<TextEditingValue>(
+          valueListenable: controller,
+          builder: (_, value, __) {
+            final hasValue = value.text.trim().isNotEmpty;
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: hasValue ? color : color.withOpacity(0.3),
+                ),
+                borderRadius: BorderRadius.circular(8),
+                color: hasValue ? color.withOpacity(0.05) : Colors.transparent,
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.location_on_outlined,
+                    size: 16,
+                    color: hasValue ? color : color.withOpacity(0.4),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      hasValue ? value.text : hint,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.topology.textTheme.bodySmall?.copyWith(
+                        color: hasValue ? color : color.withOpacity(0.4),
+                      ),
+                    ),
+                  ),
+                  if (hasValue)
+                    GestureDetector(
+                      onTap: controller.clear,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 4),
+                        child: Icon(
+                          Icons.close,
+                          size: 15,
+                          color: color.withOpacity(0.5),
+                        ),
+                      ),
+                    )
+                  else
+                    Icon(Icons.arrow_drop_down, color: color.withOpacity(0.6)),
+                ],
+              ),
+            );
+          },
         ),
+      ),
+    );
+  }
+
+  Widget _loader() => const Center(
+    child: SizedBox(
+      height: 24,
+      width: 24,
+      child: CircularProgressIndicator(strokeWidth: 2),
+    ),
+  );
+
+  Widget _divisionDropdown(BuildContext context) {
+    return _field(
+      context,
+      label: 'Division Name',
+      icon: Icons.business,
+      required: true,
+      child: Consumer<SystemProvider>(
+        builder: (context, system, _) {
+          if (system.isLoading) return _loader();
+
+          return CommonDropdown<String>(
+            value: _divisionId,
+            items:
+            system.divisions
+                .map(
+                  (d) => DropdownMenuItem<String>(
+                value: d.divisionid,
+                child: Text(
+                  d.divisionname ?? 'Unknown',
+                  style: context.topology.textTheme.bodySmall,
+                ),
+              ),
+            )
+                .toList(),
+            onChanged: (value) {
+              setState(() {
+                _divisionId = value;
+                _division.text = value ?? '';
+                if (value == null) {
+                  _address.clear();
+                  return;
+                }
+                final selected = system.divisions.firstWhere(
+                      (d) => d.divisionid == value,
+                  orElse: () => system.divisions.first,
+                );
+                _address.text = selected.address ?? '';
+              });
+            },
+            borderColor: context.colors.primary,
+            textStyle: context.topology.textTheme.bodySmall?.copyWith(
+              color: context.colors.primary,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _authenticatorDropdown(BuildContext context) {
+    return _field(
+      context,
+      label: 'Authenticator',
+      icon: Icons.admin_panel_settings,
+      required: true,
+      child: Consumer<PersonnelProvider>(
+        builder: (context, personnel, _) {
+          if (personnel.isLoading) return _loader();
+
+          return CommonDropdown<String>(
+            value: _authenticatorId,
+            items: [
+              DropdownMenuItem<String>(
+                value: null,
+                child: Text(
+                  'Select authenticator',
+                  style: context.topology.textTheme.bodySmall?.copyWith(
+                    color: context.colors.primary.withOpacity(0.5),
+                  ),
+                ),
+              ),
+              ...personnel.activePersonnel.map(
+                    (p) => DropdownMenuItem<String>(
+                  value: p.personnel.personnelID,
+                  child: Text(
+                    p.displayName,
+                    style: context.topology.textTheme.bodySmall,
+                  ),
+                ),
+              ),
+            ],
+            onChanged: (value) => setState(() => _authenticatorId = value),
+            borderColor: context.colors.primary,
+            textStyle: context.topology.textTheme.bodySmall?.copyWith(
+              color: context.colors.primary,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _fileRow(
+      BuildContext context, {
+        required String label,
+        required PlatformFile? file,
+        required VoidCallback onPick,
+      }) {
+    final color = context.colors.primary;
+    return _field(
+      context,
+      label: label,
+      icon: Icons.upload_file,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: onPick,
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: context.colors.secondary,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: color.withOpacity(0.2)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.attach_file, color: color, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Choose File',
+                    style: context.topology.textTheme.titleSmall?.copyWith(
+                      color: color,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (file != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: Colors.green.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.green, size: 16),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      file.name,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.topology.textTheme.bodySmall?.copyWith(
+                        color: Colors.green[700],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _spaced(BuildContext context, List<Widget> children) {
+    return [
+      for (var i = 0; i < children.length; i++) ...[
+        if (i > 0) context.vS,
+        children[i],
+      ],
+    ];
+  }
+
+  Widget _section(
+      BuildContext context,
+      String title,
+      IconData icon,
+      List<Widget> fields,
+      ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionHeader(context, title, icon),
+        context.vM,
+        ..._spaced(context, fields),
+      ],
+    );
+  }
+
+  Widget _jobInfoSection(BuildContext context) {
+    return _section(context, 'Job Information', Icons.work_outline, [
+      _textRow(
+        context,
+        'Job No',
+        _jobNo,
+        icon: Icons.tag,
+        required: true,
+      ),
+      _textRow(
+        context,
+        'Created Date',
+        _createdDate,
+        icon: Icons.calendar_today,
+      ),
+      _textRow(context, 'Purchase Order No', _po, icon: Icons.shopping_cart),
+      _pickerRow(
+        context,
+        label: 'Procedure No',
+        icon: Icons.description_outlined,
+        controller: _procedure,
+        hint: 'Select or enter procedure no',
+        onTap:
+            () => _openPicker(
+          controller: _procedure,
+          storageKey: PickerStorageKey.applicableCode,
+          title: 'Select Procedure No',
+          hint: 'Select or enter procedure no',
+          presets: _procedureNoPresets,
+        ),
+      ),
+      _textRow(context, 'Notes', _notes, icon: Icons.notes),
+    ]);
+  }
+
+  Widget _locationSection(BuildContext context) {
+    return _section(context, 'Location Details', Icons.location_on, [
+      _divisionDropdown(context),
+      _textRow(
+        context,
+        'Address',
+        _address,
+        icon: Icons.home,
+        minLines: 3,
+        maxLines: 5,
+      ),
+      _pickerRow(
+        context,
+        label: 'Location',
+        icon: Icons.location_on_outlined,
+        controller: _location,
+        hint: 'Select or enter location',
+        onTap:
+            () => _openPicker(
+          controller: _location,
+          storageKey: PickerStorageKey.jobLocation,
+          title: 'Select Location',
+          hint: 'Select or enter location',
+        ),
+      ),
+      _pickerRow(
+        context,
+        label: 'Inspection Location',
+        icon: Icons.water,
+        controller: _offshoreLocation,
+        hint: 'Select or enter inspection location',
+        onTap:
+            () => _openPicker(
+          controller: _offshoreLocation,
+          storageKey: PickerStorageKey.offshoreLocation,
+          title: 'Select Inspection Location',
+          hint: 'Select or enter Inspection Location',
+        ),
+      ),
+    ]);
+  }
+
+  Widget _scheduleSection(BuildContext context) {
+    return _section(context, 'Duration & Schedule', Icons.schedule, [
+      _dateRow(
+        context,
+        'Est. Start Date',
+        _estStartDate,
+        icon: Icons.event,
+        required: true,
+      ),
+      _dateRow(
+        context,
+        'Est. End Date',
+        _estEndDate,
+        icon: Icons.event_available,
+        required: true,
+      ),
+    ]);
+  }
+
+  Widget _authorizationSection(BuildContext context) {
+    return _section(context, 'Authorization', Icons.verified_user, [
+      _authenticatorDropdown(context),
+      _textRow(context, 'Client Name', _clientName, icon: Icons.person_outline),
+      _fileRow(
+        context,
+        label: 'Client Signature',
+        file: _clientSignatureFile,
+        onPick: () => _pickSignature(isClient: true),
+      ),
+    ]);
+  }
+
+  Widget _submitButton() {
+    return CommonButton(
+      text: _submitLabel,
+      onPressed: _isLoading ? null : _submit,
+    );
+  }
+
+  Widget _tabletLayout(BuildContext context) {
+    return Padding(
+      padding: context.paddingHorizontal,
+      child: Column(
+        children: [
+          Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        _jobInfoSection(context),
+                        context.vL,
+                        _scheduleSection(context),
+                      ],
+                    ),
+                  ),
+                ),
+                context.hXl,
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        _locationSection(context),
+                        context.vL,
+                        _authorizationSection(context),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          context.vL,
+          SizedBox(width: 200, child: _submitButton()),
+          context.vM,
+        ],
+      ),
+    );
+  }
+
+  Widget _mobileLayout(BuildContext context) {
+    return SingleChildScrollView(
+      padding: context.paddingHorizontal,
+      child: Column(
+        children: [
+          context.vM,
+          _jobInfoSection(context),
+          context.vL,
+          _locationSection(context),
+          context.vL,
+          _scheduleSection(context),
+          context.vL,
+          _authorizationSection(context),
+          context.vL,
+          _submitButton(),
+          context.vL,
+        ],
+      ),
+    );
+  }
+
+  Widget _offlineBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      color: Colors.orange.shade700,
+      child: const Row(
+        children: [
+          Icon(Icons.wifi_off, color: Colors.white, size: 16),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Offline mode — job will be queued and synced when you reconnect.',
+              style: TextStyle(color: Colors.white, fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _loadingBody(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(color: context.colors.primary),
+          const SizedBox(height: 16),
+          Text(
+            widget.isEditMode ? 'Saving changes...' : 'Creating job...',
+            style: context.topology.textTheme.bodyMedium?.copyWith(
+              color: context.colors.primary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  PreferredSizeWidget _appBar(BuildContext context) {
+    final color = context.colors.primary;
+    return AppBar(
+      centerTitle: true,
+      elevation: 0,
+      backgroundColor: context.colors.onPrimary,
+      iconTheme: IconThemeData(color: color),
+      leading: IconButton(
+        onPressed: () => NavigationService().goBack(),
+        icon: const Icon(Icons.arrow_back_ios),
+      ),
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            widget.isEditMode ? Icons.edit_outlined : Icons.add_task,
+            color: color,
+            size: 22,
+          ),
+          const SizedBox(width: 8),
+          Column(
+            children: [
+              Text(
+                widget.isEditMode ? 'Edit Job Details' : 'New Job Details',
+                style: context.topology.textTheme.titleMedium?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                '${widget.customerName}  ·  ${widget.siteName}',
+                style: context.topology.textTheme.bodySmall?.copyWith(
+                  color: color.withOpacity(0.6),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -1338,102 +999,21 @@ class _JobAddNewDetailsScreenState extends State<JobAddNewDetailsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              widget.isEditMode ? Icons.edit_outlined : Icons.add_task,
-              color: context.colors.primary,
-              size: 22,
-            ),
-            const SizedBox(width: 8),
-            Column(
-              children: [
-                Text(
-                  _appBarTitle,
-                  style: context.topology.textTheme.titleMedium?.copyWith(
-                    color: context.colors.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  '${widget.customerName}  ·  ${widget.siteName}',
-                  style: context.topology.textTheme.bodySmall?.copyWith(
-                    color: context.colors.primary.withOpacity(0.6),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        centerTitle: true,
-        iconTheme: IconThemeData(color: context.colors.primary),
-        backgroundColor: context.colors.onPrimary,
-        elevation: 0,
-        leading: IconButton(
-          onPressed: () => NavigationService().goBack(),
-          icon: const Icon(Icons.arrow_back_ios),
-        ),
-      ),
+      appBar: _appBar(context),
       body:
-          _isLoading
-              ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(color: context.colors.primary),
-                    const SizedBox(height: 16),
-                    Text(
-                      widget.isEditMode
-                          ? 'Saving changes...'
-                          : 'Creating job...',
-                      style: context.topology.textTheme.bodyMedium?.copyWith(
-                        color: context.colors.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              )
-              : Column(
-                children: [
-                  // ── Offline banner ──────────────────────────────────────
-                  if (_isOffline)
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 8,
-                        horizontal: 12,
-                      ),
-                      color: Colors.orange.shade700,
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.wifi_off,
-                            color: Colors.white,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 8),
-                          const Expanded(
-                            child: Text(
-                              'Offline mode — job will be queued and synced when you reconnect.',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  Expanded(
-                    child:
-                        context.isTablet
-                            ? _buildTabletLayout(context)
-                            : _buildMobileLayout(context),
-                  ),
-                ],
-              ),
+      _isLoading
+          ? _loadingBody(context)
+          : Column(
+        children: [
+          if (_isOffline) _offlineBanner(),
+          Expanded(
+            child:
+            context.isTablet
+                ? _tabletLayout(context)
+                : _mobileLayout(context),
+          ),
+        ],
+      ),
     );
   }
 }

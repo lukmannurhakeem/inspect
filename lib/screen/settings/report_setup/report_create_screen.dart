@@ -3,6 +3,7 @@ import 'package:inspect/core/extension/theme_extension.dart';
 import 'package:inspect/core/services/report_dropdwon_options_service.dart';
 import 'package:inspect/navigation/navigation_service.dart';
 import 'package:inspect/provider/category_provider.dart';
+import 'package:inspect/provider/report_form_provider.dart';
 import 'package:inspect/provider/system_provider.dart';
 import 'package:inspect/screen/settings/report_setup/report_template_importer.dart';
 import 'package:inspect/storage/local_storage.dart';
@@ -184,354 +185,57 @@ TextStyle? _bold(BuildContext context, TextStyle? base) => base?.copyWith(
   fontWeight: FontWeight.bold,
 );
 
-class ReportCreateScreen extends StatefulWidget {
+class ReportCreateScreen extends StatelessWidget {
   const ReportCreateScreen({super.key});
 
   @override
-  State<ReportCreateScreen> createState() => _ReportCreateScreenState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (ctx) => ReportFormProvider(ctx.read<SystemProvider>()),
+      child: const _ReportCreateView(),
+    );
+  }
 }
 
-class _ReportCreateScreenState extends State<ReportCreateScreen> {
-  static const _steps = ['Overview', 'Fields', 'Dates'];
+class _ReportCreateView extends StatefulWidget {
+  const _ReportCreateView();
 
-  final _reportNameController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _documentCodeController = TextEditingController();
-  final _batchReportTypeController = TextEditingController();
-  final _possibleStatusController = TextEditingController();
-  final _possibleBatchStatusController = TextEditingController();
-  final _permissionController = TextEditingController();
-  final _categoryIDController = TextEditingController();
+  @override
+  State<_ReportCreateView> createState() => _ReportCreateViewState();
+}
 
-  int _currentStep = 0;
-  bool _isEditMode = false;
-  bool _isLoadingEdit = false;
-  dynamic _editReportData;
-  dynamic _fullReportItem;
-
-  List<String> _selectedCategoryIds = [];
-
-  bool _isExternalReport = false;
-  bool _defaultAsDraft = true;
-  bool _archived = false;
-  bool _updateItemStatus = true;
-  bool _updateItemDates = true;
-  bool _isStatusRequired = true;
-
-  List<Map<String, dynamic>> _reportFields = [];
-  List<Map<String, dynamic>> _reportTypeDates = [];
+class _ReportCreateViewState extends State<_ReportCreateView> {
+  ReportFormProvider get _form => context.read<ReportFormProvider>();
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkEditMode();
-      final categoryProvider = context.read<CategoryProvider>();
-      if (categoryProvider.filteredCategories.isEmpty) {
-        categoryProvider.fetchCategories();
-      }
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _init());
   }
 
-  @override
-  void dispose() {
-    _reportNameController.dispose();
-    _descriptionController.dispose();
-    _documentCodeController.dispose();
-    _batchReportTypeController.dispose();
-    _possibleStatusController.dispose();
-    _possibleBatchStatusController.dispose();
-    _permissionController.dispose();
-    _categoryIDController.dispose();
-    super.dispose();
-  }
+  Future<void> _init() async {
+    final categories = context.read<CategoryProvider>();
+    if (categories.allCategories.isEmpty) categories.fetchCategories();
 
-  Map<String, dynamic>? get _routeArgs =>
-      ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-
-  String? get _optionsReportTypeId =>
-      _isEditMode
-          ? _resolveId(_editReportData)
-          : (_selectedCategoryIds.isNotEmpty ? _selectedCategoryIds.first : null);
-
-  List<String> get _availableSections {
-    final sections = <String>{};
-    for (final field in _reportFields) {
-      if (field['fieldType'] != 'section' || field['labelText'] == null) {
-        continue;
-      }
-      final name = field['labelText'].toString().trim();
-      if (name.isNotEmpty) sections.add(name);
-    }
-    return sections.toList();
-  }
-
-  void _showSnackBar(String message, {Color? color, Duration? duration}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: color,
-        duration: duration ?? const Duration(milliseconds: 4000),
-      ),
+    final form = _form;
+    final draft = await form.init(
+      ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?,
     );
-  }
-
-  String? _str(dynamic value) => value?.toString();
-
-  List<dynamic>? _asList(dynamic value) =>
-      (value is List && value.isNotEmpty) ? value : null;
-
-  String? _resolveId(dynamic data) {
-    if (data == null) return null;
-
-    for (final accessor in <dynamic Function()>[
-          () => data.reportTypeID,
-          () => data.reportTypeId,
-          () => data.categoryId,
-    ]) {
-      try {
-        final value = accessor()?.toString();
-        if (value != null && value.isNotEmpty) return value;
-      } catch (_) {}
-    }
-
-    if (data is Map) {
-      for (final key in [
-        'reportTypeID',
-        'reportTypeId',
-        'categoryId',
-        'categoryID',
-        'id',
-      ]) {
-        final value = data[key]?.toString();
-        if (value != null && value.isNotEmpty) return value;
-      }
-    }
-    return null;
-  }
-
-  void _seedCategory(String id) {
-    if (id.isNotEmpty && !_selectedCategoryIds.contains(id)) {
-      _selectedCategoryIds = [id];
-    }
-  }
-
-  void _checkEditMode() {
-    final args = _routeArgs;
-    if (args == null) {
-      _loadDraft();
-      return;
-    }
-
-    _isEditMode = args['isEdit'] ?? false;
-    _editReportData = args['reportData'];
-    _fullReportItem = args['fullReportItem'];
-
-    if (_isEditMode && _editReportData != null) {
-      _populateFormFields();
-    } else {
-      _loadDraft();
-    }
-  }
-
-  Future<void> _populateFormFields() async {
-    setState(() => _isLoadingEdit = true);
-
-    try {
-      final args = _routeArgs;
-      final reportTypeId =
-          _resolveId(_editReportData) ??
-              _resolveId(_fullReportItem?.reportType) ??
-              args?['reportTypeID']?.toString() ??
-              args?['reportTypeId']?.toString();
-
-      if (reportTypeId == null) {
-        _applyShallowFallback();
-        return;
-      }
-      await _fetchAndApplyFromApi(reportTypeId);
-    } catch (e) {
-      if (!mounted) return;
-      _showSnackBar('Failed to load report details: $e', color: Colors.red);
-      _applyShallowFallback();
-    } finally {
-      if (mounted) setState(() => _isLoadingEdit = false);
-    }
-  }
-
-  Future<void> _fetchAndApplyFromApi(String reportTypeId) async {
-    final provider = context.read<SystemProvider>();
-    final datum = await provider.fetchReportTypeById(reportTypeId);
     if (!mounted) return;
 
-    if (datum == null) {
-      _applyShallowFallback();
-      return;
-    }
-
-    final rt = datum.reportType;
-    final rawFields =
-    provider.currentReportTypeRawFields.isNotEmpty
-        ? provider.currentReportTypeRawFields
-        : _asList(datum.reportFields);
-    final rawDates = _asList(datum.reportTypeDates);
-
-    setState(() {
-      _reportNameController.text =
-          _str(rt?.reportName) ?? _str(_editReportData?.reportName) ?? '';
-      _descriptionController.text =
-          _str(rt?.description) ?? _str(_editReportData?.description) ?? '';
-      _documentCodeController.text =
-          _str(rt?.documentCode) ?? _str(_editReportData?.documentCode) ?? '';
-      _batchReportTypeController.text = _str(rt?.batchReportType) ?? '';
-      _possibleStatusController.text = _str(rt?.possibleStatus) ?? '';
-      _possibleBatchStatusController.text = _str(rt?.possibleBatchStatus) ?? '';
-      _permissionController.text = _str(rt?.permission) ?? '';
-
-      final resolvedId = _resolveId(rt) ?? reportTypeId;
-      _categoryIDController.text = resolvedId;
-      _seedCategory(resolvedId);
-
-      _isExternalReport = rt?.isExternalReport ?? false;
-      _defaultAsDraft = rt?.defaultAsDraft ?? true;
-      _archived = rt?.archived ?? _editReportData?.archived ?? false;
-      _updateItemStatus = rt?.updateItemStatus ?? true;
-      _updateItemDates = rt?.updateItemDates ?? true;
-      _isStatusRequired = rt?.isStatusRequired ?? true;
-
-      if (rawFields != null) _reportFields = _parseReportFields(rawFields);
-      if (rawDates != null) _reportTypeDates = _parseDates(rawDates);
-    });
+    final error = form.loadError;
+    if (error != null) _showSnackBar(error, color: Colors.red);
+    if (draft != null) await _offerDraft(draft);
   }
 
-  void _applyShallowFallback() {
-    setState(() {
-      _reportNameController.text = _str(_editReportData?.reportName) ?? '';
-      _descriptionController.text = _str(_editReportData?.description) ?? '';
-      _documentCodeController.text = _str(_editReportData?.documentCode) ?? '';
-
-      final resolvedId = _resolveId(_editReportData) ?? '';
-      _categoryIDController.text = resolvedId;
-      _seedCategory(resolvedId);
-
-      _archived = _editReportData?.archived ?? false;
-    });
-  }
-
-  List<Map<String, dynamic>> _parseReportFields(List<dynamic> raw) =>
-      raw.map(_parseReportField).toList();
-
-  Map<String, dynamic> _parseReportField(dynamic field) {
-    final f =
-    field is Map ? Map<String, dynamic>.from(field) : <String, dynamic>{};
-    f['fieldType'] = _normaliseFieldType(f['fieldType']);
-
-    final dv = f['defaultValue'];
-
-    if (f['fieldType'] != 'dropdown') {
-      f['defaultValue'] = (dv is List || dv is Map) ? '' : (dv?.toString() ?? '');
-      return f;
-    }
-
-    f['dropdownType'] ??= 'typed';
-    final hasOptions = (f['options']?.toString() ?? '').isNotEmpty;
-
-    if (dv is Map) {
-      final embedded = dv['options'];
-      if (embedded is List && embedded.isNotEmpty && !hasOptions) {
-        f['options'] = _joinCsv(embedded);
-      }
-      final value = dv['value'];
-      f['defaultValue'] =
-      (value == null || value is Map || value is List)
-          ? ''
-          : value.toString();
-    } else {
-      final text = dv?.toString() ?? '';
-      f['defaultValue'] = text;
-      if (text.contains(',') && !hasOptions) {
-        f['options'] = text;
-        f['defaultValue'] = '';
-      }
-    }
-    return f;
-  }
-
-  List<Map<String, dynamic>> _parseDates(List<dynamic> raw) =>
-      raw.map((d) {
-        final date =
-        d is Map ? Map<String, dynamic>.from(d) : <String, dynamic>{};
-        date['applyCycle'] = _safeOption(date['applyCycle'], _applyCycleOptions);
-        return date;
-      }).toList();
-
-  Map<String, List<String>> _buildOptionsMap() {
-    final result = <String, List<String>>{};
-    for (final field in _reportFields) {
-      if (field['fieldType']?.toString() != 'dropdown') continue;
-
-      final name = field['name']?.toString().trim() ?? '';
-      final options = _splitCsv(field['options']?.toString());
-      if (name.isNotEmpty && options.isNotEmpty) result[name] = options;
-    }
-    return result;
-  }
-
-  Future<void> _saveDropdownOptions() {
-    return ReportDropdownOptionsService.save(
-      reportName: _reportNameController.text.trim(),
-      optionsMap: _buildOptionsMap(),
-      reportTypeId: _optionsReportTypeId,
-    );
-  }
-
-  Future<void> _saveDraft() async {
-    final draft = {
-      'reportName': _reportNameController.text,
-      'description': _descriptionController.text,
-      'documentCode': _documentCodeController.text,
-      'batchReportType': _batchReportTypeController.text,
-      'possibleStatus': _possibleStatusController.text,
-      'possibleBatchStatus': _possibleBatchStatusController.text,
-      'permission': _permissionController.text,
-      'categoryID': _categoryIDController.text,
-      'selectedCategoryIds': _selectedCategoryIds,
-      'isExternalReport': _isExternalReport,
-      'defaultAsDraft': _defaultAsDraft,
-      'archived': _archived,
-      'updateItemStatus': _updateItemStatus,
-      'updateItemDates': _updateItemDates,
-      'isStatusRequired': _isStatusRequired,
-      'reportFields': _reportFields,
-      'reportTypeDates': _reportTypeDates,
-    };
-
-    await LocalStorage.setJson(LocalStorageConstant.reportDraft, draft);
-    await LocalStorage.setString(
-      LocalStorageConstant.lastReportDraftTimestamp,
-      DateTime.now().toIso8601String(),
-    );
-    await _saveDropdownOptions();
-  }
-
-  void _loadDraft() {
-    final draft = LocalStorage.getJson(LocalStorageConstant.reportDraft);
-    if (draft == null) return;
-
-    final draftName = draft['reportName']?.toString() ?? '';
-    if (draftName.isEmpty) return;
-
-    final savedAt = LocalStorage.getString(
-      LocalStorageConstant.lastReportDraftTimestamp,
-    );
-
-    showDialog<bool>(
+  Future<void> _offerDraft(ReportDraft draft) async {
+    final resume = await showDialog<bool>(
       context: context,
       builder:
           (ctx) => AlertDialog(
         title: const Text('Resume draft?'),
         content: Text(
-          'A saved draft "$draftName" was found${savedAt.isNotEmpty ? ' (saved $savedAt)' : ''}.\n\nWould you like to continue editing it?',
+          'A saved draft "${draft.name}" was found${draft.savedAt.isNotEmpty ? ' (saved ${draft.savedAt})' : ''}.\n\nWould you like to continue editing it?',
         ),
         actions: [
           TextButton(
@@ -544,141 +248,97 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
           ),
         ],
       ),
-    ).then((resume) => resume == true ? _applyDraft(draft) : _clearDraft());
+    );
+
+    if (resume == true) {
+      _form.applyDraft(draft.data);
+    } else {
+      _form.clearDraft();
+    }
   }
 
-  void _applyDraft(Map<String, dynamic> draft) {
-    setState(() {
-      _reportNameController.text = draft['reportName'] ?? '';
-      _descriptionController.text = draft['description'] ?? '';
-      _documentCodeController.text = draft['documentCode'] ?? '';
-      _batchReportTypeController.text = draft['batchReportType'] ?? '';
-      _possibleStatusController.text = draft['possibleStatus'] ?? '';
-      _possibleBatchStatusController.text = draft['possibleBatchStatus'] ?? '';
-      _permissionController.text = draft['permission'] ?? '';
-      _categoryIDController.text = draft['categoryID'] ?? '';
-      _selectedCategoryIds = List<String>.from(
-        draft['selectedCategoryIds'] ?? [],
-      );
-      _isExternalReport = draft['isExternalReport'] ?? false;
-      _defaultAsDraft = draft['defaultAsDraft'] ?? true;
-      _archived = draft['archived'] ?? false;
-      _updateItemStatus = draft['updateItemStatus'] ?? true;
-      _updateItemDates = draft['updateItemDates'] ?? true;
-      _isStatusRequired = draft['isStatusRequired'] ?? true;
-      _reportFields = _castJsonList(draft['reportFields']);
-      _reportTypeDates = _castJsonList(draft['reportTypeDates']);
-    });
+  void _showSnackBar(String message, {Color? color, Duration? duration}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+        duration: duration ?? const Duration(milliseconds: 4000),
+      ),
+    );
   }
 
-  List<Map<String, dynamic>> _castJsonList(dynamic raw) =>
-      raw is List
-          ? raw.map((e) => Map<String, dynamic>.from(e as Map)).toList()
-          : [];
-
-  Future<void> _clearDraft() async {
-    await LocalStorage.remove(LocalStorageConstant.reportDraft);
-    await LocalStorage.remove(LocalStorageConstant.lastReportDraftTimestamp);
+  Future<void> _saveDraft() async {
+    await _form.saveDraft();
+    if (mounted) {
+      _showSnackBar('Draft saved', duration: const Duration(seconds: 2));
+    }
   }
 
-  Future<void> _showFieldDialog({int? editIndex}) async {
-    final isEdit = editIndex != null;
-    final initialData =
-    isEdit
-        ? Map<String, dynamic>.from(_reportFields[editIndex])
-        : <String, dynamic>{
-      'labelText': '',
-      'name': '',
-      'fieldType': 'text',
-      'defaultValue': '',
-      'section': '',
-      'onlyAvailable': '',
-      'onlyAvailableField': '',
-      'onlyAvailableOperator': '==',
-      'onlyAvailableValue': '',
-      'isRequired': false,
-      'isReadOnly': false,
-      'permissionField': '',
-      'doNotCopy': false,
-      'infoText': '',
-      'isArchive': false,
-      'appendPDF': false,
-      'fileExtensions': '',
-      'options': '',
-    };
+  Future<void> _submit() async {
+    final form = _form;
+    final error = await form.submit();
+    if (!mounted) return;
 
+    if (error != null) return _showSnackBar(error, color: Colors.red);
+
+    _showSnackBar(
+      form.isEditMode
+          ? 'Report updated successfully!'
+          : 'Report created successfully!',
+      color: Colors.green,
+    );
+    NavigationService().goBack();
+  }
+
+  Future<void> _editField([int? index]) async {
+    final form = _form;
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       barrierDismissible: false,
       barrierColor: Colors.black.withOpacity(0.4),
       builder:
           (_) => _AddFieldDialog(
-        initialData: initialData,
-        availableSections: _availableSections,
-        availableFieldNames:
-        _reportFields
-            .where((f) => f['name']?.toString().isNotEmpty == true)
-            .map((f) => f['name'].toString())
-            .toList(),
-        isEdit: isEdit,
+        initialData: form.fieldAt(index),
+        availableSections: form.availableSections,
+        availableFieldNames: form.availableFieldNames,
+        isEdit: index != null,
       ),
     );
-
-    if (result == null) return;
-    setState(() {
-      if (isEdit) {
-        _reportFields[editIndex] = result;
-      } else {
-        _reportFields.add(result);
-      }
-    });
+    if (result != null) form.saveField(index, result);
   }
 
-  Future<void> _showDateDialog({int? editIndex}) async {
-    final isEdit = editIndex != null;
-    final initialData =
-    isEdit
-        ? Map<String, dynamic>.from(_reportTypeDates[editIndex])
-        : <String, dynamic>{
-      'name': '',
-      'applyCycle': 'daily',
-      'isRequired': true,
-      'disableFreeType': false,
-    };
-
+  Future<void> _editDate([int? index]) async {
+    final form = _form;
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       barrierDismissible: false,
       barrierColor: Colors.black.withOpacity(0.4),
-      builder: (_) => _AddDateDialog(initialData: initialData, isEdit: isEdit),
+      builder:
+          (_) => _AddDateDialog(
+        initialData: form.dateAt(index),
+        isEdit: index != null,
+      ),
     );
-
-    if (result == null) return;
-    setState(() {
-      if (isEdit) {
-        _reportTypeDates[editIndex] = result;
-      } else {
-        _reportTypeDates.add(result);
-      }
-    });
+    if (result != null) form.saveDate(index, result);
   }
 
-  void _confirmDeleteField(int index) {
-    final label =
-        _reportFields[index]['labelText']?.toString() ?? 'Field ${index + 1}';
+  void _deleteField(int index) {
+    final form = _form;
     _confirmDelete(
       title: 'Delete Field?',
-      itemLabel: label,
-      onConfirm: () => setState(() => _reportFields.removeAt(index)),
+      itemLabel:
+      form.fields[index]['labelText']?.toString() ?? 'Field ${index + 1}',
+      onConfirm: () => form.removeField(index),
     );
   }
 
-  void _confirmDeleteDate(int index) {
-    final name = _reportTypeDates[index]['name']?.toString() ?? '';
+  void _deleteDate(int index) {
+    final form = _form;
+    final name = form.dates[index]['name']?.toString() ?? '';
     _confirmDelete(
       title: 'Delete Date?',
       itemLabel: name.isNotEmpty ? name : 'Date ${index + 1}',
-      onConfirm: () => setState(() => _reportTypeDates.removeAt(index)),
+      onConfirm: () => form.removeDate(index),
     );
   }
 
@@ -698,143 +358,11 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
     );
   }
 
-  Future<void> _submitReport() async {
-    if (_reportNameController.text.trim().isEmpty) {
-      _showSnackBar('Please enter a report name');
-      setState(() => _currentStep = 0);
-      return;
-    }
-
-    try {
-      final provider = context.read<SystemProvider>();
-      final cleanedFields = _reportFields.map(_cleanReportField).toList();
-
-      final reportType = {
-        'reportName': _reportNameController.text.trim(),
-        'description': _descriptionController.text.trim(),
-        'documentCode': _documentCodeController.text.trim(),
-        'isExternalReport': _isExternalReport,
-        'defaultAsDraft': _defaultAsDraft,
-        'archived': _archived,
-        'updateItemStatus': _updateItemStatus,
-        'updateItemDates': _updateItemDates,
-        'batchReportType': _batchReportTypeController.text.trim(),
-        'isStatusRequired': _isStatusRequired,
-        'possibleStatus': _possibleStatusController.text.trim(),
-        'possibleBatchStatus': _possibleBatchStatusController.text.trim(),
-        'permission': _permissionController.text.trim(),
-        'categoryID':
-        _selectedCategoryIds.isNotEmpty
-            ? _selectedCategoryIds
-            : (_isEditMode && _categoryIDController.text.isNotEmpty
-            ? [_categoryIDController.text.trim()]
-            : null),
-      };
-
-      if (_isEditMode) {
-        await provider.updateReport(
-          reportId: _resolveId(_editReportData) ?? '',
-          reportType: reportType,
-          competencyReports: [],
-          reportTypeDates: _reportTypeDates,
-          statusRuleReports: [],
-          reportFields: cleanedFields,
-          actionReports: [],
-        );
-      } else {
-        await provider.createReport(
-          reportType: reportType,
-          competencyReports: [],
-          reportTypeDates: _reportTypeDates,
-          statusRuleReports: [],
-          reportFields: cleanedFields,
-          actionReports: [],
-        );
-      }
-
-      if (provider.hasError) {
-        if (mounted) {
-          _showSnackBar('Error: ${provider.errorMessage}', color: Colors.red);
-        }
-        return;
-      }
-
-      await _saveDropdownOptions();
-      await _clearDraft();
-      if (!mounted) return;
-
-      _showSnackBar(
-        _isEditMode
-            ? 'Report updated successfully!'
-            : 'Report created successfully!',
-        color: Colors.green,
-      );
-      NavigationService().goBack();
-    } catch (e) {
-      if (mounted) _showSnackBar('Error: $e', color: Colors.red);
-    }
-  }
-
-  Map<String, dynamic> _cleanReportField(Map<String, dynamic> field) {
-    final f =
-    Map<String, dynamic>.from(field)
-      ..remove('created_at')
-      ..remove('updated_at')
-      ..remove('createdAt')
-      ..remove('updatedAt')
-      ..remove('reportFieldID')
-      ..remove('reportTypeID');
-
-    f['labelText'] = f['labelText']?.toString() ?? '';
-    f['name'] = f['name']?.toString() ?? '';
-    f['fieldType'] = _normaliseFieldType(f['fieldType']);
-    f['section'] = f['section']?.toString() ?? '';
-    f['onlyAvailable'] = f['onlyAvailable']?.toString() ?? 'all';
-    f['permissionField'] = f['permissionField']?.toString() ?? '';
-    f['infoText'] = f['infoText']?.toString() ?? '';
-    f['isRequired'] = f['isRequired'] == true;
-    f['doNotCopy'] = f['doNotCopy'] == true;
-    f['isArchive'] = f['isArchive'] == true;
-
-    final dv = f['defaultValue'];
-
-    if (f['fieldType'] == 'dropdown') {
-      f['dropdownType'] ??= 'typed';
-      final rawOptions = f['options']?.toString() ?? '';
-      final options = _splitCsv(rawOptions);
-
-      if (options.isNotEmpty) {
-        f['defaultValue'] = {
-          'dropdownType':
-          dv is Map ? (dv['dropdownType']?.toString() ?? 'Options') : 'Options',
-          'options': options,
-          'value':
-          dv is Map
-              ? dv['value']
-              : (dv?.toString().isNotEmpty == true ? dv.toString() : null),
-        };
-      } else if (dv is! Map) {
-        f['defaultValue'] = '';
-      }
-      f['options'] = rawOptions;
-    } else if (dv is! Map) {
-      f['defaultValue'] = dv is List ? '' : (dv?.toString() ?? '');
-    }
-
-    return f;
-  }
-
-  void _goNext() {
-    if (_currentStep == 1) _saveDropdownOptions();
-    setState(() => _currentStep++);
-  }
-
-  Future<void> _pickMultiSelect({
-    required String label,
-    required List<String> options,
-    required List<String> selected,
-    required ValueChanged<List<String>> onChanged,
-  }) async {
+  Future<void> _pickMulti(
+      ReportMulti multi,
+      String label,
+      List<String> options,
+      ) async {
     final result = await showDialog<List<String>>(
       context: context,
       barrierColor: Colors.black.withOpacity(0.4),
@@ -850,10 +378,10 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
               color: _statusBadgeColor(option),
             ),
         ],
-        selected: selected,
+        selected: _form.multi(multi),
       ),
     );
-    if (result != null) onChanged(result);
+    if (result != null) _form.setMulti(multi, result);
   }
 
   Future<void> _pickCategories(List<CategoryItem> flat) async {
@@ -873,19 +401,21 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
               level: cat.level,
             ),
         ],
-        selected: _selectedCategoryIds,
+        selected: _form.categoryIds,
         searchable: true,
       ),
     );
-    if (result != null) setState(() => _selectedCategoryIds = result);
+    if (result != null) _form.setCategoryIds(result);
   }
 
   @override
   Widget build(BuildContext context) {
+    final form = context.watch<ReportFormProvider>();
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          _isEditMode ? 'Edit Report Template' : 'Create Report Template',
+          form.isEditMode ? 'Edit Report Template' : 'Create Report Template',
           style: context.topology.textTheme.titleLarge?.copyWith(
             color: context.colors.primary,
           ),
@@ -897,7 +427,7 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
           icon: const Icon(Icons.chevron_left),
         ),
         actions:
-        _isEditMode
+        form.isEditMode
             ? null
             : [
           IconButton(
@@ -907,21 +437,13 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
             tooltip: 'Import from Excel',
           ),
           IconButton(
-            onPressed: () async {
-              await _saveDraft();
-              if (mounted) {
-                _showSnackBar(
-                  'Draft saved',
-                  duration: const Duration(seconds: 2),
-                );
-              }
-            },
+            onPressed: _saveDraft,
             icon: const Icon(Icons.save_outlined),
             tooltip: 'Save draft',
           ),
         ],
       ),
-      body: _isLoadingEdit ? _buildLoadingView() : _buildContent(),
+      body: form.isLoading ? _buildLoadingView() : _buildContent(form),
     );
   }
 
@@ -945,34 +467,36 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildContent(ReportFormProvider form) {
     return Container(
       padding: context.paddingAll,
       child: Column(
         children: [
-          _buildStepIndicator(),
+          _buildStepIndicator(form.step),
           context.vL,
-          Expanded(child: _buildStepContent()),
-          _buildNavigationButtons(),
+          Expanded(child: _buildStepContent(form)),
+          _buildNavigationButtons(form),
         ],
       ),
     );
   }
 
-  Widget _buildStepIndicator() {
+  Widget _buildStepIndicator(int current) {
+    const steps = ReportFormProvider.steps;
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          for (var i = 0; i < _steps.length; i++) ...[
-            _buildStep(i),
-            if (i != _steps.length - 1)
+          for (var i = 0; i < steps.length; i++) ...[
+            _buildStep(i, current),
+            if (i != steps.length - 1)
               Container(
                 width: 40,
                 height: 2,
                 margin: const EdgeInsets.symmetric(horizontal: 4),
                 color:
-                i < _currentStep
+                i < current
                     ? context.colors.primary
                     : context.colors.secondary,
               ),
@@ -982,9 +506,9 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
     );
   }
 
-  Widget _buildStep(int index) {
-    final isActive = _currentStep == index;
-    final isCompleted = index < _currentStep;
+  Widget _buildStep(int index, int current) {
+    final isActive = current == index;
+    final isCompleted = index < current;
 
     return Column(
       children: [
@@ -1003,7 +527,7 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
         ),
         context.vS,
         Text(
-          _steps[index],
+          ReportFormProvider.steps[index],
           style: context.topology.textTheme.titleSmall?.copyWith(
             color: context.colors.primary,
           ),
@@ -1012,53 +536,46 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
     );
   }
 
-  Widget _buildNavigationButtons() {
-    final isLastStep = _currentStep == _steps.length - 1;
-    final buttonWidth = context.screenWidth / 2.5;
+  Widget _buildNavigationButtons(ReportFormProvider form) {
+    final width = context.screenWidth / 2.5;
+    final submitLabel =
+    form.isSubmitting
+        ? (form.isEditMode ? 'Updating...' : 'Creating...')
+        : (form.isEditMode ? 'Update Report' : 'Create Report');
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         SizedBox(
-          width: buttonWidth,
+          width: width,
           child: CommonButton(
             text: 'Back',
-            onPressed:
-            _currentStep > 0 ? () => setState(() => _currentStep--) : null,
+            onPressed: form.step > 0 ? form.back : null,
           ),
         ),
         context.hM,
         SizedBox(
-          width: buttonWidth,
-          child: Consumer<SystemProvider>(
-            builder: (context, provider, _) {
-              final busy = provider.isLoading;
-              final submitLabel = _isEditMode ? 'Update Report' : 'Create Report';
-              final busyLabel = _isEditMode ? 'Updating...' : 'Creating...';
-
-              return CommonButton(
-                text:
-                !isLastStep
-                    ? 'Next'
-                    : (busy ? busyLabel : submitLabel),
-                onPressed:
-                !isLastStep ? _goNext : (busy ? null : _submitReport),
-              );
-            },
+          width: width,
+          child: CommonButton(
+            text: form.isLastStep ? submitLabel : 'Next',
+            onPressed:
+            !form.isLastStep
+                ? form.next
+                : (form.isSubmitting ? null : _submit),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildStepContent() {
-    switch (_currentStep) {
+  Widget _buildStepContent(ReportFormProvider form) {
+    switch (form.step) {
       case 0:
-        return _buildOverviewStep();
+        return _buildOverviewStep(form);
       case 1:
-        return _buildFieldsStep();
+        return _buildFieldsStep(form);
       case 2:
-        return _buildDatesStep();
+        return _buildDatesStep(form);
       default:
         return const Text('Unknown Step');
     }
@@ -1096,7 +613,6 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
       String label,
       TextEditingController controller, {
         int maxLines = 1,
-        bool enabled = true,
       }) {
     return _labeled(
       label,
@@ -1104,25 +620,24 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
         controller: controller,
         style: _bodySmall(context),
         maxLines: maxLines,
-        enabled: enabled,
       ),
     );
   }
 
-  Widget _buildCheckbox(String label, bool value, ValueChanged<bool?> onChanged) {
+  Widget _buildFlag(ReportFormProvider form, ReportFlag flag) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
           Checkbox(
-            value: value,
-            onChanged: onChanged,
+            value: form.flag(flag),
+            onChanged: (v) => form.setFlag(flag, v ?? flag.initial),
             activeColor: context.colors.primary,
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              label,
+              flag.label,
               style: context.topology.textTheme.bodyMedium?.copyWith(
                 color: context.colors.primary,
               ),
@@ -1134,25 +649,17 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
   }
 
   Widget _buildMultiSelectField(
+      ReportFormProvider form,
+      ReportMulti multi,
       String label,
       List<String> options,
-      TextEditingController controller,
       ) {
-    final selected = _splitCsv(controller.text);
-
-    void update(List<String> values) =>
-        setState(() => controller.text = values.join(','));
+    final selected = form.multi(multi);
 
     return _labeled(
       label,
       _PickerBox(
-        onTap:
-            () => _pickMultiSelect(
-          label: label,
-          options: options,
-          selected: selected,
-          onChanged: update,
-        ),
+        onTap: () => _pickMulti(multi, label, options),
         child:
         selected.isEmpty
             ? Text('Tap to select…', style: _bodySmall(context, opacity: 0.35))
@@ -1164,7 +671,7 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
               _RemovableChip(
                 label: value.toUpperCase(),
                 onRemove:
-                    () => update(List.of(selected)..remove(value)),
+                    () => form.setMulti(multi, [...selected]..remove(value)),
               ),
           ],
         ),
@@ -1172,20 +679,15 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
     );
   }
 
-  Widget _buildCategoryField() {
+  Widget _buildCategoryField(ReportFormProvider form) {
     return Consumer<CategoryProvider>(
       builder: (context, provider, _) {
-        final flat = _flattenCategories(provider.filteredCategories);
-
-        String nameFor(String id) {
-          for (final cat in flat) {
-            if (cat.id == id) return cat.name;
-          }
-          return id;
-        }
+        final flat = _flattenCategories(provider.allCategories);
+        final names = {for (final cat in flat) cat.id: cat.name};
+        final ids = form.categoryIds;
 
         final Widget content;
-        if (provider.isLoading) {
+        if (provider.isLoading || (flat.isEmpty && ids.isNotEmpty)) {
           content = Row(
             children: [
               SizedBox(
@@ -1197,13 +699,10 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              Text(
-                'Loading categories…',
-                style: _bodySmall(context, opacity: 0.4),
-              ),
+              Text('Loading categories…', style: _bodySmall(context, opacity: 0.4)),
             ],
           );
-        } else if (_selectedCategoryIds.isEmpty) {
+        } else if (ids.isEmpty) {
           content = Text(
             'Tap to select categories…',
             style: _bodySmall(context, opacity: 0.35),
@@ -1213,13 +712,12 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
             spacing: 6,
             runSpacing: 6,
             children: [
-              for (final id in _selectedCategoryIds)
+              for (final id in ids)
                 _RemovableChip(
-                  label: nameFor(id),
+                  label: names[id] ?? id,
                   icon: Icons.category_outlined,
                   tinted: true,
-                  onRemove:
-                      () => setState(() => _selectedCategoryIds.remove(id)),
+                  onRemove: () => form.removeCategory(id),
                 ),
             ],
           );
@@ -1236,94 +734,65 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
     );
   }
 
-  Widget _buildOverviewStep() {
-    final batchType = _batchReportTypeController.text;
+  Widget _buildOverviewStep(ReportFormProvider form) {
+    final batchType =
+    _batchReportTypeOptions.contains(form.batchReportType)
+        ? form.batchReportType
+        : 'No Batch';
 
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ..._section('Basic Information'),
-          _buildTextField('Report Name *', _reportNameController),
+          _buildTextField('Report Name *', form.nameController),
           context.vS,
-          _buildTextField('Description', _descriptionController, maxLines: 3),
+          _buildTextField('Description', form.descriptionController, maxLines: 3),
           context.vS,
-          _buildTextField('Document Code', _documentCodeController),
+          _buildTextField('Document Code', form.documentCodeController),
           context.vS,
           _labeled(
             'Batch Report Type',
             _DropdownBox(
-              value:
-              _batchReportTypeOptions.contains(batchType)
-                  ? batchType
-                  : 'No Batch',
+              value: batchType,
               items: _batchReportTypeOptions,
-              onChanged:
-                  (v) => setState(
-                    () => _batchReportTypeController.text = v ?? 'No Batch',
-              ),
+              onChanged: form.setBatchReportType,
             ),
           ),
-          if (_isEditMode) ...[
-            context.vS,
-            _buildTextField('Category ID', _categoryIDController, enabled: false),
-          ],
           context.vL,
           ..._section('Report Settings'),
-          _buildCheckbox(
-            'External Report',
-            _isExternalReport,
-                (v) => setState(() => _isExternalReport = v ?? false),
-          ),
-          _buildCheckbox(
-            'Default as Draft',
-            _defaultAsDraft,
-                (v) => setState(() => _defaultAsDraft = v ?? true),
-          ),
-          _buildCheckbox(
-            'Archived',
-            _archived,
-                (v) => setState(() => _archived = v ?? false),
-          ),
-          _buildCheckbox(
-            'Update Item Status',
-            _updateItemStatus,
-                (v) => setState(() => _updateItemStatus = v ?? true),
-          ),
-          _buildCheckbox(
-            'Update Item Dates',
-            _updateItemDates,
-                (v) => setState(() => _updateItemDates = v ?? true),
-          ),
+          for (final flag in ReportFlag.values.where(
+                (f) => f != ReportFlag.isStatusRequired,
+          ))
+            _buildFlag(form, flag),
           context.vL,
           ..._section('Status Configuration'),
-          _buildCheckbox(
-            'Status Required',
-            _isStatusRequired,
-                (v) => setState(() => _isStatusRequired = v ?? true),
-          ),
+          _buildFlag(form, ReportFlag.isStatusRequired),
           context.vS,
           _buildMultiSelectField(
+            form,
+            ReportMulti.possibleStatus,
             'Possible Statuses',
             _statusOptions,
-            _possibleStatusController,
           ),
           context.vS,
           _buildMultiSelectField(
+            form,
+            ReportMulti.possibleBatchStatus,
             'Possible Batch Statuses',
             _statusOptions,
-            _possibleBatchStatusController,
           ),
           context.vL,
           ..._section('Permissions'),
           _buildMultiSelectField(
+            form,
+            ReportMulti.permission,
             'Permissions',
             _permissionOptions,
-            _permissionController,
           ),
           context.vL,
           ..._section('Associations'),
-          _buildCategoryField(),
+          _buildCategoryField(form),
           context.vL,
         ],
       ),
@@ -1422,15 +891,15 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
     );
   }
 
-  Widget _buildFieldsStep() {
-    final fields = _reportFields;
+  Widget _buildFieldsStep(ReportFormProvider form) {
+    final fields = form.fields;
 
     final rows = <Widget>[];
     final seenSections = <String>{};
     for (var i = 0; i < fields.length; i++) {
       final section = fields[i]['section']?.toString().trim() ?? '';
       if (section.isNotEmpty && seenSections.add(section)) {
-        rows.add(_buildSectionGroupHeader(section));
+        rows.add(_buildSectionGroupHeader(fields, section));
       }
       rows.add(_buildFieldRow(i, fields[i], indented: section.isNotEmpty));
     }
@@ -1444,7 +913,7 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
           count: fields.length,
           countLabel: 'field',
           buttonLabel: 'New Field',
-          onAdd: _showFieldDialog,
+          onAdd: _editField,
         ),
         context.vM,
         Expanded(
@@ -1455,7 +924,7 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
             title: 'No Fields Yet',
             subtitle: 'Click "New Field" to add your first field',
             buttonLabel: 'Add First Field',
-            onAdd: _showFieldDialog,
+            onAdd: _editField,
           )
               : ListView(children: rows),
         ),
@@ -1463,9 +932,12 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
     );
   }
 
-  Widget _buildSectionGroupHeader(String sectionName) {
+  Widget _buildSectionGroupHeader(
+      List<Map<String, dynamic>> fields,
+      String sectionName,
+      ) {
     final count =
-        _reportFields
+        fields
             .where((f) => f['section']?.toString().trim() == sectionName)
             .length;
 
@@ -1475,25 +947,15 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
       decoration: BoxDecoration(
         color: _fade(context, 0.07),
         borderRadius: BorderRadius.circular(8),
-        border: Border(
-          left: BorderSide(color: context.colors.primary, width: 3),
-        ),
+        border: Border(left: BorderSide(color: context.colors.primary, width: 3)),
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.view_agenda_outlined,
-            size: 14,
-            color: context.colors.primary,
-          ),
+          Icon(Icons.view_agenda_outlined, size: 14, color: context.colors.primary),
           const SizedBox(width: 8),
           Text(
             sectionName,
-            style: _bodySmall(
-              context,
-              weight: FontWeight.w700,
-              letterSpacing: 0.4,
-            ),
+            style: _bodySmall(context, weight: FontWeight.w700, letterSpacing: 0.4),
           ),
           const Spacer(),
           Container(
@@ -1547,7 +1009,7 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
           ),
         Expanded(
           child: InkWell(
-            onTap: () => _showFieldDialog(editIndex: index),
+            onTap: () => _editField(index),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
               decoration: _rowDecoration(index, indented: indented),
@@ -1598,8 +1060,8 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
                     ),
                   ),
                   _RowActions(
-                    onEdit: () => _showFieldDialog(editIndex: index),
-                    onDelete: () => _confirmDeleteField(index),
+                    onEdit: () => _editField(index),
+                    onDelete: () => _deleteField(index),
                   ),
                 ],
               ),
@@ -1610,8 +1072,8 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
     );
   }
 
-  Widget _buildDatesStep() {
-    final dates = _reportTypeDates;
+  Widget _buildDatesStep(ReportFormProvider form) {
+    final dates = form.dates;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1622,7 +1084,7 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
           count: dates.length,
           countLabel: 'date',
           buttonLabel: 'New Date',
-          onAdd: _showDateDialog,
+          onAdd: _editDate,
         ),
         context.vM,
         Expanded(
@@ -1633,7 +1095,7 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
             title: 'No Date Configurations Yet',
             subtitle: 'Click "New Date" to add date tracking',
             buttonLabel: 'Add First Date',
-            onAdd: _showDateDialog,
+            onAdd: _editDate,
           )
               : ListView.builder(
             itemCount: dates.length,
@@ -1649,7 +1111,7 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
     final cycle = date['applyCycle']?.toString() ?? '';
 
     return InkWell(
-      onTap: () => _showDateDialog(editIndex: index),
+      onTap: () => _editDate(index),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
         decoration: _rowDecoration(index),
@@ -1687,8 +1149,8 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
               _MiniBadge(label: 'Required', color: Colors.green),
             ],
             _RowActions(
-              onEdit: () => _showDateDialog(editIndex: index),
-              onDelete: () => _confirmDeleteDate(index),
+              onEdit: () => _editDate(index),
+              onDelete: () => _deleteDate(index),
             ),
           ],
         ),
