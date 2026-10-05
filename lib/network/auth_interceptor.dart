@@ -4,8 +4,6 @@ import 'package:flutter/foundation.dart';
 import '../storage/token_storage.dart';
 import 'api_endpoint.dart';
 
-/// Attaches the bearer token to every request and, on a 401, refreshes
-/// the token once and retries the original request.
 class AuthInterceptor extends QueuedInterceptor {
   AuthInterceptor({
     required this.storage,
@@ -17,25 +15,24 @@ class AuthInterceptor extends QueuedInterceptor {
   final Dio dio;
   final VoidCallback onSessionExpired;
 
-  // Endpoints that must NOT get a token or trigger a refresh.
   static final _publicPaths = [ApiEndpoint.login, ApiEndpoint.refreshToken];
 
   bool _isPublic(RequestOptions o) =>
       _publicPaths.any((p) => o.path.contains(p));
 
-  /// Interceptor-free Dio for the refresh call and the retry, so neither
-  /// can loop back into this interceptor or deadlock its error queue.
   Dio _cleanDio() => Dio(BaseOptions(baseUrl: dio.options.baseUrl));
 
   @override
   Future<void> onRequest(
-    RequestOptions options,
-    RequestInterceptorHandler handler,
-  ) async {
+      RequestOptions options,
+      RequestInterceptorHandler handler,
+      ) async {
     if (!_isPublic(options)) {
       final token = await storage.token;
-      if (token != null) {
+      if (token != null && token.isNotEmpty) {
         options.headers['Authorization'] = 'Bearer $token';
+      } else {
+        debugPrint('[Auth] No token for ${options.path}');
       }
     }
     handler.next(options);
@@ -43,9 +40,9 @@ class AuthInterceptor extends QueuedInterceptor {
 
   @override
   Future<void> onError(
-    DioException err,
-    ErrorInterceptorHandler handler,
-  ) async {
+      DioException err,
+      ErrorInterceptorHandler handler,
+      ) async {
     final req = err.requestOptions;
 
     if (err.response?.statusCode != 401 ||
@@ -61,36 +58,33 @@ class AuthInterceptor extends QueuedInterceptor {
         '',
       );
 
-      if (currentAccess != null && currentAccess != usedToken) {
+      if (currentAccess != null &&
+          currentAccess.isNotEmpty &&
+          currentAccess != usedToken) {
         return handler.resolve(await _retry(req, currentAccess));
       }
 
       final refresh = await storage.refreshToken;
       final expiry = await storage.refreshExpiry;
       if (refresh == null ||
+          refresh.isEmpty ||
           (expiry != null && expiry.isBefore(DateTime.now()))) {
         throw StateError('Refresh token missing or expired');
       }
 
       final res = await _cleanDio().post(
         ApiEndpoint.refreshToken,
-        data: {'accessToken': currentAccess ?? '', 'refreshToken': refresh},
+        data: {'refresh_token': refresh},
       );
 
       final body = res.data as Map<String, dynamic>;
-      if (body['isSuccess'] != true) {
-        throw StateError('Refresh failed');
-      }
-
-      final r = body['result'] as Map<String, dynamic>;
-      final newAccess = r['token'] as String;
-      final newRefresh = r['refreshToken'] as String;
-      final newExpiry = DateTime.parse(r['refreshTokenExpiryTime'] as String);
+      final newAccess = body['access_token'] as String;
+      final newRefresh = (body['refresh_token'] as String?) ?? refresh;
 
       await storage.saveTokens(
         token: newAccess,
         refreshToken: newRefresh,
-        refreshExpiry: newExpiry,
+        refreshExpiry: DateTime.now().add(const Duration(days: 30)),
       );
 
       handler.resolve(await _retry(req, newAccess));

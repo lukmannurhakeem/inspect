@@ -8,6 +8,7 @@ import 'package:inspect/navigation/navigation_route.dart';
 import 'package:inspect/navigation/navigation_service.dart';
 import 'package:inspect/storage/local_storage.dart';
 import 'package:inspect/storage/local_storage_constant.dart';
+import 'package:inspect/storage/token_storage.dart';
 import 'package:inspect/widget/common_snackbar.dart';
 
 class AuthenticateProvider extends ChangeNotifier {
@@ -23,10 +24,14 @@ class AuthenticateProvider extends ChangeNotifier {
   static const _minPasswordLength = 8;
   static final _emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
 
-  AuthenticateProvider({UserRepository? userRepository})
-      : _userRepository = userRepository ?? ServiceLocator().userRepository;
+  AuthenticateProvider({
+    UserRepository? userRepository,
+    TokenStorage? tokenStorage,
+  })  : _userRepository = userRepository ?? ServiceLocator().userRepository,
+        _tokenStorage = tokenStorage ?? ServiceLocator().tokenStorage;
 
   final UserRepository _userRepository;
+  final TokenStorage _tokenStorage;
 
   UserLoginModel? _user;
 
@@ -167,21 +172,9 @@ class AuthenticateProvider extends ChangeNotifier {
       return null;
     }
 
+    final UserLoginModel loginResult;
     try {
-      final loginResult = await _userRepository.userLogin(name, password);
-      _user = loginResult;
-      await _persistProfile(loginResult);
-
-      notifyListeners();
-      NavigationService().replaceTo(
-        NavigationRoutes.home,
-        arguments: {
-          'showWelcomeDialog': true,
-          'userName':
-          '${loginResult.user?.firstName ?? ''} ${loginResult.user?.lastName ?? ''}',
-        },
-      );
-      return loginResult;
+      loginResult = await _userRepository.userLogin(name, password);
     } catch (e) {
       _showError(
         context,
@@ -189,6 +182,20 @@ class AuthenticateProvider extends ChangeNotifier {
       );
       return null;
     }
+
+    _user = loginResult;
+    await _persistProfile(loginResult);
+    notifyListeners();
+
+    NavigationService().replaceTo(
+      NavigationRoutes.home,
+      arguments: {
+        'showWelcomeDialog': true,
+        'userName':
+        '${loginResult.user?.firstName ?? ''} ${loginResult.user?.lastName ?? ''}',
+      },
+    );
+    return loginResult;
   }
 
   Future<void> _persistProfile(UserLoginModel login) async {
@@ -219,6 +226,7 @@ class AuthenticateProvider extends ChangeNotifier {
   }
 
   Future<void> _clearSession() async {
+    await _tokenStorage.clearTokens();
     await LocalStorage.removeAll(_sessionKeys);
     _user = null;
   }
@@ -238,10 +246,8 @@ class AuthenticateProvider extends ChangeNotifier {
 
   Future<void> verifyToken(BuildContext context) async {
     try {
-      final hasAccess =
-          LocalStorage.getString(LocalStorageConstant.accessToken).isNotEmpty;
-      final hasRefresh =
-          LocalStorage.getString(LocalStorageConstant.refreshToken).isNotEmpty;
+      final hasAccess = (await _tokenStorage.token)?.isNotEmpty == true;
+      final hasRefresh = (await _tokenStorage.refreshToken)?.isNotEmpty == true;
 
       if (!hasAccess && !hasRefresh) return _redirectToLogin();
 
@@ -261,14 +267,18 @@ class AuthenticateProvider extends ChangeNotifier {
   Future<bool> _isTokenValid() async {
     try {
       final response = await _userRepository.userVerifyToken();
-      return response.valid == true;
+      if (response.valid == true) return true;
+      return _refreshSession();
     } catch (_) {
-      return false;
+      return _refreshSession();
     }
   }
 
   Future<bool> _refreshSession() async {
     try {
+      final expiry = await _tokenStorage.refreshExpiry;
+      if (expiry != null && expiry.isBefore(DateTime.now())) return false;
+
       final response = await _userRepository.userRefreshToken();
       return response.accessToken?.isNotEmpty == true;
     } catch (_) {
@@ -287,10 +297,10 @@ class AuthenticateProvider extends ChangeNotifier {
   Future<void> logout(BuildContext context) async {
     try {
       await _userRepository.userLogout();
-      await _redirectToLogin();
-    } catch (e) {
-      _showError(context, _messageOf(e));
+    } catch (_) {
+      // Log out locally even if the server call fails.
     }
+    await _redirectToLogin();
   }
 
   Future<bool> requestPasswordReset(BuildContext context, String email) async {

@@ -1,4 +1,3 @@
-
 import 'package:inspect/data/model/user_login_model/user_login_model.dart';
 import 'package:inspect/data/model/user_refresh_token_model/user_refresh_token_model.dart';
 import 'package:inspect/data/model/user_verify_token_model/user_verify_token_model.dart';
@@ -8,13 +7,16 @@ import 'package:inspect/errors/app_exception.dart';
 import 'package:inspect/errors/error_handler.dart';
 import 'package:inspect/network/api_client.dart';
 import 'package:inspect/network/api_endpoint.dart';
-import 'package:inspect/storage/local_storage.dart';
-import 'package:inspect/storage/local_storage_constant.dart';
+import 'package:inspect/storage/token_storage.dart';
 
 class UserImpl implements UserRepository {
   final ApiClient _api;
+  final TokenStorage _tokenStorage;
 
-  UserImpl(this._api);
+  UserImpl(this._api, this._tokenStorage);
+
+  static DateTime _defaultRefreshExpiry() =>
+      DateTime.now().add(const Duration(days: 30));
 
   @override
   Future<UserLoginModel> userLogin(String name, String password) async {
@@ -24,10 +26,6 @@ class UserImpl implements UserRepository {
         data: {'email': name, 'password': password},
       );
 
-      if (response == null) {
-        throw UnknownException('Empty response from server');
-      }
-
       final accessToken = response['access_token'] as String?;
       final refreshToken = response['refresh_token'] as String?;
 
@@ -35,17 +33,11 @@ class UserImpl implements UserRepository {
         throw UnknownException('No access token in response');
       }
 
-      await LocalStorage.setString(
-        LocalStorageConstant.accessToken,
-        accessToken,
+      await _tokenStorage.saveTokens(
+        token: accessToken,
+        refreshToken: refreshToken ?? '',
+        refreshExpiry: _defaultRefreshExpiry(),
       );
-
-      if (refreshToken != null && refreshToken.isNotEmpty) {
-        await LocalStorage.setString(
-          LocalStorageConstant.refreshToken,
-          refreshToken,
-        );
-      }
 
       return UserLoginModel.fromJson(response);
     } catch (error, stackTrace) {
@@ -63,32 +55,21 @@ class UserImpl implements UserRepository {
   @override
   Future<UserRefreshTokenModel> userRefreshToken() async {
     try {
-      final refreshTokenValue = LocalStorage.getString(
-        LocalStorageConstant.refreshToken,
-      );
+      final refreshTokenValue = await _tokenStorage.refreshToken;
 
       final response = await _api.post<Map<String, dynamic>>(
         ApiEndpoint.refreshToken,
         data: {'refresh_token': refreshTokenValue},
       );
 
-      if (response == null) {
-        throw UnknownException('Empty response during token refresh');
-      }
-
       final accessToken = response['access_token'] as String?;
       final refreshToken = response['refresh_token'] as String?;
 
-      if (accessToken != null) {
-        await LocalStorage.setString(
-          LocalStorageConstant.accessToken,
-          accessToken,
-        );
-      }
-      if (refreshToken != null) {
-        await LocalStorage.setString(
-          LocalStorageConstant.refreshToken,
-          refreshToken,
+      if (accessToken != null && accessToken.isNotEmpty) {
+        await _tokenStorage.saveTokens(
+          token: accessToken,
+          refreshToken: refreshToken ?? refreshTokenValue ?? '',
+          refreshExpiry: _defaultRefreshExpiry(),
         );
       }
 
@@ -101,31 +82,23 @@ class UserImpl implements UserRepository {
   @override
   Future<void> userLogout() async {
     try {
-      final refreshTokenValue = LocalStorage.getString(
-        LocalStorageConstant.refreshToken,
-      );
+      final refreshTokenValue = await _tokenStorage.refreshToken;
 
       await _api.post<dynamic>(
         ApiEndpoint.logout,
         data: {'refresh_token': refreshTokenValue},
       );
     } catch (_) {
-      // Ignore network errors on logout to force local clearing
     } finally {
-      await LocalStorage.remove(LocalStorageConstant.accessToken);
-      await LocalStorage.remove(LocalStorageConstant.refreshToken);
+      await _tokenStorage.clearTokens();
     }
   }
 
   @override
-  String? getAccessToken() {
-    return LocalStorage.getString(LocalStorageConstant.accessToken);
-  }
+  String? getAccessToken() => null;
 
   @override
-  String? getRefreshToken() {
-    return LocalStorage.getString(LocalStorageConstant.refreshToken);
-  }
+  String? getRefreshToken() => null;
 
   @override
   Future<Map<String, dynamic>> userRegister(

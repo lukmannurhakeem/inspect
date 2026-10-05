@@ -40,7 +40,9 @@ class _DashboardScreenState extends State<DashboardScreen>
       curve: Curves.easeInOut,
     );
     _loadUserData();
-    _initializeData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _initializeData();
+    });
     _animationController.forward();
   }
 
@@ -51,19 +53,9 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   Future<void> _loadUserData() async {
-    final firstName =
-        await LocalStorage.getString(
-          LocalStorageConstant.userFirstName,
-        ) ??
-        '';
-    final lastName =
-        await LocalStorage.getString(
-          LocalStorageConstant.userLastName,
-        ) ??
-        '';
-    final email =
-        await LocalStorage.getString(LocalStorageConstant.userEmail) ??
-        '';
+    final firstName = LocalStorage.getString(LocalStorageConstant.userFirstName);
+    final lastName = LocalStorage.getString(LocalStorageConstant.userLastName);
+    final email = LocalStorage.getString(LocalStorageConstant.userEmail);
 
     if (mounted) {
       setState(() {

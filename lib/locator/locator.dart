@@ -1,13 +1,21 @@
 import 'package:flutter/foundation.dart' show VoidCallback;
+import 'package:inspect/data/repository/agent/agent_impl.dart';
 import 'package:inspect/data/repository/agent/agent_repository.dart';
+import 'package:inspect/data/repository/category/category_impl.dart';
 import 'package:inspect/data/repository/category/category_repository.dart';
+import 'package:inspect/data/repository/customer/customer_impl.dart';
 import 'package:inspect/data/repository/customer/customer_repository.dart';
 import 'package:inspect/data/repository/cycle/cycle_impl.dart';
 import 'package:inspect/data/repository/cycle/cycle_repository.dart';
+import 'package:inspect/data/repository/job/job_impl.dart';
 import 'package:inspect/data/repository/job/job_repository.dart';
+import 'package:inspect/data/repository/personnel/personnel_impl.dart';
 import 'package:inspect/data/repository/personnel/personnel_repository.dart';
+import 'package:inspect/data/repository/planner/planner_impl.dart';
 import 'package:inspect/data/repository/planner/planner_repository.dart';
+import 'package:inspect/data/repository/site/site_impl.dart';
 import 'package:inspect/data/repository/site/site_repository.dart';
+import 'package:inspect/data/repository/system/system_impl.dart';
 import 'package:inspect/data/repository/system/system_repository.dart';
 import 'package:inspect/data/repository/user/user_impl.dart';
 import 'package:inspect/data/repository/user/user_repository.dart';
@@ -56,8 +64,17 @@ class ServiceLocator {
       tokenStorage: tokenStorage,
       onSessionExpired: () => _onSessionExpired?.call(),
     );
-    userRepository = UserImpl(apiClient);
+
+    userRepository = UserImpl(apiClient, tokenStorage);
+    agentRepository = AgentImpl(apiClient);
     cycleRepository = CycleImpl(apiClient);
+    categoryRepository = CategoryImpl(apiClient);
+    siteRepository = SiteImpl(apiClient);
+    systemRepository = SystemImpl(apiClient);
+    customerRepository = CustomerImpl(apiClient);
+    jobRepository = JobImpl(apiClient);
+    personnelRepository = PersonnelImpl(apiClient);
+    plannerRepository = PlannerImpl(apiClient);
 
     _initialized = true;
   }

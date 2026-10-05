@@ -4,13 +4,18 @@ import 'navigation_route.dart';
 
 enum NavTransition { none, fade, slideRight, slideUp, scale }
 
-/// Registered as a lazy singleton in the service locator
-/// (lib/core/di/locator.dart) — access it via `locator<NavigationService>()`
-/// rather than constructing your own instance.
 class NavigationService {
+  NavigationService._internal();
+
+  static final NavigationService _instance = NavigationService._internal();
+
+  factory NavigationService() => _instance;
+
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   final List<String> _navigationHistory = [];
   final Map<String, WidgetBuilder> _routes = {};
+
+  // ...rest of the class unchanged
 
   MapEntry<String, Object?> Function(Uri uri)? _deepLinkResolver;
 
@@ -19,8 +24,8 @@ class NavigationService {
   );
 
   void registerDeepLinkResolver(
-      MapEntry<String, Object?> Function(Uri uri) resolver,
-      ) {
+    MapEntry<String, Object?> Function(Uri uri) resolver,
+  ) {
     _deepLinkResolver = resolver;
   }
 
@@ -34,11 +39,11 @@ class NavigationService {
   List<String> get navigationHistory => List.unmodifiable(_navigationHistory);
 
   PageRoute<T> _buildRoute<T>(
-      String routeName, {
-        Object? arguments,
-        NavTransition transition = NavTransition.slideRight,
-        Duration duration = const Duration(milliseconds: 300),
-      }) {
+    String routeName, {
+    Object? arguments,
+    NavTransition transition = NavTransition.slideRight,
+    Duration duration = const Duration(milliseconds: 300),
+  }) {
     // Dynamically registered routes (via registerRoutes) win over the
     // static table in NavigationRoutes; unknown names fall through to
     // RouteNotFoundScreen inside NavigationRoutes.getBuilder.
@@ -64,15 +69,15 @@ class NavigationService {
           case NavTransition.slideUp:
             return SlideTransition(
               position:
-              Tween<Offset>(
-                begin: const Offset(0.0, 1.0),
-                end: Offset.zero,
-              ).animate(
-                CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeOutCubic,
-                ),
-              ),
+                  Tween<Offset>(
+                    begin: const Offset(0.0, 1.0),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOutCubic,
+                    ),
+                  ),
               child: child,
             );
           case NavTransition.scale:
@@ -87,12 +92,12 @@ class NavigationService {
           default:
             return SlideTransition(
               position:
-              Tween<Offset>(
-                begin: const Offset(1.0, 0.0),
-                end: Offset.zero,
-              ).animate(
-                CurvedAnimation(parent: animation, curve: Curves.easeInOut),
-              ),
+                  Tween<Offset>(
+                    begin: const Offset(1.0, 0.0),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(parent: animation, curve: Curves.easeInOut),
+                  ),
               child: child,
             );
         }
@@ -113,11 +118,11 @@ class NavigationService {
   }
 
   Future<dynamic> navigateTo(
-      String routeName, {
-        Object? arguments,
-        NavTransition transition = NavTransition.slideRight,
-        Duration duration = const Duration(milliseconds: 300),
-      }) {
+    String routeName, {
+    Object? arguments,
+    NavTransition transition = NavTransition.slideRight,
+    Duration duration = const Duration(milliseconds: 300),
+  }) {
     return navigatorKey.currentState!.push(
       _buildRoute(
         routeName,
@@ -129,11 +134,11 @@ class NavigationService {
   }
 
   Future<dynamic> replaceTo(
-      String routeName, {
-        Object? arguments,
-        NavTransition transition = NavTransition.slideRight,
-        Duration duration = const Duration(milliseconds: 300),
-      }) {
+    String routeName, {
+    Object? arguments,
+    NavTransition transition = NavTransition.slideRight,
+    Duration duration = const Duration(milliseconds: 300),
+  }) {
     return navigatorKey.currentState!.pushReplacement(
       _buildRoute(
         routeName,
@@ -145,11 +150,11 @@ class NavigationService {
   }
 
   Future<dynamic> navigateToAndRemoveUntil(
-      String routeName, {
-        Object? arguments,
-        NavTransition transition = NavTransition.fade,
-        Duration duration = const Duration(milliseconds: 300),
-      }) {
+    String routeName, {
+    Object? arguments,
+    NavTransition transition = NavTransition.fade,
+    Duration duration = const Duration(milliseconds: 300),
+  }) {
     debugPrint('REMOVE-UNTIL $routeName\n${StackTrace.current}');
     return navigatorKey.currentState!.pushAndRemoveUntil(
       _buildRoute(
@@ -158,17 +163,17 @@ class NavigationService {
         transition: transition,
         duration: duration,
       ),
-          (route) => false,
+      (route) => false,
     );
   }
 
   Future<dynamic> navigateToAndRemoveUntilRoute(
-      String routeName,
-      String untilRouteName, {
-        Object? arguments,
-        NavTransition transition = NavTransition.slideRight,
-        Duration duration = const Duration(milliseconds: 300),
-      }) {
+    String routeName,
+    String untilRouteName, {
+    Object? arguments,
+    NavTransition transition = NavTransition.slideRight,
+    Duration duration = const Duration(milliseconds: 300),
+  }) {
     return navigatorKey.currentState!.pushAndRemoveUntil(
       _buildRoute(
         routeName,
@@ -189,14 +194,14 @@ class NavigationService {
   // }
 
   Future<dynamic> handleDeepLink(
-      Uri uri, {
-        bool override = false,
-        NavTransition transition = NavTransition.fade,
-        Duration duration = const Duration(milliseconds: 300),
-      }) {
+    Uri uri, {
+    bool override = false,
+    NavTransition transition = NavTransition.fade,
+    Duration duration = const Duration(milliseconds: 300),
+  }) {
     final resolved =
         _deepLinkResolver?.call(uri) ??
-            MapEntry(uri.path.isEmpty ? '/' : uri.path, uri.queryParameters);
+        MapEntry(uri.path.isEmpty ? '/' : uri.path, uri.queryParameters);
 
     var routeName = resolved.key;
     if (routeName.length > 1 && routeName.endsWith('/')) {
@@ -205,17 +210,17 @@ class NavigationService {
 
     return override
         ? navigateToAndRemoveUntil(
-      routeName,
-      arguments: resolved.value,
-      transition: transition,
-      duration: duration,
-    )
+            routeName,
+            arguments: resolved.value,
+            transition: transition,
+            duration: duration,
+          )
         : navigateTo(
-      routeName,
-      arguments: resolved.value,
-      transition: transition,
-      duration: duration,
-    );
+            routeName,
+            arguments: resolved.value,
+            transition: transition,
+            duration: duration,
+          );
   }
 
   void goBack() {
