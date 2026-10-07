@@ -47,7 +47,12 @@ class SiteProvider extends ChangeNotifier {
     customerIdController,
   ];
 
+  static const int pageSize = 10;
+
   bool _isLoading = false;
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
+  int _page = 1;
   bool _hasError = false;
   String? _errorMessage;
 
@@ -64,6 +69,8 @@ class SiteProvider extends ChangeNotifier {
   String? selectedCustomerSiteName;
 
   bool get isLoading => _isLoading;
+  bool get isLoadingMore => _isLoadingMore;
+  bool get hasMore => _hasMore;
   bool get hasError => _hasError;
   String? get errorMessage => _errorMessage;
   bool get hasData => _sites.isNotEmpty;
@@ -125,9 +132,38 @@ class SiteProvider extends ChangeNotifier {
   }
 
   Future<void> fetchSite(BuildContext context) => _guard(() async {
-    _getSiteModel = await _siteRepository.fetchSite();
+    _page = 1;
+    _hasMore = true;
+    _getSiteModel = await _siteRepository.fetchSite(page: 1, limit: pageSize);
     _sites = _getSiteModel?.sites ?? [];
+    _hasMore = _sites.length >= pageSize;
   });
+
+  Future<void> fetchMoreSites() async {
+    if (_isLoading || _isLoadingMore || !_hasMore) return;
+    _isLoadingMore = true;
+    notifyListeners();
+    try {
+      final nextPage = _page + 1;
+      final model = await _siteRepository.fetchSite(
+        page: nextPage,
+        limit: pageSize,
+      );
+      final incoming = model.sites ?? [];
+      final existingIds = _sites.map((s) => s.siteid).toSet();
+      final fresh =
+      incoming.where((s) => !existingIds.contains(s.siteid)).toList();
+      debugPrint('page=$nextPage incoming=${incoming.length} fresh=${fresh.length} hasMore=$_hasMore');
+      _page = nextPage;
+      _sites = [..._sites, ...fresh];
+      _hasMore = incoming.length >= pageSize && fresh.isNotEmpty;
+    } catch (e) {
+      debugPrint('SiteProvider: failed to load more sites: $e');
+    } finally {
+      _isLoadingMore = false;
+      notifyListeners();
+    }
+  }
 
   Future<void> fetchSiteByCustomerId(
       BuildContext context,
