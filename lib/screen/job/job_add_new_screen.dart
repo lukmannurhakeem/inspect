@@ -126,21 +126,21 @@ class _JobAddNewScreen extends State<JobAddNewScreen> {
                                 ?.copyWith(color: Colors.grey),
                           ),
                           items:
-                              customers.map((customer) {
-                                return DropdownMenuItem<String>(
-                                  value: customer.customerid,
-                                  child: Text(
-                                    customer.customername ?? '-',
-                                    style: context.topology.textTheme.bodySmall
-                                        ?.copyWith(
-                                          color: context.colors.primary,
-                                        ),
-                                  ),
-                                );
-                              }).toList(),
+                          customers.map((customer) {
+                            return DropdownMenuItem<String>(
+                              value: customer.customerid,
+                              child: Text(
+                                customer.customername ?? '-',
+                                style: context.topology.textTheme.bodySmall
+                                    ?.copyWith(
+                                  color: context.colors.primary,
+                                ),
+                              ),
+                            );
+                          }).toList(),
                           onChanged: (value) {
                             final selectedCustomer = customers.firstWhere(
-                              (c) => c.customerid == value,
+                                  (c) => c.customerid == value,
                             );
 
                             siteProvider.setSelectedCustomer(
@@ -183,17 +183,17 @@ class _JobAddNewScreen extends State<JobAddNewScreen> {
                         final sites = siteProvider.sitesCustomerList;
                         final isEnabled =
                             siteProvider.selectedCustomerId != null &&
-                            sites.isNotEmpty;
+                                sites.isNotEmpty;
 
                         return DropdownButtonFormField<String>(
                           value: siteProvider.selectedCustomerIdSite,
                           decoration: InputDecoration(
                             hintText:
-                                siteProvider.selectedCustomerId == null
-                                    ? 'Select Customer First'
-                                    : (sites.isEmpty
-                                        ? 'No Sites Available'
-                                        : 'Select Site'),
+                            siteProvider.selectedCustomerId == null
+                                ? 'Select Customer First'
+                                : (sites.isEmpty
+                                ? 'No Sites Available'
+                                : 'Select Site'),
                             border: OutlineInputBorder(),
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 10,
@@ -203,33 +203,33 @@ class _JobAddNewScreen extends State<JobAddNewScreen> {
                                 ?.copyWith(color: Colors.grey),
                           ),
                           items:
-                              sites.map((site) {
-                                return DropdownMenuItem<String>(
-                                  value: site.siteid,
-                                  child: Text(
-                                    '${site.siteName ?? site.siteCode ?? '-'} (${site.siteCode ?? ''})',
-                                    style: context.topology.textTheme.bodySmall
-                                        ?.copyWith(
-                                          color: context.colors.primary,
-                                        ),
-                                  ),
-                                );
-                              }).toList(),
+                          sites.map((site) {
+                            return DropdownMenuItem<String>(
+                              value: site.siteid,
+                              child: Text(
+                                '${site.siteName ?? site.siteCode ?? '-'} (${site.siteCode ?? ''})',
+                                style: context.topology.textTheme.bodySmall
+                                    ?.copyWith(
+                                  color: context.colors.primary,
+                                ),
+                              ),
+                            );
+                          }).toList(),
                           onChanged:
-                              isEnabled
-                                  ? (value) {
-                                    final selectedSite = sites.firstWhere(
-                                      (s) => s.siteid == value,
-                                    );
+                          isEnabled
+                              ? (value) {
+                            final selectedSite = sites.firstWhere(
+                                  (s) => s.siteid == value,
+                            );
 
-                                    siteProvider.setSelectedCustomerById(
-                                      value,
-                                      name:
-                                          selectedSite.siteName ??
-                                          selectedSite.siteCode,
-                                    );
-                                  }
-                                  : null,
+                            siteProvider.setSelectedCustomerById(
+                              value,
+                              name:
+                              selectedSite.siteName ??
+                                  selectedSite.siteCode,
+                            );
+                          }
+                              : null,
                         );
                       },
                     ),
@@ -240,35 +240,41 @@ class _JobAddNewScreen extends State<JobAddNewScreen> {
               context.vXxl,
 
               // Next Button
+              // Next Button
               Consumer<SiteProvider>(
                 builder: (context, siteProvider, child) {
                   final canProceed =
                       siteProvider.selectedCustomerIdSite != null &&
-                      siteProvider.selectedCustomerIdSite!.isNotEmpty;
+                          siteProvider.selectedCustomerIdSite!.isNotEmpty;
 
                   return CommonButton(
                     onPressed:
-                        canProceed
-                            ? () {
-                              NavigationService().navigateTo(
-                                NavigationRoutes.jobAddNewDetailsScreen,
-                                arguments: {
-                                  // UUIDs → sent in API body
-                                  'customerId':
-                                      siteProvider.selectedCustomerId ?? '',
-                                  'siteId':
-                                      siteProvider.selectedCustomerIdSite ?? '',
-                                  // Display names → used for jobID prefix & AppBar
-                                  'customerName':
-                                      siteProvider.selectedCustomerName ?? '',
+                    canProceed
+                        ? () {
+                      final rawCust = siteProvider.selectedCustomerName ?? 'NA';
+                      final rawSite = siteProvider.selectedCustomerSiteName ?? 'NA';
 
-                                  'siteName':
-                                      siteProvider.selectedCustomerSiteName ??
-                                      '',
-                                },
-                              );
-                            }
-                            : null,
+                      String c = rawCust.replaceAll(' ', '');
+                      if (c.length > 3) c = c.substring(0, 3);
+
+                      String s = rawSite.replaceAll(' ', '');
+                      if (s.length > 3) s = s.substring(0, 3);
+
+                      final ts = DateTime.now().millisecondsSinceEpoch.toString();
+                      final jobNo = "/${c.toUpperCase()}/${s.toUpperCase()}/${ts.substring(ts.length - 5)}";
+
+                      NavigationService().navigateTo(
+                        NavigationRoutes.jobAddNewDetailsScreen,
+                        arguments: {
+                          'customerId': siteProvider.selectedCustomerId ?? '',
+                          'siteId': siteProvider.selectedCustomerIdSite ?? '',
+                          'customerName': rawCust,
+                          'siteName': rawSite,
+                          'jobNo': jobNo,
+                        },
+                      );
+                    }
+                        : null,
                     text: 'Next',
                   );
                 },
