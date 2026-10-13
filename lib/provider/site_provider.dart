@@ -185,7 +185,7 @@ class SiteProvider extends ChangeNotifier {
       _getSiteByCustomerIdModel = model;
       _sitesCustomerList = model.siteCustomers ?? [];
       _cacheSites(id, _sitesCustomerList);
-      _autoSelectSingleSite();
+      _autoSelectFirstSite();
       notifyListeners();
     } catch (e) {
       if (!_applyCachedSites(id)) _setError(e.toString());
@@ -201,13 +201,13 @@ class SiteProvider extends ChangeNotifier {
     final cached = _loadSitesFromCache(customerId);
     if (cached.isEmpty) return false;
     _sitesCustomerList = cached;
-    _autoSelectSingleSite();
+    _autoSelectFirstSite();
     notifyListeners();
     return true;
   }
 
-  void _autoSelectSingleSite() {
-    if (_sitesCustomerList.length != 1) return;
+  void _autoSelectFirstSite() {
+    if (_sitesCustomerList.isEmpty) return;
     final site = _sitesCustomerList.first;
     selectedCustomerIdSite = site.siteid;
     selectedCustomerSiteName = site.siteName ?? site.siteCode;

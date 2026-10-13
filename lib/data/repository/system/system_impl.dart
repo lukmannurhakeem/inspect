@@ -5,6 +5,9 @@ import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http_parser/http_parser.dart' as http_parser;
+import 'package:inspect/data/model/delete_report_field_response/delete_report_field_response.dart';
+import 'package:inspect/data/model/edit_report_field/edit_report_field_request.dart';
+import 'package:inspect/data/model/edit_report_field/edit_report_field_response.dart';
 import 'package:inspect/data/model/get_company_division/get_company_division.dart';
 import 'package:inspect/data/model/get_report_type_model/get_report_type_model.dart';
 import 'package:inspect/data/model/item_report_model/item_report_model.dart';
@@ -581,5 +584,51 @@ class SystemImpl implements SystemRepository {
       default:
         return 'application/octet-stream';
     }
+  }
+
+  @override
+  Future<EditReportFieldResponse?> patchReportField(
+      String reportFieldId,
+      EditReportFieldRequest request,
+      ) async {
+    final data = await _api.patch<dynamic>(
+      ApiEndpoint.reportFieldUpdate(reportFieldId),
+      data: request.toJson(),
+    );
+
+    if (_isQueued(data)) return null; // offline: will sync later
+
+    final map = _mapOrNull(data);
+    return map == null ? null : EditReportFieldResponse.fromJson(map);
+  }
+
+
+  @override
+  Future<DeleteReportFieldResponse?> deleteReportField(
+      String reportFieldId,
+      ) async {
+    final data = await _api.delete<dynamic>(
+      ApiEndpoint.reportFieldDelete(reportFieldId),
+    );
+
+    if (_isQueued(data)) return null;
+
+    final map = _mapOrNull(data);
+    return map == null ? null : DeleteReportFieldResponse.fromJson(map);
+  }
+
+  @override
+  Future<EditReportFieldResponse?> createReportField(
+      EditReportFieldRequest request,
+      ) async {
+    final data = await _api.post<dynamic>(
+      ApiEndpoint.reportFieldCreate,
+      data: request.toJson(),
+    );
+
+    if (_isQueued(data)) return null;
+
+    final map = _mapOrNull(data);
+    return map == null ? null : EditReportFieldResponse.fromJson(map);
   }
 }

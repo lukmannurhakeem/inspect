@@ -29,11 +29,18 @@ class _JobAddNewScreen extends State<JobAddNewScreen> {
         });
       }
     });
-    final customerProvider = Provider.of<CustomerProvider>(
-      context,
-      listen: false,
-    );
-    customerProvider.fetchCustomers(context);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadInitialData());
+  }
+
+  Future<void> _loadInitialData() async {
+    final customerProvider = context.read<CustomerProvider>();
+    final siteProvider = context.read<SiteProvider>();
+
+    await customerProvider.fetchCustomers(context);
+
+    final customerId = siteProvider.selectedCustomerId;
+    if (!mounted || customerId == null) return;
+    await siteProvider.fetchSiteByCustomerId(context, customerId);
   }
 
   Future<void> _checkConnectivity() async {
@@ -239,7 +246,6 @@ class _JobAddNewScreen extends State<JobAddNewScreen> {
 
               context.vXxl,
 
-              // Next Button
               // Next Button
               Consumer<SiteProvider>(
                 builder: (context, siteProvider, child) {

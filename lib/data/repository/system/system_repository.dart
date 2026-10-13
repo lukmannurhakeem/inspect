@@ -1,5 +1,8 @@
 import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
+import 'package:inspect/data/model/delete_report_field_response/delete_report_field_response.dart';
+import 'package:inspect/data/model/edit_report_field/edit_report_field_request.dart';
+import 'package:inspect/data/model/edit_report_field/edit_report_field_response.dart';
 import 'package:inspect/data/model/get_company_division/get_company_division.dart';
 import 'package:inspect/data/model/get_report_type_model/get_report_type_model.dart';
 import 'package:inspect/data/model/item_report_model/item_report_model.dart';
@@ -99,4 +102,15 @@ abstract class SystemRepository {
   );
 
   Future<void> deleteRegulation(String regulationId);
+
+  Future<EditReportFieldResponse?> patchReportField(
+    String reportFieldId,
+    EditReportFieldRequest request,
+  );
+
+  Future<DeleteReportFieldResponse?> deleteReportField(String reportFieldId);
+
+  Future<EditReportFieldResponse?> createReportField(
+      EditReportFieldRequest request,
+      );
 }

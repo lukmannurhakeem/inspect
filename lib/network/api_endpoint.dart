@@ -282,4 +282,11 @@ class ApiEndpoint {
 
   static String getReportDataByReportId(String reportId) =>
       '/reportData/$reportId';
+
+  static String reportFieldUpdate(String reportFieldId) =>
+      '/report/field/update/$reportFieldId';
+
+  static String reportFieldDelete(String fieldId) => '/report/field/delete/$fieldId';
+
+  static const String reportFieldCreate = '/report/field/create';
 }
