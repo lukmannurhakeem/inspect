@@ -240,35 +240,41 @@ class _JobAddNewScreen extends State<JobAddNewScreen> {
               context.vXxl,
 
               // Next Button
+              // Next Button
               Consumer<SiteProvider>(
                 builder: (context, siteProvider, child) {
                   final canProceed =
                       siteProvider.selectedCustomerIdSite != null &&
-                      siteProvider.selectedCustomerIdSite!.isNotEmpty;
+                          siteProvider.selectedCustomerIdSite!.isNotEmpty;
 
                   return CommonButton(
                     onPressed:
-                        canProceed
-                            ? () {
-                              NavigationService().navigateTo(
-                                NavigationRoutes.jobAddNewDetailsScreen,
-                                arguments: {
-                                  // UUIDs → sent in API body
-                                  'customerId':
-                                      siteProvider.selectedCustomerId ?? '',
-                                  'siteId':
-                                      siteProvider.selectedCustomerIdSite ?? '',
-                                  // Display names → used for jobID prefix & AppBar
-                                  'customerName':
-                                      siteProvider.selectedCustomerName ?? '',
+                    canProceed
+                        ? () {
+                      final rawCust = siteProvider.selectedCustomerName ?? 'NA';
+                      final rawSite = siteProvider.selectedCustomerSiteName ?? 'NA';
 
-                                  'siteName':
-                                      siteProvider.selectedCustomerSiteName ??
-                                      '',
-                                },
-                              );
-                            }
-                            : null,
+                      String c = rawCust.replaceAll(' ', '');
+                      if (c.length > 3) c = c.substring(0, 3);
+
+                      String s = rawSite.replaceAll(' ', '');
+                      if (s.length > 3) s = s.substring(0, 3);
+
+                      final ts = DateTime.now().millisecondsSinceEpoch.toString();
+                      final jobNo = "/${c.toUpperCase()}/${s.toUpperCase()}/${ts.substring(ts.length - 5)}";
+
+                      NavigationService().navigateTo(
+                        NavigationRoutes.jobAddNewDetailsScreen,
+                        arguments: {
+                          'customerId': siteProvider.selectedCustomerId ?? '',
+                          'siteId': siteProvider.selectedCustomerIdSite ?? '',
+                          'customerName': rawCust,
+                          'siteName': rawSite,
+                          'jobNo': jobNo,
+                        },
+                      );
+                    }
+                        : null,
                     text: 'Next',
                   );
                 },
