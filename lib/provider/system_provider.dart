@@ -3,6 +3,9 @@ import 'dart:typed_data';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:inspect/data/model/delete_report_field_response/delete_report_field_response.dart';
+import 'package:inspect/data/model/edit_report_field/edit_report_field_request.dart';
+import 'package:inspect/data/model/edit_report_field/edit_report_field_response.dart';
 import 'package:inspect/data/model/get_company_division/get_company_division.dart';
 import 'package:inspect/data/model/get_report_type_model/get_report_type_model.dart';
 import 'package:inspect/data/model/item_report_model/item_report_model.dart';
@@ -34,30 +37,42 @@ class SystemProvider extends ChangeNotifier {
   String? _errorMessage;
 
   List<GetCompanyDivision> get divisions => _division;
+
   List<RegulationModel> get regulations => List.unmodifiable(_regulations);
+
   List<ItemReportModel>? get itemReportModel => _itemReportModel;
+
   List<dynamic> get currentReportTypeRawFields => _currentReportTypeRawFields;
 
   GetReportTypeModel? get getReportTypeModel => _getReportTypeModel;
+
   Datum? get currentReportTypeDetail => _currentReportTypeDetail;
+
   Uint8List? get pdfData => _pdfData;
 
   bool get isLoading => _isLoading;
+
   bool get isCreatingCycle => _isCreatingCycle;
+
   bool get isFetchingPdf => _isFetchingPdf;
+
   String? get errorMessage => _errorMessage;
 
   bool get hasError => _errorMessage != null;
+
   bool get hasData => _division.isNotEmpty;
+
   bool get hasRegulations => _regulations.isNotEmpty;
+
   bool get hasReport => _getReportTypeModel?.data?.isNotEmpty ?? false;
+
   bool get hasItemReport => _itemReportModel?.isNotEmpty ?? false;
 
   Future<T?> _run<T>(
-      Future<T> Function() action, {
-        bool rethrowError = false,
-        bool showLoading = true,
-      }) async {
+    Future<T> Function() action, {
+    bool rethrowError = false,
+    bool showLoading = true,
+  }) async {
     if (showLoading) _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -164,8 +179,9 @@ class SystemProvider extends ChangeNotifier {
   }
 
   Future<bool> deleteDivisionById(String divisionId) async {
-    final division =
-        _division.where((d) => d.divisionid == divisionId).firstOrNull;
+    final division = _division
+        .where((d) => d.divisionid == divisionId)
+        .firstOrNull;
     if (division == null) {
       _errorMessage = 'Division not found';
       notifyListeners();
@@ -179,9 +195,9 @@ class SystemProvider extends ChangeNotifier {
   }, showLoading: !hasReport);
 
   Future<void> _cacheReportFields(
-      String reportTypeId,
-      List<dynamic> fields,
-      ) async {
+    String reportTypeId,
+    List<dynamic> fields,
+  ) async {
     try {
       await LocalStorage.setString(
         _reportFieldsKey(reportTypeId),
@@ -238,8 +254,7 @@ class SystemProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _itemReportModel =
-      reportTypeId.isEmpty
+      _itemReportModel = reportTypeId.isEmpty
           ? []
           : await _systemRepository.fetchReportDataTypeModel(reportTypeId);
     } catch (e) {
@@ -328,14 +343,22 @@ class SystemProvider extends ChangeNotifier {
     await fetchReportType();
   }, rethrowError: true);
 
+  Future<EditReportFieldResponse?> patchReportField({
+    required String reportFieldId,
+    required EditReportFieldRequest request,
+  }) => _run<EditReportFieldResponse?>(
+    () => _systemRepository.patchReportField(reportFieldId, request),
+    rethrowError: true,
+  );
+
   Future<Map<String, dynamic>?> getReportDetails(String reportId) =>
       _run<Map<String, dynamic>?>(
-            () => _systemRepository.getReportDetails(reportId),
+        () => _systemRepository.getReportDetails(reportId),
       );
 
   Future<Map<String, dynamic>?> getReportFields(String reportTypeId) =>
       _run<Map<String, dynamic>?>(
-            () => _systemRepository.getReportFields(reportTypeId),
+        () => _systemRepository.getReportFields(reportTypeId),
       );
 
   Future<Uint8List?> fetchPdfReportById(String reportId) async {
@@ -371,7 +394,7 @@ class SystemProvider extends ChangeNotifier {
     required Map<String, dynamic> reportData,
     Map<String, PlatformFile>? files,
   }) => _run<Map<String, dynamic>?>(
-        () => _systemRepository.createReportData({
+    () => _systemRepository.createReportData({
       'reportTypeID': reportTypeId,
       'itemID': itemId,
       'itemNo': itemNo,
@@ -384,21 +407,34 @@ class SystemProvider extends ChangeNotifier {
     rethrowError: true,
   );
 
+  Future<DeleteReportFieldResponse?> deleteReportField(String reportFieldId) =>
+      _run<DeleteReportFieldResponse?>(
+        () => _systemRepository.deleteReportField(reportFieldId),
+        rethrowError: true,
+      );
+
+  Future<EditReportFieldResponse?> createReportField({
+    required EditReportFieldRequest request,
+  }) => _run<EditReportFieldResponse?>(
+    () => _systemRepository.createReportField(request),
+    rethrowError: true,
+  );
+
   Future<Map<String, dynamic>?> pushReportPayload(
-      Map<String, dynamic> payload, {
-        Map<String, PlatformFile>? files,
-      }) => _systemRepository.createReportData(payload, files: files);
+    Map<String, dynamic> payload, {
+    Map<String, PlatformFile>? files,
+  }) => _systemRepository.createReportData(payload, files: files);
 
   Future<Map<String, dynamic>?> updateReportPayload(
-      String reportId,
-      Map<String, dynamic> payload, {
-        Map<String, PlatformFile>? files,
-      }) => _systemRepository.updateReportData(reportId, payload, files: files);
+    String reportId,
+    Map<String, dynamic> payload, {
+    Map<String, PlatformFile>? files,
+  }) => _systemRepository.updateReportData(reportId, payload, files: files);
 
   Future<List<Map<String, dynamic>>> fetchApprovalReports(
-      String jobId,
-      String status,
-      ) async {
+    String jobId,
+    String status,
+  ) async {
     try {
       return await _systemRepository.fetchApprovalReports(jobId, status);
     } catch (e) {
@@ -434,10 +470,9 @@ class SystemProvider extends ChangeNotifier {
     try {
       final raw = LocalStorage.getString(_regulationsKey);
       if (raw.isEmpty) return;
-      _regulations =
-          (jsonDecode(raw) as List<dynamic>)
-              .map((e) => RegulationModel.fromJson(e as Map<String, dynamic>))
-              .toList();
+      _regulations = (jsonDecode(raw) as List<dynamic>)
+          .map((e) => RegulationModel.fromJson(e as Map<String, dynamic>))
+          .toList();
     } catch (e) {
       debugPrint('SystemProvider: failed to load regulations cache: $e');
     }
@@ -453,9 +488,9 @@ class SystemProvider extends ChangeNotifier {
       }, rethrowError: true);
 
   Future<RegulationModel?> updateRegulation(
-      String regulationId,
-      String newName,
-      ) => _run<RegulationModel?>(() async {
+    String regulationId,
+    String newName,
+  ) => _run<RegulationModel?>(() async {
     final updated = await _systemRepository.updateRegulation(
       regulationId,
       newName,

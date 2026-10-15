@@ -18,8 +18,9 @@ class SiteImpl implements SiteRepository {
   SiteImpl(this._api);
 
   @override
-  Future<GetSiteModel> fetchSite() => _api.get(
+  Future<GetSiteModel> fetchSite({int page = 1, int limit = 10}) => _api.get(
     ApiEndpoint.site,
+    queryParameters: {'page': page, 'limit': limit},
     parser: (data) => GetSiteModel.fromJson(data as Map<String, dynamic>),
   );
 

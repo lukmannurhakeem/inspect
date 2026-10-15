@@ -4,7 +4,7 @@ import 'package:inspect/data/model/get_site_by_customer_id_model/get_site_by_cus
 import 'package:inspect/data/model/get_site_model/get_site_model.dart';
 
 abstract class SiteRepository {
-  Future<GetSiteModel> fetchSite();
+  Future<GetSiteModel> fetchSite({int page = 1, int limit = 10});
 
   Future<void> createSite({
     required String siteCode,

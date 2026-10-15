@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:inspect/core/services/report_dropdwon_options_service.dart';
+import 'package:inspect/data/model/edit_report_field/edit_report_field_request.dart';
+import 'package:inspect/data/model/edit_report_field/report_field_default_value.dart';
 import 'package:inspect/provider/system_provider.dart';
 import 'package:inspect/storage/local_storage.dart';
 import 'package:inspect/storage/local_storage_constant.dart';
@@ -42,12 +44,14 @@ const _fieldTypeAliases = <String, String>{
   'section': 'section',
 };
 
+const _reportFieldIdKey = 'reportFieldID';
+
 const _serverKeys = {
   'created_at',
   'updated_at',
   'createdAt',
   'updatedAt',
-  'reportFieldID',
+  _reportFieldIdKey,
   'reportTypeID',
 };
 
@@ -245,6 +249,7 @@ class ReportFormProvider extends ChangeNotifier {
   }
 
   void next() {
+    if (isLastStep) return;
     if (_step == 1) _saveDropdownOptions();
     _step++;
     notifyListeners();
@@ -290,11 +295,18 @@ class ReportFormProvider extends ChangeNotifier {
         'disableFreeType': false,
       };
 
+
   void saveField(int? index, Map<String, dynamic> field) {
     if (index == null) {
       _fields.add(field);
     } else {
-      _fields[index] = field;
+      final id = _fields[index][_reportFieldIdKey];
+      final typeId = _fields[index]['reportTypeID'];
+      _fields[index] = {
+        ...field,
+        if (id != null) _reportFieldIdKey: id,
+        if (typeId != null) 'reportTypeID': typeId,
+      };
     }
     notifyListeners();
   }
@@ -308,10 +320,24 @@ class ReportFormProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void removeField(int index) {
+  Future<String?> removeField(int index) async {
+    final id = _fields[index][_reportFieldIdKey]?.toString() ?? '';
+
+    if (_isEditMode && id.isNotEmpty) {
+      try {
+        await _system.deleteReportField(id);
+        if (_system.hasError) return 'Error: ${_system.errorMessage}';
+      } catch (e) {
+        return 'Error: $e';
+      }
+    }
+
     _fields.removeAt(index);
     notifyListeners();
+    return null;
   }
+
+
 
   void removeDate(int index) {
     _dates.removeAt(index);
@@ -409,7 +435,8 @@ class ReportFormProvider extends ChangeNotifier {
     final dv = f['defaultValue'];
 
     if (f['fieldType'] != 'dropdown') {
-      f['defaultValue'] = (dv is List || dv is Map) ? '' : (dv?.toString() ?? '');
+      f['defaultValue'] =
+      (dv is List || dv is Map) ? '' : (dv?.toString() ?? '');
       return f;
     }
 
@@ -472,7 +499,9 @@ class ReportFormProvider extends ChangeNotifier {
       if (options.isNotEmpty) {
         f['defaultValue'] = {
           'dropdownType':
-          dv is Map ? dv['dropdownType']?.toString() ?? 'Options' : 'Options',
+          dv is Map
+              ? dv['dropdownType']?.toString() ?? 'Options'
+              : 'Options',
           'options': options,
           'value':
           dv is Map
@@ -490,6 +519,29 @@ class ReportFormProvider extends ChangeNotifier {
     return f;
   }
 
+  EditReportFieldRequest _toPatchRequest(Map<String, dynamic> raw) {
+    final f = _cleanField(raw);
+    final dv = f['defaultValue'];
+
+    final dynamic value = dv is Map ? dv['value'] : dv;
+    final text = value?.toString() ?? '';
+
+    return EditReportFieldRequest(
+      reportTypeID: raw['reportTypeID']?.toString() ?? _resolveId(_editData),
+      labelText: f['labelText']?.toString(),
+      name: f['name']?.toString(),
+      fieldType: f['fieldType']?.toString(),
+      defaultValue: ReportFieldDefaultValue(
+        value: text.isEmpty ? null : text,
+        isReadOnly: raw['isReadOnly'] == true,
+      ),
+      onlyAvailable: f['onlyAvailable']?.toString(),
+      isRequired: f['isRequired'] == true,
+      doNotCopy: f['doNotCopy'] == true,
+      isArchive: f['isArchive'] == true,
+    );
+  }
+
   Map<String, List<String>> _optionsMap() {
     final result = <String, List<String>>{};
     for (final field in _fields) {
@@ -502,11 +554,17 @@ class ReportFormProvider extends ChangeNotifier {
     return result;
   }
 
-  Future<void> _saveDropdownOptions() => ReportDropdownOptionsService.save(
-    reportName: nameController.text.trim(),
-    optionsMap: _optionsMap(),
-    reportTypeId: _optionsReportTypeId,
-  );
+  Future<void> _saveDropdownOptions() async {
+    try {
+      await ReportDropdownOptionsService.save(
+        reportName: nameController.text.trim(),
+        optionsMap: _optionsMap(),
+        reportTypeId: _optionsReportTypeId,
+      );
+    } catch (e) {
+      debugPrint('ReportFormProvider: failed to save dropdown options: $e');
+    }
+  }
 
   Map<String, dynamic> _draftJson() => {
     'reportName': nameController.text,
@@ -588,30 +646,47 @@ class ReportFormProvider extends ChangeNotifier {
 
     try {
       final reportType = _reportTypeJson();
-      final reportFields = _fields.map(_cleanField).toList();
 
       if (_isEditMode) {
-        await _system.updateReport(
-          reportId: _resolveId(_editData) ?? '',
-          reportType: reportType,
-          competencyReports: [],
-          reportTypeDates: _dates,
-          statusRuleReports: [],
-          reportFields: reportFields,
-          actionReports: [],
-        );
+        final reportTypeId = _resolveId(_editData);
+
+        for (var i = 0; i < _fields.length; i++) {
+          final field = _fields[i];
+          final id = field[_reportFieldIdKey]?.toString() ?? '';
+          final request = _toPatchRequest(field);
+
+          if (id.isEmpty) {
+            final created = await _system.createReportField(
+              request: request.copyWith(
+                reportTypeID: request.reportTypeID ?? reportTypeId,
+              ),
+            );
+            if (_system.hasError) return 'Error: ${_system.errorMessage}';
+
+            final newId = created?.data.reportFieldID;
+            if (newId != null) {
+              _fields[i] = {
+                ..._fields[i],
+                _reportFieldIdKey: newId,
+                'reportTypeID': created!.data.reportTypeID,
+              };
+            }
+          } else {
+            await _system.patchReportField(reportFieldId: id, request: request);
+            if (_system.hasError) return 'Error: ${_system.errorMessage}';
+          }
+        }
       } else {
         await _system.createReport(
           reportType: reportType,
           competencyReports: [],
           reportTypeDates: _dates,
           statusRuleReports: [],
-          reportFields: reportFields,
+          reportFields: _fields.map(_cleanField).toList(),
           actionReports: [],
         );
+        if (_system.hasError) return 'Error: ${_system.errorMessage}';
       }
-
-      if (_system.hasError) return 'Error: ${_system.errorMessage}';
 
       await _saveDropdownOptions();
       await clearDraft();

@@ -2583,10 +2583,10 @@ class _ReportFieldsScreenState extends State<ReportFieldsScreen> {
       );
       return;
     }
-    if (_itemIdController.text.trim().isEmpty) {
-      _showErrorSnackBar('Please enter Item ID');
-      return;
-    }
+    // if (_itemIdController.text.trim().isEmpty) {
+    //   _showErrorSnackBar('Please enter Item ID');
+    //   return;
+    // }
     if (_itemNoController.text.trim().isEmpty) {
       _showErrorSnackBar('Please enter Item No');
       return;

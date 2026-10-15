@@ -43,6 +43,7 @@ class _SiteScreenState extends State<SiteScreen>
     );
     WidgetsBinding.instance.addPostFrameCallback((_) => _initializeData());
     _searchController.addListener(_onSearchChanged);
+    _scrollController.addListener(_onScroll);
   }
 
   Future<void> _initializeData() async {
@@ -54,17 +55,24 @@ class _SiteScreenState extends State<SiteScreen>
   @override
   void dispose() {
     _searchController.removeListener(_onSearchChanged);
+    _scrollController.removeListener(_onScroll);
     _searchController.dispose();
     _animationController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
+  void _onScroll() {
+    if (!mounted || !_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    if (position.maxScrollExtent - position.pixels <= 200) {
+      context.read<SiteProvider>().fetchMoreSites();
+    }
+  }
+
   void _onSearchChanged() {
     if (mounted) setState(() {});
   }
-
-  // ─── Filter helpers ───────────────────────────────────────────────────────
 
   List<dynamic> _getColumnValues(List<Site> sites, SiteSearchColumn column) {
     if (sites.isEmpty) return [];
@@ -168,8 +176,6 @@ class _SiteScreenState extends State<SiteScreen>
     return value.toString();
   }
 
-  // ─── Actions ──────────────────────────────────────────────────────────────
-
   void _editSite(Site site) {
     NavigationService().navigateTo(
       NavigationRoutes.createSite,
@@ -253,9 +259,9 @@ class _SiteScreenState extends State<SiteScreen>
                               site.siteName ?? 'Unknown',
                               style: context.topology.textTheme.titleSmall
                                   ?.copyWith(
-                                    color: context.colors.primary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                color: context.colors.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             if (site.siteCode != null) ...[
                               const SizedBox(height: 4),
@@ -274,10 +280,10 @@ class _SiteScreenState extends State<SiteScreen>
                                   'Code: ${site.siteCode}',
                                   style: context.topology.textTheme.bodySmall
                                       ?.copyWith(
-                                        color: context.colors.primary,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 11,
-                                      ),
+                                    color: context.colors.primary,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 11,
+                                  ),
                                 ),
                               ),
                             ],
@@ -343,9 +349,9 @@ class _SiteScreenState extends State<SiteScreen>
                         builder: (context, provider, child) {
                           return ElevatedButton(
                             onPressed:
-                                provider.isLoading
-                                    ? null
-                                    : () => _performDelete(dialogContext, site),
+                            provider.isLoading
+                                ? null
+                                : () => _performDelete(dialogContext, site),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red.shade600,
                               foregroundColor: Colors.white,
@@ -356,32 +362,32 @@ class _SiteScreenState extends State<SiteScreen>
                               elevation: 0,
                             ),
                             child:
-                                provider.isLoading
-                                    ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                              Colors.white,
-                                            ),
-                                      ),
-                                    )
-                                    : Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: const [
-                                        Icon(Icons.delete_rounded, size: 18),
-                                        SizedBox(width: 6),
-                                        Text(
-                                          'Delete',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                            provider.isLoading
+                                ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
+                            )
+                                : Row(
+                              mainAxisAlignment:
+                              MainAxisAlignment.center,
+                              children: const [
+                                Icon(Icons.delete_rounded, size: 18),
+                                SizedBox(width: 6),
+                                Text(
+                                  'Delete',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
                           );
                         },
                       ),
@@ -416,8 +422,6 @@ class _SiteScreenState extends State<SiteScreen>
     }
   }
 
-  // ─── Filter dialog ────────────────────────────────────────────────────────
-
   void _showFilterDialog(BuildContext context, List<Site> sites) {
     SiteSearchColumn? tempColumn = selectedColumn;
     dynamic tempValue = selectedValue;
@@ -427,9 +431,9 @@ class _SiteScreenState extends State<SiteScreen>
       widget: StatefulBuilder(
         builder: (context, setDialogState) {
           final columnValues =
-              tempColumn != null
-                  ? _getColumnValues(sites, tempColumn!)
-                  : <dynamic>[];
+          tempColumn != null
+              ? _getColumnValues(sites, tempColumn!)
+              : <dynamic>[];
 
           return Container(
             constraints: BoxConstraints(
@@ -462,10 +466,10 @@ class _SiteScreenState extends State<SiteScreen>
                               'Select Column',
                               style: context.topology.textTheme.bodySmall
                                   ?.copyWith(
-                                    color: context.colors.primary.withOpacity(
-                                      0.6,
-                                    ),
-                                  ),
+                                color: context.colors.primary.withOpacity(
+                                  0.6,
+                                ),
+                              ),
                             ),
                           ),
                           ...SiteSearchColumn.values.map((col) {
@@ -505,68 +509,68 @@ class _SiteScreenState extends State<SiteScreen>
                     Expanded(
                       flex: 2,
                       child:
-                          tempColumn == null
-                              ? Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 16,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: context.colors.surface,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: context.colors.primary.withOpacity(
-                                      0.3,
-                                    ),
-                                  ),
-                                ),
-                                child: Text(
-                                  'Select a column first',
-                                  style: context.topology.textTheme.bodySmall
-                                      ?.copyWith(
-                                        color: context.colors.primary
-                                            .withOpacity(0.5),
-                                      ),
-                                ),
-                              )
-                              : CommonDropdown<dynamic>(
-                                value: tempValue,
-                                items: [
-                                  DropdownMenuItem<dynamic>(
-                                    value: null,
-                                    child: Text(
-                                      'All',
-                                      style: context
-                                          .topology
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            color: context.colors.primary
-                                                .withOpacity(0.6),
-                                          ),
-                                    ),
-                                  ),
-                                  ...columnValues.map((v) {
-                                    return DropdownMenuItem<dynamic>(
-                                      value: v,
-                                      child: Text(
-                                        _getValueLabel(tempColumn!, v),
-                                        style: context
-                                            .topology
-                                            .textTheme
-                                            .bodySmall
-                                            ?.copyWith(
-                                              color: context.colors.primary,
-                                            ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    );
-                                  }),
-                                ],
-                                onChanged: (value) {
-                                  setDialogState(() => tempValue = value);
-                                },
+                      tempColumn == null
+                          ? Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 16,
+                        ),
+                        decoration: BoxDecoration(
+                          color: context.colors.surface,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: context.colors.primary.withOpacity(
+                              0.3,
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          'Select a column first',
+                          style: context.topology.textTheme.bodySmall
+                              ?.copyWith(
+                            color: context.colors.primary
+                                .withOpacity(0.5),
+                          ),
+                        ),
+                      )
+                          : CommonDropdown<dynamic>(
+                        value: tempValue,
+                        items: [
+                          DropdownMenuItem<dynamic>(
+                            value: null,
+                            child: Text(
+                              'All',
+                              style: context
+                                  .topology
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                color: context.colors.primary
+                                    .withOpacity(0.6),
                               ),
+                            ),
+                          ),
+                          ...columnValues.map((v) {
+                            return DropdownMenuItem<dynamic>(
+                              value: v,
+                              child: Text(
+                                _getValueLabel(tempColumn!, v),
+                                style: context
+                                    .topology
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                  color: context.colors.primary,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          }),
+                        ],
+                        onChanged: (value) {
+                          setDialogState(() => tempValue = value);
+                        },
+                      ),
                     ),
                   ],
                 ),
@@ -608,8 +612,6 @@ class _SiteScreenState extends State<SiteScreen>
     );
   }
 
-  // ─── Build ────────────────────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
     return Consumer<SiteProvider>(
@@ -631,8 +633,6 @@ class _SiteScreenState extends State<SiteScreen>
       },
     );
   }
-
-  // ─── Loading ──────────────────────────────────────────────────────────────
 
   Widget _buildLoadingState() {
     return Scaffold(
@@ -671,8 +671,6 @@ class _SiteScreenState extends State<SiteScreen>
       ),
     );
   }
-
-  // ─── Empty ────────────────────────────────────────────────────────────────
 
   Widget _buildEmptyState(BuildContext context) {
     return Scaffold(
@@ -737,8 +735,8 @@ class _SiteScreenState extends State<SiteScreen>
                     ElevatedButton.icon(
                       onPressed:
                           () => NavigationService().navigateTo(
-                            NavigationRoutes.createSite,
-                          ),
+                        NavigationRoutes.createSite,
+                      ),
                       icon: const Icon(Icons.add_rounded, size: 24),
                       label: const Text('Create Site'),
                       style: ElevatedButton.styleFrom(
@@ -763,8 +761,6 @@ class _SiteScreenState extends State<SiteScreen>
       ),
     );
   }
-
-  // ─── Error ────────────────────────────────────────────────────────────────
 
   Widget _buildErrorState(BuildContext context, SiteProvider provider) {
     return Scaffold(
@@ -845,16 +841,16 @@ class _SiteScreenState extends State<SiteScreen>
     );
   }
 
-  // ─── Main layout ──────────────────────────────────────────────────────────
-
   Widget _buildMainLayout(
-    BuildContext context,
-    List<Site> filteredSites,
-    List<Site> allSites,
-  ) {
+      BuildContext context,
+      List<Site> filteredSites,
+      List<Site> allSites,
+      ) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isTablet = screenWidth >= 768;
     final isDesktop = screenWidth >= 1024;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => _onScroll());
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
@@ -881,13 +877,32 @@ class _SiteScreenState extends State<SiteScreen>
                             const SizedBox(height: 16),
                             _buildFilterChips(),
                             const SizedBox(height: 16),
-                            _buildResultsCount(filteredSites),
+                            _buildResultsCount(filteredSites, allSites.length),
                             const SizedBox(height: 16),
                           ],
                         ),
                       ),
                     ),
                     _buildSitesList(filteredSites, isDesktop, isTablet),
+                    SliverToBoxAdapter(
+                      child: Consumer<SiteProvider>(
+                        builder: (context, provider, child) {
+                          if (!provider.isLoadingMore) {
+                            return const SizedBox.shrink();
+                          }
+                          return const Padding(
+                            padding: EdgeInsets.only(bottom: 100),
+                            child: Center(
+                              child: SizedBox(
+                                width: 28,
+                                height: 28,
+                                child: CircularProgressIndicator(strokeWidth: 3),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -896,21 +911,19 @@ class _SiteScreenState extends State<SiteScreen>
         ),
       ),
       floatingActionButton:
-          !isDesktop
-              ? FloatingActionButton.extended(
-                onPressed:
-                    () => NavigationService().navigateTo(NavigationRoutes.createSite),
-                icon: const Icon(Icons.add_rounded),
-                label: const Text('Create'),
-                backgroundColor: context.colors.primary,
-                foregroundColor: Colors.white,
-                elevation: 4,
-              )
-              : null,
+      !isDesktop
+          ? FloatingActionButton.extended(
+        onPressed:
+            () => NavigationService().navigateTo(NavigationRoutes.createSite),
+        icon: const Icon(Icons.add_rounded),
+        label: const Text('Create'),
+        backgroundColor: context.colors.primary,
+        foregroundColor: Colors.white,
+        elevation: 4,
+      )
+          : null,
     );
   }
-
-  // ─── Header ───────────────────────────────────────────────────────────────
 
   Widget _buildHeaderSection(bool isDesktop, bool isTablet) {
     return Container(
@@ -1007,8 +1020,6 @@ class _SiteScreenState extends State<SiteScreen>
     );
   }
 
-  // ─── Search bar ───────────────────────────────────────────────────────────
-
   Widget _buildSearchBar(List<Site> allSites, bool isDesktop) {
     return Focus(
       onFocusChange: (hasFocus) {
@@ -1021,9 +1032,9 @@ class _SiteScreenState extends State<SiteScreen>
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color:
-                _isSearchFocused
-                    ? context.colors.primary
-                    : Colors.grey.shade200,
+            _isSearchFocused
+                ? context.colors.primary
+                : Colors.grey.shade200,
             width: _isSearchFocused ? 2 : 1,
           ),
           boxShadow: [
@@ -1044,9 +1055,9 @@ class _SiteScreenState extends State<SiteScreen>
         child: CommonTextField(
           controller: _searchController,
           hintText:
-              isDesktop
-                  ? 'Search by site name, code, division, or address...'
-                  : 'Search sites...',
+          isDesktop
+              ? 'Search by site name, code, division, or address...'
+              : 'Search sites...',
           style: context.topology.textTheme.bodyMedium?.copyWith(
             color: context.colors.primary,
           ),
@@ -1073,24 +1084,24 @@ class _SiteScreenState extends State<SiteScreen>
                 margin: const EdgeInsets.only(right: 8),
                 decoration: BoxDecoration(
                   color:
-                      (selectedColumn != null && selectedValue != null)
-                          ? context.colors.primary.withOpacity(0.1)
-                          : Colors.transparent,
+                  (selectedColumn != null && selectedValue != null)
+                      ? context.colors.primary.withOpacity(0.1)
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: IconButton(
                   icon: Icon(
                     Icons.filter_list_rounded,
                     color:
-                        (selectedColumn != null && selectedValue != null)
-                            ? context.colors.primary
-                            : context.colors.primary.withOpacity(0.5),
+                    (selectedColumn != null && selectedValue != null)
+                        ? context.colors.primary
+                        : context.colors.primary.withOpacity(0.5),
                   ),
                   onPressed:
                       () => _showFilterDialog(
-                        context,
-                        context.read<SiteProvider>().sites,
-                      ),
+                    context,
+                    context.read<SiteProvider>().sites,
+                  ),
                   tooltip: 'Filter sites',
                 ),
               ),
@@ -1100,8 +1111,6 @@ class _SiteScreenState extends State<SiteScreen>
       ),
     );
   }
-
-  // ─── Filter chips ─────────────────────────────────────────────────────────
 
   Widget _buildFilterChips() {
     if (selectedColumn == null || selectedValue == null) {
@@ -1183,9 +1192,7 @@ class _SiteScreenState extends State<SiteScreen>
     );
   }
 
-  // ─── Results count ────────────────────────────────────────────────────────
-
-  Widget _buildResultsCount(List<Site> filteredSites) {
+  Widget _buildResultsCount(List<Site> filteredSites, int totalCount) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
       child: Row(
@@ -1212,7 +1219,9 @@ class _SiteScreenState extends State<SiteScreen>
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '${filteredSites.length} ${filteredSites.length == 1 ? 'site' : 'sites'}',
+                  filteredSites.length == totalCount
+                      ? '$totalCount ${totalCount == 1 ? 'site' : 'sites'}'
+                      : '${filteredSites.length} of $totalCount sites',
                   style: context.topology.textTheme.bodySmall?.copyWith(
                     color: context.colors.primary,
                     fontWeight: FontWeight.w600,
@@ -1229,9 +1238,9 @@ class _SiteScreenState extends State<SiteScreen>
                   color: context.colors.primary,
                 ),
                 onPressed:
-                    provider.isLoading
-                        ? null
-                        : () => provider.fetchSite(context),
+                provider.isLoading
+                    ? null
+                    : () => provider.fetchSite(context),
                 tooltip: 'Refresh',
               );
             },
@@ -1241,13 +1250,11 @@ class _SiteScreenState extends State<SiteScreen>
     );
   }
 
-  // ─── List (table) ─────────────────────────────────────────────────────────
-
   Widget _buildSitesList(
-    List<Site> filteredSites,
-    bool isDesktop,
-    bool isTablet,
-  ) {
+      List<Site> filteredSites,
+      bool isDesktop,
+      bool isTablet,
+      ) {
     if (filteredSites.isEmpty) {
       return SliverFillRemaining(
         hasScrollBody: false,
@@ -1305,7 +1312,6 @@ class _SiteScreenState extends State<SiteScreen>
     );
   }
 
-  // ── Fixed columns: Site | Division | Address | Status | Actions ───────────
   List<DataColumn> _buildTableColumns() {
     const labels = ['Site', 'Division', 'Address', 'Status', 'Actions'];
     return labels.asMap().entries.map((e) {
@@ -1328,13 +1334,12 @@ class _SiteScreenState extends State<SiteScreen>
 
     return DataRow(
       color: MaterialStateProperty.resolveWith<Color?>(
-        (_) => isEven ? context.colors.primary.withOpacity(0.05) : null,
+            (_) => isEven ? context.colors.primary.withOpacity(0.05) : null,
       ),
       onSelectChanged: (_) {
         NavigationService().navigateTo(NavigationRoutes.siteDetails, arguments: site);
       },
       cells: [
-        // ── Site name + code ────────────────────────────────────────────────
         DataCell(
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -1379,7 +1384,6 @@ class _SiteScreenState extends State<SiteScreen>
           ),
         ),
 
-        // ── Division ────────────────────────────────────────────────────────
         DataCell(
           Text(
             site.divisionName ?? '-',
@@ -1389,7 +1393,6 @@ class _SiteScreenState extends State<SiteScreen>
           ),
         ),
 
-        // ── Address ─────────────────────────────────────────────────────────
         DataCell(
           SizedBox(
             width: 200,
@@ -1404,21 +1407,20 @@ class _SiteScreenState extends State<SiteScreen>
           ),
         ),
 
-        // ── Status badge ────────────────────────────────────────────────────
         DataCell(
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
               color:
-                  isArchived
-                      ? Colors.grey.withOpacity(0.15)
-                      : Colors.green.withOpacity(0.12),
+              isArchived
+                  ? Colors.grey.withOpacity(0.15)
+                  : Colors.green.withOpacity(0.12),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color:
-                    isArchived
-                        ? Colors.grey.withOpacity(0.4)
-                        : Colors.green.withOpacity(0.4),
+                isArchived
+                    ? Colors.grey.withOpacity(0.4)
+                    : Colors.green.withOpacity(0.4),
               ),
             ),
             child: Row(
@@ -1429,9 +1431,9 @@ class _SiteScreenState extends State<SiteScreen>
                   height: 6,
                   decoration: BoxDecoration(
                     color:
-                        isArchived
-                            ? Colors.grey.shade500
-                            : Colors.green.shade600,
+                    isArchived
+                        ? Colors.grey.shade500
+                        : Colors.green.shade600,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -1440,9 +1442,9 @@ class _SiteScreenState extends State<SiteScreen>
                   isArchived ? 'Archived' : 'Active',
                   style: context.topology.textTheme.bodySmall?.copyWith(
                     color:
-                        isArchived
-                            ? Colors.grey.shade700
-                            : Colors.green.shade700,
+                    isArchived
+                        ? Colors.grey.shade700
+                        : Colors.green.shade700,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                   ),
@@ -1452,7 +1454,6 @@ class _SiteScreenState extends State<SiteScreen>
           ),
         ),
 
-        // ── Actions ─────────────────────────────────────────────────────────
         DataCell(
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -1472,22 +1473,22 @@ class _SiteScreenState extends State<SiteScreen>
               Consumer<SiteProvider>(
                 builder:
                     (context, provider, _) => IconButton(
-                      icon: const Icon(
-                        Icons.delete_rounded,
-                        color: Colors.red,
-                        size: 18,
-                      ),
-                      onPressed:
-                          provider.isLoading
-                              ? null
-                              : () => _showDeleteConfirmation(context, site),
-                      tooltip: 'Delete Site',
-                      padding: const EdgeInsets.all(8),
-                      constraints: const BoxConstraints(
-                        minWidth: 36,
-                        minHeight: 36,
-                      ),
-                    ),
+                  icon: const Icon(
+                    Icons.delete_rounded,
+                    color: Colors.red,
+                    size: 18,
+                  ),
+                  onPressed:
+                  provider.isLoading
+                      ? null
+                      : () => _showDeleteConfirmation(context, site),
+                  tooltip: 'Delete Site',
+                  padding: const EdgeInsets.all(8),
+                  constraints: const BoxConstraints(
+                    minWidth: 36,
+                    minHeight: 36,
+                  ),
+                ),
               ),
             ],
           ),
@@ -1496,13 +1497,11 @@ class _SiteScreenState extends State<SiteScreen>
     );
   }
 
-  // ─── Site avatar ──────────────────────────────────────────────────────────
-
   Widget _buildSiteAvatar(Site site, {double size = 34}) {
     final initial =
-        site.siteName?.isNotEmpty == true
-            ? site.siteName!.substring(0, 1).toUpperCase()
-            : 'S';
+    site.siteName?.isNotEmpty == true
+        ? site.siteName!.substring(0, 1).toUpperCase()
+        : 'S';
 
     if (site.logo != null && site.logo!.isNotEmpty) {
       return ClipRRect(
@@ -1539,8 +1538,6 @@ class _SiteScreenState extends State<SiteScreen>
       ),
     );
   }
-
-  // ─── No results ───────────────────────────────────────────────────────────
 
   Widget _buildNoResultsState() {
     return Center(
@@ -1620,8 +1617,6 @@ class _SiteScreenState extends State<SiteScreen>
       ),
     );
   }
-
-  // ─── Snackbars ────────────────────────────────────────────────────────────
 
   void _showSuccessSnackbar(String siteName) {
     ScaffoldMessenger.of(context).showSnackBar(

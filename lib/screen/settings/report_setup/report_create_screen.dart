@@ -6,8 +6,6 @@ import 'package:inspect/provider/category_provider.dart';
 import 'package:inspect/provider/report_form_provider.dart';
 import 'package:inspect/provider/system_provider.dart';
 import 'package:inspect/screen/settings/report_setup/report_template_importer.dart';
-import 'package:inspect/storage/local_storage.dart';
-import 'package:inspect/storage/local_storage_constant.dart';
 import 'package:inspect/widget/common_button.dart';
 import 'package:inspect/widget/common_confirm_dialog.dart';
 import 'package:inspect/widget/common_textfield.dart';
@@ -328,7 +326,14 @@ class _ReportCreateViewState extends State<_ReportCreateView> {
       title: 'Delete Field?',
       itemLabel:
       form.fields[index]['labelText']?.toString() ?? 'Field ${index + 1}',
-      onConfirm: () => form.removeField(index),
+      onConfirm: () async {
+        final error = await form.removeField(index);
+        if (!mounted) return;
+        _showSnackBar(
+          error ?? 'Field deleted successfully',
+          color: error != null ? Colors.red : Colors.green,
+        );
+      },
     );
   }
 
