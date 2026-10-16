@@ -54,6 +54,7 @@ dependencies:
   table_calendar: ^3.2.1
   flutter_svg: ^2.2.3
   pdfx: ^2.11.0
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
@@ -113,3 +114,14 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/logo_small.jpg"
+  remove_alpha_ios: true
+  web:
+    generate: true
+    image_path: "assets/images/logo_small.jpg"
+    background_color: "#ffffff"
+    theme_color: "#ffffff"
