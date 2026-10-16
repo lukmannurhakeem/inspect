@@ -247,6 +247,7 @@ class _JobAddNewScreen extends State<JobAddNewScreen> {
               context.vXxl,
 
               // Next Button
+              // Next Button
               Consumer<SiteProvider>(
                 builder: (context, siteProvider, child) {
                   final canProceed =
