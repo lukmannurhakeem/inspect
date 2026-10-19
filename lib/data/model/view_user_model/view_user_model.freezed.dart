@@ -290,7 +290,7 @@ as List<AuthUser>,
 /// @nodoc
 mixin _$AuthUser {
 
- int get id; String get email; String get username;@JsonKey(name: 'divisionid') String get divisionId; String get code;@JsonKey(name: 'password_reset') bool get passwordReset;@JsonKey(name: 'is_account_locked') bool get isAccountLocked;@JsonKey(name: 'user_group') String get userGroup;@JsonKey(name: 'first_name') String get firstName;@JsonKey(name: 'last_name') String get lastName;@JsonKey(name: 'created_at') String get createdAt;@JsonKey(name: 'updated_at') String get updatedAt;
+ int get id; String get email; String get username;@JsonKey(name: 'divisionid') String get divisionId; String? get code;@JsonKey(name: 'password_reset') bool get passwordReset;@JsonKey(name: 'is_account_locked') bool get isAccountLocked;@JsonKey(name: 'user_group') String get userGroup;@JsonKey(name: 'first_name') String get firstName;@JsonKey(name: 'last_name') String get lastName;@JsonKey(name: 'created_at') String get createdAt;@JsonKey(name: 'updated_at') String get updatedAt;
 /// Create a copy of AuthUser
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -323,7 +323,7 @@ abstract mixin class $AuthUserCopyWith<$Res>  {
   factory $AuthUserCopyWith(AuthUser value, $Res Function(AuthUser) _then) = _$AuthUserCopyWithImpl;
 @useResult
 $Res call({
- int id, String email, String username,@JsonKey(name: 'divisionid') String divisionId, String code,@JsonKey(name: 'password_reset') bool passwordReset,@JsonKey(name: 'is_account_locked') bool isAccountLocked,@JsonKey(name: 'user_group') String userGroup,@JsonKey(name: 'first_name') String firstName,@JsonKey(name: 'last_name') String lastName,@JsonKey(name: 'created_at') String createdAt,@JsonKey(name: 'updated_at') String updatedAt
+ int id, String email, String username,@JsonKey(name: 'divisionid') String divisionId, String? code,@JsonKey(name: 'password_reset') bool passwordReset,@JsonKey(name: 'is_account_locked') bool isAccountLocked,@JsonKey(name: 'user_group') String userGroup,@JsonKey(name: 'first_name') String firstName,@JsonKey(name: 'last_name') String lastName,@JsonKey(name: 'created_at') String createdAt,@JsonKey(name: 'updated_at') String updatedAt
 });
 
 
@@ -340,14 +340,14 @@ class _$AuthUserCopyWithImpl<$Res>
 
 /// Create a copy of AuthUser
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? email = null,Object? username = null,Object? divisionId = null,Object? code = null,Object? passwordReset = null,Object? isAccountLocked = null,Object? userGroup = null,Object? firstName = null,Object? lastName = null,Object? createdAt = null,Object? updatedAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? email = null,Object? username = null,Object? divisionId = null,Object? code = freezed,Object? passwordReset = null,Object? isAccountLocked = null,Object? userGroup = null,Object? firstName = null,Object? lastName = null,Object? createdAt = null,Object? updatedAt = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,username: null == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
 as String,divisionId: null == divisionId ? _self.divisionId : divisionId // ignore: cast_nullable_to_non_nullable
-as String,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
-as String,passwordReset: null == passwordReset ? _self.passwordReset : passwordReset // ignore: cast_nullable_to_non_nullable
+as String,code: freezed == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
+as String?,passwordReset: null == passwordReset ? _self.passwordReset : passwordReset // ignore: cast_nullable_to_non_nullable
 as bool,isAccountLocked: null == isAccountLocked ? _self.isAccountLocked : isAccountLocked // ignore: cast_nullable_to_non_nullable
 as bool,userGroup: null == userGroup ? _self.userGroup : userGroup // ignore: cast_nullable_to_non_nullable
 as String,firstName: null == firstName ? _self.firstName : firstName // ignore: cast_nullable_to_non_nullable
@@ -439,7 +439,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String email,  String username, @JsonKey(name: 'divisionid')  String divisionId,  String code, @JsonKey(name: 'password_reset')  bool passwordReset, @JsonKey(name: 'is_account_locked')  bool isAccountLocked, @JsonKey(name: 'user_group')  String userGroup, @JsonKey(name: 'first_name')  String firstName, @JsonKey(name: 'last_name')  String lastName, @JsonKey(name: 'created_at')  String createdAt, @JsonKey(name: 'updated_at')  String updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String email,  String username, @JsonKey(name: 'divisionid')  String divisionId,  String? code, @JsonKey(name: 'password_reset')  bool passwordReset, @JsonKey(name: 'is_account_locked')  bool isAccountLocked, @JsonKey(name: 'user_group')  String userGroup, @JsonKey(name: 'first_name')  String firstName, @JsonKey(name: 'last_name')  String lastName, @JsonKey(name: 'created_at')  String createdAt, @JsonKey(name: 'updated_at')  String updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AuthUser() when $default != null:
 return $default(_that.id,_that.email,_that.username,_that.divisionId,_that.code,_that.passwordReset,_that.isAccountLocked,_that.userGroup,_that.firstName,_that.lastName,_that.createdAt,_that.updatedAt);case _:
@@ -460,7 +460,7 @@ return $default(_that.id,_that.email,_that.username,_that.divisionId,_that.code,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String email,  String username, @JsonKey(name: 'divisionid')  String divisionId,  String code, @JsonKey(name: 'password_reset')  bool passwordReset, @JsonKey(name: 'is_account_locked')  bool isAccountLocked, @JsonKey(name: 'user_group')  String userGroup, @JsonKey(name: 'first_name')  String firstName, @JsonKey(name: 'last_name')  String lastName, @JsonKey(name: 'created_at')  String createdAt, @JsonKey(name: 'updated_at')  String updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String email,  String username, @JsonKey(name: 'divisionid')  String divisionId,  String? code, @JsonKey(name: 'password_reset')  bool passwordReset, @JsonKey(name: 'is_account_locked')  bool isAccountLocked, @JsonKey(name: 'user_group')  String userGroup, @JsonKey(name: 'first_name')  String firstName, @JsonKey(name: 'last_name')  String lastName, @JsonKey(name: 'created_at')  String createdAt, @JsonKey(name: 'updated_at')  String updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _AuthUser():
 return $default(_that.id,_that.email,_that.username,_that.divisionId,_that.code,_that.passwordReset,_that.isAccountLocked,_that.userGroup,_that.firstName,_that.lastName,_that.createdAt,_that.updatedAt);case _:
@@ -480,7 +480,7 @@ return $default(_that.id,_that.email,_that.username,_that.divisionId,_that.code,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String email,  String username, @JsonKey(name: 'divisionid')  String divisionId,  String code, @JsonKey(name: 'password_reset')  bool passwordReset, @JsonKey(name: 'is_account_locked')  bool isAccountLocked, @JsonKey(name: 'user_group')  String userGroup, @JsonKey(name: 'first_name')  String firstName, @JsonKey(name: 'last_name')  String lastName, @JsonKey(name: 'created_at')  String createdAt, @JsonKey(name: 'updated_at')  String updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String email,  String username, @JsonKey(name: 'divisionid')  String divisionId,  String? code, @JsonKey(name: 'password_reset')  bool passwordReset, @JsonKey(name: 'is_account_locked')  bool isAccountLocked, @JsonKey(name: 'user_group')  String userGroup, @JsonKey(name: 'first_name')  String firstName, @JsonKey(name: 'last_name')  String lastName, @JsonKey(name: 'created_at')  String createdAt, @JsonKey(name: 'updated_at')  String updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _AuthUser() when $default != null:
 return $default(_that.id,_that.email,_that.username,_that.divisionId,_that.code,_that.passwordReset,_that.isAccountLocked,_that.userGroup,_that.firstName,_that.lastName,_that.createdAt,_that.updatedAt);case _:
@@ -495,14 +495,14 @@ return $default(_that.id,_that.email,_that.username,_that.divisionId,_that.code,
 @JsonSerializable()
 
 class _AuthUser extends AuthUser {
-  const _AuthUser({required this.id, required this.email, required this.username, @JsonKey(name: 'divisionid') required this.divisionId, required this.code, @JsonKey(name: 'password_reset') required this.passwordReset, @JsonKey(name: 'is_account_locked') required this.isAccountLocked, @JsonKey(name: 'user_group') required this.userGroup, @JsonKey(name: 'first_name') required this.firstName, @JsonKey(name: 'last_name') required this.lastName, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'updated_at') required this.updatedAt}): super._();
+  const _AuthUser({required this.id, required this.email, required this.username, @JsonKey(name: 'divisionid') required this.divisionId, this.code, @JsonKey(name: 'password_reset') required this.passwordReset, @JsonKey(name: 'is_account_locked') required this.isAccountLocked, @JsonKey(name: 'user_group') required this.userGroup, @JsonKey(name: 'first_name') required this.firstName, @JsonKey(name: 'last_name') required this.lastName, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'updated_at') required this.updatedAt}): super._();
   factory _AuthUser.fromJson(Map<String, dynamic> json) => _$AuthUserFromJson(json);
 
 @override final  int id;
 @override final  String email;
 @override final  String username;
 @override@JsonKey(name: 'divisionid') final  String divisionId;
-@override final  String code;
+@override final  String? code;
 @override@JsonKey(name: 'password_reset') final  bool passwordReset;
 @override@JsonKey(name: 'is_account_locked') final  bool isAccountLocked;
 @override@JsonKey(name: 'user_group') final  String userGroup;
@@ -544,7 +544,7 @@ abstract mixin class _$AuthUserCopyWith<$Res> implements $AuthUserCopyWith<$Res>
   factory _$AuthUserCopyWith(_AuthUser value, $Res Function(_AuthUser) _then) = __$AuthUserCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String email, String username,@JsonKey(name: 'divisionid') String divisionId, String code,@JsonKey(name: 'password_reset') bool passwordReset,@JsonKey(name: 'is_account_locked') bool isAccountLocked,@JsonKey(name: 'user_group') String userGroup,@JsonKey(name: 'first_name') String firstName,@JsonKey(name: 'last_name') String lastName,@JsonKey(name: 'created_at') String createdAt,@JsonKey(name: 'updated_at') String updatedAt
+ int id, String email, String username,@JsonKey(name: 'divisionid') String divisionId, String? code,@JsonKey(name: 'password_reset') bool passwordReset,@JsonKey(name: 'is_account_locked') bool isAccountLocked,@JsonKey(name: 'user_group') String userGroup,@JsonKey(name: 'first_name') String firstName,@JsonKey(name: 'last_name') String lastName,@JsonKey(name: 'created_at') String createdAt,@JsonKey(name: 'updated_at') String updatedAt
 });
 
 
@@ -561,14 +561,14 @@ class __$AuthUserCopyWithImpl<$Res>
 
 /// Create a copy of AuthUser
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? email = null,Object? username = null,Object? divisionId = null,Object? code = null,Object? passwordReset = null,Object? isAccountLocked = null,Object? userGroup = null,Object? firstName = null,Object? lastName = null,Object? createdAt = null,Object? updatedAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? email = null,Object? username = null,Object? divisionId = null,Object? code = freezed,Object? passwordReset = null,Object? isAccountLocked = null,Object? userGroup = null,Object? firstName = null,Object? lastName = null,Object? createdAt = null,Object? updatedAt = null,}) {
   return _then(_AuthUser(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,username: null == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
 as String,divisionId: null == divisionId ? _self.divisionId : divisionId // ignore: cast_nullable_to_non_nullable
-as String,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
-as String,passwordReset: null == passwordReset ? _self.passwordReset : passwordReset // ignore: cast_nullable_to_non_nullable
+as String,code: freezed == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
+as String?,passwordReset: null == passwordReset ? _self.passwordReset : passwordReset // ignore: cast_nullable_to_non_nullable
 as bool,isAccountLocked: null == isAccountLocked ? _self.isAccountLocked : isAccountLocked // ignore: cast_nullable_to_non_nullable
 as bool,userGroup: null == userGroup ? _self.userGroup : userGroup // ignore: cast_nullable_to_non_nullable
 as String,firstName: null == firstName ? _self.firstName : firstName // ignore: cast_nullable_to_non_nullable

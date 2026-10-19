@@ -27,7 +27,7 @@ _AuthUser _$AuthUserFromJson(Map<String, dynamic> json) => _AuthUser(
   email: json['email'] as String,
   username: json['username'] as String,
   divisionId: json['divisionid'] as String,
-  code: json['code'] as String,
+  code: json['code'] as String?,
   passwordReset: json['password_reset'] as bool,
   isAccountLocked: json['is_account_locked'] as bool,
   userGroup: json['user_group'] as String,
