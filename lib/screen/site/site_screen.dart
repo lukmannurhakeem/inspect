@@ -877,8 +877,6 @@ class _SiteScreenState extends State<SiteScreen>
                             const SizedBox(height: 16),
                             _buildFilterChips(),
                             const SizedBox(height: 16),
-                            _buildResultsCount(filteredSites, allSites.length),
-                            const SizedBox(height: 16),
                           ],
                         ),
                       ),
@@ -1186,64 +1184,6 @@ class _SiteScreenState extends State<SiteScreen>
                 ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildResultsCount(List<Site> filteredSites, int totalCount) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  context.colors.primary.withOpacity(0.12),
-                  context.colors.primary.withOpacity(0.06),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.location_on_rounded,
-                  size: 18,
-                  color: context.colors.primary,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  filteredSites.length == totalCount
-                      ? '$totalCount ${totalCount == 1 ? 'site' : 'sites'}'
-                      : '${filteredSites.length} of $totalCount sites',
-                  style: context.topology.textTheme.bodySmall?.copyWith(
-                    color: context.colors.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Consumer<SiteProvider>(
-            builder: (context, provider, child) {
-              return IconButton(
-                icon: Icon(
-                  Icons.refresh_rounded,
-                  color: context.colors.primary,
-                ),
-                onPressed:
-                provider.isLoading
-                    ? null
-                    : () => provider.fetchSite(context),
-                tooltip: 'Refresh',
-              );
-            },
           ),
         ],
       ),
