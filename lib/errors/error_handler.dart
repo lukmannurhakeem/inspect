@@ -27,21 +27,23 @@ class ErrorHandler {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
+      case DioExceptionType.transformTimeout:
         return const TimeoutException();
       case DioExceptionType.connectionError:
         return const NetworkException();
       case DioExceptionType.badCertificate:
         return const NetworkException(
-            'A secure connection could not be established.');
+          'A secure connection could not be established.',
+        );
       case DioExceptionType.cancel:
         return const UnknownException('The request was cancelled.');
       case DioExceptionType.badResponse:
-        return _fromStatusCode(error.response?.statusCode, error.response?.data);
+        return _fromStatusCode(
+          error.response?.statusCode,
+          error.response?.data,
+        );
       case DioExceptionType.unknown:
         return const NetworkException();
-      case DioExceptionType.transformTimeout:
-        // TODO: Handle this case.
-        throw UnimplementedError();
     }
   }
 
@@ -53,19 +55,31 @@ class ErrorHandler {
       case 401:
       case 403:
         return UnauthorizedException(
-            message ?? 'You are not authorized to perform this action.');
+          message ?? 'You are not authorized to perform this action.',
+        );
       case 404:
-        return NotFoundException(message ?? 'The requested resource was not found.');
+        return NotFoundException(
+          message ?? 'The requested resource was not found.',
+        );
       default:
         if (code != null && code >= 500) {
-          return ServerException(message ?? 'Server error. Please try again later.', code);
+          return ServerException(
+            message ?? 'Server error. Please try again later.',
+            code,
+          );
         }
-        return UnknownException(message ?? 'Something went wrong. (status: $code)');
+        return UnknownException(
+          message ?? 'Something went wrong. (status: $code)',
+        );
     }
   }
 
   static String? _extractMessage(dynamic data) {
-    if (data is Map && data['message'] is String) return data['message'] as String;
+    if (data is! Map) return null;
+    for (final key in const ['message', 'error']) {
+      final value = data[key];
+      if (value is String && value.isNotEmpty) return value;
+    }
     return null;
   }
 }

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show VoidCallback;
 import 'package:inspect/data/repository/agent/agent_impl.dart';
 import 'package:inspect/data/repository/agent/agent_repository.dart';
 import 'package:inspect/data/repository/category/category_impl.dart';
@@ -19,9 +18,13 @@ import 'package:inspect/data/repository/system/system_impl.dart';
 import 'package:inspect/data/repository/system/system_repository.dart';
 import 'package:inspect/data/repository/user/user_impl.dart';
 import 'package:inspect/data/repository/user/user_repository.dart';
+import 'package:inspect/navigation/navigation_route.dart';
+import 'package:inspect/navigation/navigation_service.dart';
 import 'package:inspect/network/api_client.dart';
 import 'package:inspect/storage/local_storage.dart';
 import 'package:inspect/storage/token_storage.dart';
+import 'package:inspect/widget/common_snackbar.dart';
+import 'package:flutter/widgets.dart' show WidgetsBinding;
 
 class ServiceLocator {
   ServiceLocator._();
@@ -30,7 +33,7 @@ class ServiceLocator {
 
   factory ServiceLocator() => _instance;
 
-  VoidCallback? _onSessionExpired;
+  void Function(String? message) _onSessionExpired = _goToLogin;
   bool _initialized = false;
 
   late final TokenStorage tokenStorage;
@@ -48,8 +51,24 @@ class ServiceLocator {
 
   bool get isInitialized => _initialized;
 
+  static void _goToLogin(String? message) {
+    final nav = NavigationService();
+    if (nav.currentRoute == NavigationRoutes.login) return;
+
+    nav.navigateToAndRemoveUntil(NavigationRoutes.login);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = nav.navigatorKey.currentState?.overlay?.context;
+      if (context == null || !context.mounted) return;
+      CommonSnackbar.showError(
+        context,
+        message ?? 'Session expired. Please login again.',
+      );
+    });
+  }
+
   // ignore: use_setters_to_change_properties
-  void setSessionExpiredHandler(VoidCallback handler) {
+  void setSessionExpiredHandler(void Function(String? message) handler) {
     _onSessionExpired = handler;
   }
 
@@ -62,7 +81,7 @@ class ServiceLocator {
     apiClient = ApiClient(
       baseUrl: baseUrl,
       tokenStorage: tokenStorage,
-      onSessionExpired: () => _onSessionExpired?.call(),
+      onSessionExpired: (message) => _onSessionExpired(message),
     );
 
     userRepository = UserImpl(apiClient, tokenStorage);

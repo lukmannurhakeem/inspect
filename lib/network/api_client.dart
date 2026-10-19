@@ -11,16 +11,16 @@ class ApiClient {
     String? baseUrl,
     Dio? dio,
     TokenStorage? tokenStorage,
-    VoidCallback? onSessionExpired,
+    required void Function(String? message) onSessionExpired,
   }) : _dio =
-      dio ??
-          Dio(
-            BaseOptions(
-              baseUrl: baseUrl ?? AppConstants.apiBaseUrl,
-              connectTimeout: const Duration(seconds: 15),
-              receiveTimeout: const Duration(seconds: 15),
-            ),
-          ) {
+           dio ??
+           Dio(
+             BaseOptions(
+               baseUrl: baseUrl ?? AppConstants.apiBaseUrl,
+               connectTimeout: const Duration(seconds: 15),
+               receiveTimeout: const Duration(seconds: 15),
+             ),
+           ) {
     _dio.transformer = BackgroundTransformer();
 
     if (tokenStorage != null) {
@@ -28,7 +28,7 @@ class ApiClient {
         AuthInterceptor(
           storage: tokenStorage,
           dio: _dio,
-          onSessionExpired: onSessionExpired ?? () {},
+          onSessionExpired: onSessionExpired,
         ),
       );
     }
@@ -54,40 +54,40 @@ class ApiClient {
   Dio get raw => _dio;
 
   Future<T> get<T>(
-      String path, {
-        Map<String, dynamic>? queryParameters,
-        T Function(dynamic data)? parser,
-      }) =>
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    T Function(dynamic data)? parser,
+  }) =>
       _request(() => _dio.get(path, queryParameters: queryParameters), parser);
 
   Future<T> post<T>(
-      String path, {
-        dynamic data,
-        T Function(dynamic data)? parser,
-      }) => _request(() => _dio.post(path, data: data), parser);
+    String path, {
+    dynamic data,
+    T Function(dynamic data)? parser,
+  }) => _request(() => _dio.post(path, data: data), parser);
 
   Future<T> put<T>(
-      String path, {
-        dynamic data,
-        T Function(dynamic data)? parser,
-      }) => _request(() => _dio.put(path, data: data), parser);
+    String path, {
+    dynamic data,
+    T Function(dynamic data)? parser,
+  }) => _request(() => _dio.put(path, data: data), parser);
 
   Future<T> patch<T>(
-      String path, {
-        dynamic data,
-        T Function(dynamic data)? parser,
-      }) => _request(() => _dio.patch(path, data: data), parser);
+    String path, {
+    dynamic data,
+    T Function(dynamic data)? parser,
+  }) => _request(() => _dio.patch(path, data: data), parser);
 
   Future<T> delete<T>(
-      String path, {
-        dynamic data,
-        T Function(dynamic data)? parser,
-      }) => _request(() => _dio.delete(path, data: data), parser);
+    String path, {
+    dynamic data,
+    T Function(dynamic data)? parser,
+  }) => _request(() => _dio.delete(path, data: data), parser);
 
   Future<T> _request<T>(
-      Future<Response<dynamic>> Function() call,
-      T Function(dynamic data)? parser,
-      ) async {
+    Future<Response<dynamic>> Function() call,
+    T Function(dynamic data)? parser,
+  ) async {
     try {
       final response = await call();
       final data = response.data;

@@ -27,13 +27,14 @@ class AuthenticateProvider extends ChangeNotifier {
   AuthenticateProvider({
     UserRepository? userRepository,
     TokenStorage? tokenStorage,
-  })  : _userRepository = userRepository ?? ServiceLocator().userRepository,
-        _tokenStorage = tokenStorage ?? ServiceLocator().tokenStorage;
+  }) : _userRepository = userRepository ?? ServiceLocator().userRepository,
+       _tokenStorage = tokenStorage ?? ServiceLocator().tokenStorage;
 
   final UserRepository _userRepository;
   final TokenStorage _tokenStorage;
 
   UserLoginModel? _user;
+  bool _isRedirecting = false;
 
   List<AuthUser> _users = [];
   bool _isLoadingUsers = false;
@@ -90,11 +91,11 @@ class AuthenticateProvider extends ChangeNotifier {
   }
 
   Future<bool> _mutateUsers(
-      BuildContext context, {
-        required Future<void> Function() action,
-        required String successMessage,
-        bool refreshOnFailure = false,
-      }) async {
+    BuildContext context, {
+    required Future<void> Function() action,
+    required String successMessage,
+    bool refreshOnFailure = false,
+  }) async {
     _isLoadingUsers = true;
     _usersErrorMessage = null;
     notifyListeners();
@@ -118,22 +119,21 @@ class AuthenticateProvider extends ChangeNotifier {
   }
 
   Future<bool> updateUser(
-      BuildContext context, {
-        required String userId,
-        String? username,
-        String? email,
-        String? firstName,
-        String? lastName,
-        String? userGroup,
-        String? divisionid,
-        String? code,
-        bool? passwordReset,
-        bool? isAccountLocked,
-      }) {
+    BuildContext context, {
+    required String userId,
+    String? username,
+    String? email,
+    String? firstName,
+    String? lastName,
+    String? userGroup,
+    String? divisionid,
+    String? code,
+    bool? passwordReset,
+    bool? isAccountLocked,
+  }) {
     return _mutateUsers(
       context,
-      action:
-          () => _userRepository.updateUser(
+      action: () => _userRepository.updateUser(
         userId: userId,
         username: username,
         email: email,
@@ -163,10 +163,10 @@ class AuthenticateProvider extends ChangeNotifier {
   }
 
   Future<UserLoginModel?> login(
-      BuildContext context,
-      String name,
-      String password,
-      ) async {
+    BuildContext context,
+    String name,
+    String password,
+  ) async {
     if (name.trim().isEmpty || password.trim().isEmpty) {
       _showError(context, 'Email and password must not be empty');
       return null;
@@ -192,7 +192,7 @@ class AuthenticateProvider extends ChangeNotifier {
       arguments: {
         'showWelcomeDialog': true,
         'userName':
-        '${loginResult.user?.firstName ?? ''} ${loginResult.user?.lastName ?? ''}',
+            '${loginResult.user?.firstName ?? ''} ${loginResult.user?.lastName ?? ''}',
       },
     );
     return loginResult;
@@ -232,9 +232,9 @@ class AuthenticateProvider extends ChangeNotifier {
   }
 
   Future<bool> registerUser(
-      BuildContext context,
-      Map<String, dynamic> registerData,
-      ) async {
+    BuildContext context,
+    Map<String, dynamic> registerData,
+  ) async {
     try {
       await _userRepository.userRegister(registerData);
       return true;
@@ -251,8 +251,9 @@ class AuthenticateProvider extends ChangeNotifier {
 
       if (!hasAccess && !hasRefresh) return _redirectToLogin();
 
-      final authenticated =
-      hasAccess ? await _isTokenValid() : await _refreshSession();
+      final authenticated = hasAccess
+          ? await _isTokenValid()
+          : await _refreshSession();
 
       if (authenticated) {
         NavigationService().navigateToAndRemoveUntil(NavigationRoutes.home);
@@ -289,17 +290,22 @@ class AuthenticateProvider extends ChangeNotifier {
   Future<void> handleSessionExpired() => _redirectToLogin();
 
   Future<void> _redirectToLogin() async {
-    await _clearSession();
-    clearUsers();
-    NavigationService().navigateToAndRemoveUntil(NavigationRoutes.login);
+    if (_isRedirecting) return;
+    _isRedirecting = true;
+
+    try {
+      await _clearSession();
+      clearUsers();
+      NavigationService().navigateToAndRemoveUntil(NavigationRoutes.login);
+    } finally {
+      _isRedirecting = false;
+    }
   }
 
   Future<void> logout(BuildContext context) async {
     try {
       await _userRepository.userLogout();
-    } catch (_) {
-      // Log out locally even if the server call fails.
-    }
+    } catch (_) {}
     await _redirectToLogin();
   }
 
@@ -337,11 +343,11 @@ class AuthenticateProvider extends ChangeNotifier {
   }
 
   Future<bool> resetPassword(
-      BuildContext context,
-      String token,
-      String newPassword,
-      String confirmPassword,
-      ) async {
+    BuildContext context,
+    String token,
+    String newPassword,
+    String confirmPassword,
+  ) async {
     final validationError = _validateResetPassword(
       token,
       newPassword,
@@ -373,10 +379,10 @@ class AuthenticateProvider extends ChangeNotifier {
   }
 
   String? _validateResetPassword(
-      String token,
-      String newPassword,
-      String confirmPassword,
-      ) {
+    String token,
+    String newPassword,
+    String confirmPassword,
+  ) {
     if (token.trim().isEmpty) return 'Invalid reset token';
     if (newPassword.trim().isEmpty || confirmPassword.trim().isEmpty) {
       return 'Password fields cannot be empty';

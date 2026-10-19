@@ -13,7 +13,7 @@ class AuthInterceptor extends QueuedInterceptor {
 
   final TokenStorage storage;
   final Dio dio;
-  final VoidCallback onSessionExpired;
+  final void Function(String? message) onSessionExpired;
 
   static final _publicPaths = [ApiEndpoint.login, ApiEndpoint.refreshToken];
 
@@ -22,27 +22,57 @@ class AuthInterceptor extends QueuedInterceptor {
 
   Dio _cleanDio() => Dio(BaseOptions(baseUrl: dio.options.baseUrl));
 
+  String? _messageOf(Response<dynamic>? response) {
+    final data = response?.data;
+    if (data is Map) {
+      final message = data['message'];
+      if (message is String && message.isNotEmpty) return message;
+    }
+    return null;
+  }
+
+  Future<void> _expireSession([String? message]) async {
+    await storage.clearTokens();
+    try {
+      onSessionExpired(message);
+    } catch (e, st) {
+      debugPrint('[Auth] onSessionExpired failed: $e\n$st');
+    }
+  }
+
   @override
   Future<void> onRequest(
-      RequestOptions options,
-      RequestInterceptorHandler handler,
-      ) async {
-    if (!_isPublic(options)) {
-      final token = await storage.token;
-      if (token != null && token.isNotEmpty) {
-        options.headers['Authorization'] = 'Bearer $token';
-      } else {
-        debugPrint('[Auth] No token for ${options.path}');
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    if (_isPublic(options)) return handler.next(options);
+
+    final token = await storage.token;
+    if (token == null || token.isEmpty) {
+      final refresh = await storage.refreshToken;
+      if (refresh == null || refresh.isEmpty) {
+        await _expireSession();
+        return handler.reject(
+          DioException(
+            requestOptions: options,
+            type: DioExceptionType.badResponse,
+            response: Response(requestOptions: options, statusCode: 401),
+          ),
+        );
       }
+      debugPrint('[Auth] No access token for ${options.path}, refresh pending');
+      return handler.next(options);
     }
+
+    options.headers['Authorization'] = 'Bearer $token';
     handler.next(options);
   }
 
   @override
   Future<void> onError(
-      DioException err,
-      ErrorInterceptorHandler handler,
-      ) async {
+    DioException err,
+    ErrorInterceptorHandler handler,
+  ) async {
     final req = err.requestOptions;
 
     if (err.response?.statusCode != 401 ||
@@ -53,22 +83,26 @@ class AuthInterceptor extends QueuedInterceptor {
 
     try {
       final currentAccess = await storage.token;
+      final refresh = await storage.refreshToken;
+      final hasAccess = currentAccess?.isNotEmpty == true;
+      final hasRefresh = refresh?.isNotEmpty == true;
+
+      if (!hasAccess && !hasRefresh) {
+        await _expireSession(_messageOf(err.response));
+        return handler.next(err);
+      }
+
       final usedToken = req.headers['Authorization']?.toString().replaceFirst(
         'Bearer ',
         '',
       );
 
-      if (currentAccess != null &&
-          currentAccess.isNotEmpty &&
-          currentAccess != usedToken) {
-        return handler.resolve(await _retry(req, currentAccess));
+      if (hasAccess && currentAccess != usedToken) {
+        return handler.resolve(await _retry(req, currentAccess!));
       }
 
-      final refresh = await storage.refreshToken;
       final expiry = await storage.refreshExpiry;
-      if (refresh == null ||
-          refresh.isEmpty ||
-          (expiry != null && expiry.isBefore(DateTime.now()))) {
+      if (!hasRefresh || (expiry != null && expiry.isBefore(DateTime.now()))) {
         throw StateError('Refresh token missing or expired');
       }
 
@@ -79,7 +113,7 @@ class AuthInterceptor extends QueuedInterceptor {
 
       final body = res.data as Map<String, dynamic>;
       final newAccess = body['access_token'] as String;
-      final newRefresh = (body['refresh_token'] as String?) ?? refresh;
+      final newRefresh = (body['refresh_token'] as String?) ?? refresh!;
 
       await storage.saveTokens(
         token: newAccess,
@@ -91,13 +125,13 @@ class AuthInterceptor extends QueuedInterceptor {
     } on DioException catch (e) {
       final status = e.response?.statusCode;
       if (status == 401 || status == 403) {
-        await storage.clearTokens();
-        onSessionExpired();
+        await _expireSession(
+          _messageOf(e.response) ?? _messageOf(err.response),
+        );
       }
-      handler.next(e.requestOptions.path == req.path ? e : err);
+      handler.next(err);
     } catch (_) {
-      await storage.clearTokens();
-      onSessionExpired();
+      await _expireSession(_messageOf(err.response));
       handler.next(err);
     }
   }
