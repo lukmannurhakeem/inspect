@@ -214,11 +214,16 @@ class JobProvider extends ChangeNotifier {
     };
   }
 
-  String _describe(Object error) =>
-      error is DioException
-          ? _parseDioError(error)
-          : error.toString().replaceFirst('Exception: ', '');
+  String _describe(Object error) {
+    final message =
+    error is DioException
+        ? _parseDioError(error)
+        : error.toString().replaceFirst('Exception: ', '');
 
+    return message.contains('duplicate key')
+        ? 'Job already exists. Please use a different Job No.'
+        : message;
+  }
   String _fail(BuildContext context, Object error, {bool silent = false}) {
     final message = _error = _describe(error);
     if (!silent) _showError(context, message);
