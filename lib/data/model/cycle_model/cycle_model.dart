@@ -28,9 +28,11 @@ abstract class CycleData with _$CycleData {
     @JsonKey(name: 'reportTypeID') String? reportTypeId,
     String? reportTypeName,
     @JsonKey(name: 'categoryID') String? categoryId,
+    String? categoryName,
     @JsonKey(name: 'customerID') String? customerId,
     String? customerName,
     @JsonKey(name: 'siteID') String? siteId,
+    String? siteName,
     String? unit,
     int? length,
     int? minLength,
@@ -46,14 +48,11 @@ abstract class CycleData with _$CycleData {
   String? get cycleLength =>
       (length != null && unit != null) ? '$length $unit' : null;
 
-  /// Falls back to categoryId.
-  String? get categoryName => categoryId;
-
-  /// "CustomerName / SiteId"
+  /// "CustomerName / SiteName"
   String? get customerSite {
     final parts = [
       if (customerName?.isNotEmpty == true) customerName!,
-      if (siteId?.isNotEmpty == true) siteId!,
+      if (siteName?.isNotEmpty == true) siteName!,
     ];
 
     return parts.isNotEmpty ? parts.join(' / ') : null;

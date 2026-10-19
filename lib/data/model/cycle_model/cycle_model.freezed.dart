@@ -298,7 +298,7 @@ as int?,
 /// @nodoc
 mixin _$CycleData {
 
-@JsonKey(name: 'cycleID') String? get cycleId;@JsonKey(name: 'reportTypeID') String? get reportTypeId; String? get reportTypeName;@JsonKey(name: 'categoryID') String? get categoryId;@JsonKey(name: 'customerID') String? get customerId; String? get customerName;@JsonKey(name: 'siteID') String? get siteId; String? get unit; int? get length; int? get minLength; int? get maxLength; DateTime? get createdAt; DateTime? get updatedAt;
+@JsonKey(name: 'cycleID') String? get cycleId;@JsonKey(name: 'reportTypeID') String? get reportTypeId; String? get reportTypeName;@JsonKey(name: 'categoryID') String? get categoryId; String? get categoryName;@JsonKey(name: 'customerID') String? get customerId; String? get customerName;@JsonKey(name: 'siteID') String? get siteId; String? get siteName; String? get unit; int? get length; int? get minLength; int? get maxLength; DateTime? get createdAt; DateTime? get updatedAt;
 /// Create a copy of CycleData
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -311,16 +311,16 @@ $CycleDataCopyWith<CycleData> get copyWith => _$CycleDataCopyWithImpl<CycleData>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CycleData&&(identical(other.cycleId, cycleId) || other.cycleId == cycleId)&&(identical(other.reportTypeId, reportTypeId) || other.reportTypeId == reportTypeId)&&(identical(other.reportTypeName, reportTypeName) || other.reportTypeName == reportTypeName)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.customerId, customerId) || other.customerId == customerId)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.siteId, siteId) || other.siteId == siteId)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.length, length) || other.length == length)&&(identical(other.minLength, minLength) || other.minLength == minLength)&&(identical(other.maxLength, maxLength) || other.maxLength == maxLength)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CycleData&&(identical(other.cycleId, cycleId) || other.cycleId == cycleId)&&(identical(other.reportTypeId, reportTypeId) || other.reportTypeId == reportTypeId)&&(identical(other.reportTypeName, reportTypeName) || other.reportTypeName == reportTypeName)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.customerId, customerId) || other.customerId == customerId)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.siteId, siteId) || other.siteId == siteId)&&(identical(other.siteName, siteName) || other.siteName == siteName)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.length, length) || other.length == length)&&(identical(other.minLength, minLength) || other.minLength == minLength)&&(identical(other.maxLength, maxLength) || other.maxLength == maxLength)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,cycleId,reportTypeId,reportTypeName,categoryId,customerId,customerName,siteId,unit,length,minLength,maxLength,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,cycleId,reportTypeId,reportTypeName,categoryId,categoryName,customerId,customerName,siteId,siteName,unit,length,minLength,maxLength,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'CycleData(cycleId: $cycleId, reportTypeId: $reportTypeId, reportTypeName: $reportTypeName, categoryId: $categoryId, customerId: $customerId, customerName: $customerName, siteId: $siteId, unit: $unit, length: $length, minLength: $minLength, maxLength: $maxLength, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'CycleData(cycleId: $cycleId, reportTypeId: $reportTypeId, reportTypeName: $reportTypeName, categoryId: $categoryId, categoryName: $categoryName, customerId: $customerId, customerName: $customerName, siteId: $siteId, siteName: $siteName, unit: $unit, length: $length, minLength: $minLength, maxLength: $maxLength, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -331,7 +331,7 @@ abstract mixin class $CycleDataCopyWith<$Res>  {
   factory $CycleDataCopyWith(CycleData value, $Res Function(CycleData) _then) = _$CycleDataCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'cycleID') String? cycleId,@JsonKey(name: 'reportTypeID') String? reportTypeId, String? reportTypeName,@JsonKey(name: 'categoryID') String? categoryId,@JsonKey(name: 'customerID') String? customerId, String? customerName,@JsonKey(name: 'siteID') String? siteId, String? unit, int? length, int? minLength, int? maxLength, DateTime? createdAt, DateTime? updatedAt
+@JsonKey(name: 'cycleID') String? cycleId,@JsonKey(name: 'reportTypeID') String? reportTypeId, String? reportTypeName,@JsonKey(name: 'categoryID') String? categoryId, String? categoryName,@JsonKey(name: 'customerID') String? customerId, String? customerName,@JsonKey(name: 'siteID') String? siteId, String? siteName, String? unit, int? length, int? minLength, int? maxLength, DateTime? createdAt, DateTime? updatedAt
 });
 
 
@@ -348,15 +348,17 @@ class _$CycleDataCopyWithImpl<$Res>
 
 /// Create a copy of CycleData
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? cycleId = freezed,Object? reportTypeId = freezed,Object? reportTypeName = freezed,Object? categoryId = freezed,Object? customerId = freezed,Object? customerName = freezed,Object? siteId = freezed,Object? unit = freezed,Object? length = freezed,Object? minLength = freezed,Object? maxLength = freezed,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? cycleId = freezed,Object? reportTypeId = freezed,Object? reportTypeName = freezed,Object? categoryId = freezed,Object? categoryName = freezed,Object? customerId = freezed,Object? customerName = freezed,Object? siteId = freezed,Object? siteName = freezed,Object? unit = freezed,Object? length = freezed,Object? minLength = freezed,Object? maxLength = freezed,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
   return _then(_self.copyWith(
 cycleId: freezed == cycleId ? _self.cycleId : cycleId // ignore: cast_nullable_to_non_nullable
 as String?,reportTypeId: freezed == reportTypeId ? _self.reportTypeId : reportTypeId // ignore: cast_nullable_to_non_nullable
 as String?,reportTypeName: freezed == reportTypeName ? _self.reportTypeName : reportTypeName // ignore: cast_nullable_to_non_nullable
 as String?,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
+as String?,categoryName: freezed == categoryName ? _self.categoryName : categoryName // ignore: cast_nullable_to_non_nullable
 as String?,customerId: freezed == customerId ? _self.customerId : customerId // ignore: cast_nullable_to_non_nullable
 as String?,customerName: freezed == customerName ? _self.customerName : customerName // ignore: cast_nullable_to_non_nullable
 as String?,siteId: freezed == siteId ? _self.siteId : siteId // ignore: cast_nullable_to_non_nullable
+as String?,siteName: freezed == siteName ? _self.siteName : siteName // ignore: cast_nullable_to_non_nullable
 as String?,unit: freezed == unit ? _self.unit : unit // ignore: cast_nullable_to_non_nullable
 as String?,length: freezed == length ? _self.length : length // ignore: cast_nullable_to_non_nullable
 as int?,minLength: freezed == minLength ? _self.minLength : minLength // ignore: cast_nullable_to_non_nullable
@@ -448,10 +450,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'cycleID')  String? cycleId, @JsonKey(name: 'reportTypeID')  String? reportTypeId,  String? reportTypeName, @JsonKey(name: 'categoryID')  String? categoryId, @JsonKey(name: 'customerID')  String? customerId,  String? customerName, @JsonKey(name: 'siteID')  String? siteId,  String? unit,  int? length,  int? minLength,  int? maxLength,  DateTime? createdAt,  DateTime? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'cycleID')  String? cycleId, @JsonKey(name: 'reportTypeID')  String? reportTypeId,  String? reportTypeName, @JsonKey(name: 'categoryID')  String? categoryId,  String? categoryName, @JsonKey(name: 'customerID')  String? customerId,  String? customerName, @JsonKey(name: 'siteID')  String? siteId,  String? siteName,  String? unit,  int? length,  int? minLength,  int? maxLength,  DateTime? createdAt,  DateTime? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CycleData() when $default != null:
-return $default(_that.cycleId,_that.reportTypeId,_that.reportTypeName,_that.categoryId,_that.customerId,_that.customerName,_that.siteId,_that.unit,_that.length,_that.minLength,_that.maxLength,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.cycleId,_that.reportTypeId,_that.reportTypeName,_that.categoryId,_that.categoryName,_that.customerId,_that.customerName,_that.siteId,_that.siteName,_that.unit,_that.length,_that.minLength,_that.maxLength,_that.createdAt,_that.updatedAt);case _:
   return orElse();
 
 }
@@ -469,10 +471,10 @@ return $default(_that.cycleId,_that.reportTypeId,_that.reportTypeName,_that.cate
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'cycleID')  String? cycleId, @JsonKey(name: 'reportTypeID')  String? reportTypeId,  String? reportTypeName, @JsonKey(name: 'categoryID')  String? categoryId, @JsonKey(name: 'customerID')  String? customerId,  String? customerName, @JsonKey(name: 'siteID')  String? siteId,  String? unit,  int? length,  int? minLength,  int? maxLength,  DateTime? createdAt,  DateTime? updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'cycleID')  String? cycleId, @JsonKey(name: 'reportTypeID')  String? reportTypeId,  String? reportTypeName, @JsonKey(name: 'categoryID')  String? categoryId,  String? categoryName, @JsonKey(name: 'customerID')  String? customerId,  String? customerName, @JsonKey(name: 'siteID')  String? siteId,  String? siteName,  String? unit,  int? length,  int? minLength,  int? maxLength,  DateTime? createdAt,  DateTime? updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _CycleData():
-return $default(_that.cycleId,_that.reportTypeId,_that.reportTypeName,_that.categoryId,_that.customerId,_that.customerName,_that.siteId,_that.unit,_that.length,_that.minLength,_that.maxLength,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.cycleId,_that.reportTypeId,_that.reportTypeName,_that.categoryId,_that.categoryName,_that.customerId,_that.customerName,_that.siteId,_that.siteName,_that.unit,_that.length,_that.minLength,_that.maxLength,_that.createdAt,_that.updatedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -489,10 +491,10 @@ return $default(_that.cycleId,_that.reportTypeId,_that.reportTypeName,_that.cate
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'cycleID')  String? cycleId, @JsonKey(name: 'reportTypeID')  String? reportTypeId,  String? reportTypeName, @JsonKey(name: 'categoryID')  String? categoryId, @JsonKey(name: 'customerID')  String? customerId,  String? customerName, @JsonKey(name: 'siteID')  String? siteId,  String? unit,  int? length,  int? minLength,  int? maxLength,  DateTime? createdAt,  DateTime? updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'cycleID')  String? cycleId, @JsonKey(name: 'reportTypeID')  String? reportTypeId,  String? reportTypeName, @JsonKey(name: 'categoryID')  String? categoryId,  String? categoryName, @JsonKey(name: 'customerID')  String? customerId,  String? customerName, @JsonKey(name: 'siteID')  String? siteId,  String? siteName,  String? unit,  int? length,  int? minLength,  int? maxLength,  DateTime? createdAt,  DateTime? updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _CycleData() when $default != null:
-return $default(_that.cycleId,_that.reportTypeId,_that.reportTypeName,_that.categoryId,_that.customerId,_that.customerName,_that.siteId,_that.unit,_that.length,_that.minLength,_that.maxLength,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.cycleId,_that.reportTypeId,_that.reportTypeName,_that.categoryId,_that.categoryName,_that.customerId,_that.customerName,_that.siteId,_that.siteName,_that.unit,_that.length,_that.minLength,_that.maxLength,_that.createdAt,_that.updatedAt);case _:
   return null;
 
 }
@@ -504,16 +506,18 @@ return $default(_that.cycleId,_that.reportTypeId,_that.reportTypeName,_that.cate
 @JsonSerializable()
 
 class _CycleData extends CycleData {
-  const _CycleData({@JsonKey(name: 'cycleID') this.cycleId, @JsonKey(name: 'reportTypeID') this.reportTypeId, this.reportTypeName, @JsonKey(name: 'categoryID') this.categoryId, @JsonKey(name: 'customerID') this.customerId, this.customerName, @JsonKey(name: 'siteID') this.siteId, this.unit, this.length, this.minLength, this.maxLength, this.createdAt, this.updatedAt}): super._();
+  const _CycleData({@JsonKey(name: 'cycleID') this.cycleId, @JsonKey(name: 'reportTypeID') this.reportTypeId, this.reportTypeName, @JsonKey(name: 'categoryID') this.categoryId, this.categoryName, @JsonKey(name: 'customerID') this.customerId, this.customerName, @JsonKey(name: 'siteID') this.siteId, this.siteName, this.unit, this.length, this.minLength, this.maxLength, this.createdAt, this.updatedAt}): super._();
   factory _CycleData.fromJson(Map<String, dynamic> json) => _$CycleDataFromJson(json);
 
 @override@JsonKey(name: 'cycleID') final  String? cycleId;
 @override@JsonKey(name: 'reportTypeID') final  String? reportTypeId;
 @override final  String? reportTypeName;
 @override@JsonKey(name: 'categoryID') final  String? categoryId;
+@override final  String? categoryName;
 @override@JsonKey(name: 'customerID') final  String? customerId;
 @override final  String? customerName;
 @override@JsonKey(name: 'siteID') final  String? siteId;
+@override final  String? siteName;
 @override final  String? unit;
 @override final  int? length;
 @override final  int? minLength;
@@ -534,16 +538,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CycleData&&(identical(other.cycleId, cycleId) || other.cycleId == cycleId)&&(identical(other.reportTypeId, reportTypeId) || other.reportTypeId == reportTypeId)&&(identical(other.reportTypeName, reportTypeName) || other.reportTypeName == reportTypeName)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.customerId, customerId) || other.customerId == customerId)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.siteId, siteId) || other.siteId == siteId)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.length, length) || other.length == length)&&(identical(other.minLength, minLength) || other.minLength == minLength)&&(identical(other.maxLength, maxLength) || other.maxLength == maxLength)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CycleData&&(identical(other.cycleId, cycleId) || other.cycleId == cycleId)&&(identical(other.reportTypeId, reportTypeId) || other.reportTypeId == reportTypeId)&&(identical(other.reportTypeName, reportTypeName) || other.reportTypeName == reportTypeName)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.customerId, customerId) || other.customerId == customerId)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.siteId, siteId) || other.siteId == siteId)&&(identical(other.siteName, siteName) || other.siteName == siteName)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.length, length) || other.length == length)&&(identical(other.minLength, minLength) || other.minLength == minLength)&&(identical(other.maxLength, maxLength) || other.maxLength == maxLength)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,cycleId,reportTypeId,reportTypeName,categoryId,customerId,customerName,siteId,unit,length,minLength,maxLength,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,cycleId,reportTypeId,reportTypeName,categoryId,categoryName,customerId,customerName,siteId,siteName,unit,length,minLength,maxLength,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'CycleData(cycleId: $cycleId, reportTypeId: $reportTypeId, reportTypeName: $reportTypeName, categoryId: $categoryId, customerId: $customerId, customerName: $customerName, siteId: $siteId, unit: $unit, length: $length, minLength: $minLength, maxLength: $maxLength, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'CycleData(cycleId: $cycleId, reportTypeId: $reportTypeId, reportTypeName: $reportTypeName, categoryId: $categoryId, categoryName: $categoryName, customerId: $customerId, customerName: $customerName, siteId: $siteId, siteName: $siteName, unit: $unit, length: $length, minLength: $minLength, maxLength: $maxLength, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -554,7 +558,7 @@ abstract mixin class _$CycleDataCopyWith<$Res> implements $CycleDataCopyWith<$Re
   factory _$CycleDataCopyWith(_CycleData value, $Res Function(_CycleData) _then) = __$CycleDataCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'cycleID') String? cycleId,@JsonKey(name: 'reportTypeID') String? reportTypeId, String? reportTypeName,@JsonKey(name: 'categoryID') String? categoryId,@JsonKey(name: 'customerID') String? customerId, String? customerName,@JsonKey(name: 'siteID') String? siteId, String? unit, int? length, int? minLength, int? maxLength, DateTime? createdAt, DateTime? updatedAt
+@JsonKey(name: 'cycleID') String? cycleId,@JsonKey(name: 'reportTypeID') String? reportTypeId, String? reportTypeName,@JsonKey(name: 'categoryID') String? categoryId, String? categoryName,@JsonKey(name: 'customerID') String? customerId, String? customerName,@JsonKey(name: 'siteID') String? siteId, String? siteName, String? unit, int? length, int? minLength, int? maxLength, DateTime? createdAt, DateTime? updatedAt
 });
 
 
@@ -571,15 +575,17 @@ class __$CycleDataCopyWithImpl<$Res>
 
 /// Create a copy of CycleData
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? cycleId = freezed,Object? reportTypeId = freezed,Object? reportTypeName = freezed,Object? categoryId = freezed,Object? customerId = freezed,Object? customerName = freezed,Object? siteId = freezed,Object? unit = freezed,Object? length = freezed,Object? minLength = freezed,Object? maxLength = freezed,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? cycleId = freezed,Object? reportTypeId = freezed,Object? reportTypeName = freezed,Object? categoryId = freezed,Object? categoryName = freezed,Object? customerId = freezed,Object? customerName = freezed,Object? siteId = freezed,Object? siteName = freezed,Object? unit = freezed,Object? length = freezed,Object? minLength = freezed,Object? maxLength = freezed,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
   return _then(_CycleData(
 cycleId: freezed == cycleId ? _self.cycleId : cycleId // ignore: cast_nullable_to_non_nullable
 as String?,reportTypeId: freezed == reportTypeId ? _self.reportTypeId : reportTypeId // ignore: cast_nullable_to_non_nullable
 as String?,reportTypeName: freezed == reportTypeName ? _self.reportTypeName : reportTypeName // ignore: cast_nullable_to_non_nullable
 as String?,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
+as String?,categoryName: freezed == categoryName ? _self.categoryName : categoryName // ignore: cast_nullable_to_non_nullable
 as String?,customerId: freezed == customerId ? _self.customerId : customerId // ignore: cast_nullable_to_non_nullable
 as String?,customerName: freezed == customerName ? _self.customerName : customerName // ignore: cast_nullable_to_non_nullable
 as String?,siteId: freezed == siteId ? _self.siteId : siteId // ignore: cast_nullable_to_non_nullable
+as String?,siteName: freezed == siteName ? _self.siteName : siteName // ignore: cast_nullable_to_non_nullable
 as String?,unit: freezed == unit ? _self.unit : unit // ignore: cast_nullable_to_non_nullable
 as String?,length: freezed == length ? _self.length : length // ignore: cast_nullable_to_non_nullable
 as int?,minLength: freezed == minLength ? _self.minLength : minLength // ignore: cast_nullable_to_non_nullable

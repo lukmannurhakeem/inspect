@@ -1326,27 +1326,27 @@ class _AgentScreenState extends State<AgentScreen>
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  if (agent.agentid != null) ...[
-                    const SizedBox(height: 3),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: context.colors.primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        '# ${agent.agentid}',
-                        style: context.topology.textTheme.bodySmall?.copyWith(
-                          color: context.colors.primary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ),
-                  ],
+                  // if (agent.agentid != null) ...[
+                  //   const SizedBox(height: 3),
+                  //   Container(
+                  //     padding: const EdgeInsets.symmetric(
+                  //       horizontal: 6,
+                  //       vertical: 2,
+                  //     ),
+                  //     decoration: BoxDecoration(
+                  //       color: context.colors.primary.withOpacity(0.1),
+                  //       borderRadius: BorderRadius.circular(6),
+                  //     ),
+                  //     child: Text(
+                  //       '# ${agent.agentid}',
+                  //       style: context.topology.textTheme.bodySmall?.copyWith(
+                  //         color: context.colors.primary,
+                  //         fontWeight: FontWeight.w600,
+                  //         fontSize: 10,
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ],
                 ],
               ),
             ],

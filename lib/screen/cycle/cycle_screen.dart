@@ -368,17 +368,17 @@ class _CycleScreenState extends State<CycleScreen>
                       weight: FontWeight.w600,
                     ),
                   ),
-                  if (cycle.cycleId != null) ...[
-                    const SizedBox(height: 3),
-                    _Badge(
-                      '# ${cycle.cycleId}',
-                      fontSize: 10,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                    ),
-                  ],
+                  // if (cycle.cycleId != null) ...[
+                  //   const SizedBox(height: 3),
+                  //   _Badge(
+                  //     '# ${cycle.cycleId}',
+                  //     fontSize: 10,
+                  //     padding: const EdgeInsets.symmetric(
+                  //       horizontal: 6,
+                  //       vertical: 2,
+                  //     ),
+                  //   ),
+                  // ],
                 ],
               ),
             ],
