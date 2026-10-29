@@ -7,13 +7,14 @@ part of 'job_register_model.dart';
 // **************************************************************************
 
 _Item _$ItemFromJson(Map<String, dynamic> json) => _Item(
-  itemId: json['itemId'] as String?,
+  itemId: _readId(json, 'itemId') as String?,
   itemNo: json['itemNo'] as String?,
   description: json['description'] as String?,
   archived: json['archived'] as bool?,
   rfidNo: json['rfidNo'] as String?,
-  categoryId: json['categoryId'] as String?,
-  locationId: json['locationId'] as String?,
+  categoryId: _readCategoryId(json, 'categoryId') as String?,
+  categoryName: json['categoryName'] as String?,
+  locationId: _readLocationId(json, 'locationId') as String?,
   detailedLocation: json['detailedLocation'] as String?,
   internalNotes: json['internalNotes'] as String?,
   manufacturer: json['manufacturer'] as String?,
@@ -41,6 +42,7 @@ Map<String, dynamic> _$ItemToJson(_Item instance) => <String, dynamic>{
   'archived': instance.archived,
   'rfidNo': instance.rfidNo,
   'categoryId': instance.categoryId,
+  'categoryName': instance.categoryName,
   'locationId': instance.locationId,
   'detailedLocation': instance.detailedLocation,
   'internalNotes': instance.internalNotes,

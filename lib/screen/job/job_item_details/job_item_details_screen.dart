@@ -186,27 +186,31 @@ class _JobItemDetailsScreenState extends State<JobItemDetailsScreen>
   // ── Map → Item conversion ──────────────────────────────────────────────────
 
   Item _itemFromMap(Map<String, dynamic> data) {
+    final lower = {
+      for (final e in data.entries) e.key.toLowerCase(): e.value,
+    };
+
     String str(List<String> keys) {
       for (final k in keys) {
-        final v = (data[k] ?? '').toString().trim();
+        final v = (lower[k.toLowerCase()] ?? '').toString().trim();
         if (v.isNotEmpty) return v;
       }
       return '';
     }
 
     return Item(
-      itemId: str(['itemId', 'itemID', 'item_id']),
+      itemId: str(['itemId', 'item_id', 'id']),
       itemNo: str(['itemNo', 'item_no']),
       description: str(['description']),
-      categoryId: str(['categoryId', 'categoryID', 'category_id']),
-      locationId: str(['locationId', 'locationID', 'location_id']),
+      categoryId: str(['categoryId', 'category_id']),
+      locationId: str(['locationId', 'location_id']),
       detailedLocation: str([
         'detailedLocation',
         'detailed_location',
-        'ItemLocation',
+        'itemLocation',
       ]),
       status: str(['status']),
-      rfidNo: str(['rfidNo', 'RFIDNo', 'rfid_no']),
+      rfidNo: str(['rfidNo', 'rfid_no']),
       manufacturer: str(['manufacturer']),
       swl: str(['swl']),
     );

@@ -3,16 +3,25 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'job_register_model.freezed.dart';
 part 'job_register_model.g.dart';
 
+Object? _readId(Map map, String key) => map['itemId'] ?? map['itemID'];
+
+Object? _readCategoryId(Map map, String key) =>
+    map['categoryId'] ?? map['categoryID'];
+
+Object? _readLocationId(Map map, String key) =>
+    map['locationId'] ?? map['locationID'];
+
 @freezed
 abstract class Item with _$Item {
   const factory Item({
-    @JsonKey(name: 'itemId') String? itemId,
+    @JsonKey(name: 'itemId', readValue: _readId) String? itemId,
     String? itemNo,
     String? description,
     bool? archived,
     String? rfidNo,
-    @JsonKey(name: 'categoryId') String? categoryId,
-    @JsonKey(name: 'locationId') String? locationId,
+    @JsonKey(name: 'categoryId', readValue: _readCategoryId) String? categoryId,
+    String? categoryName,
+    @JsonKey(name: 'locationId', readValue: _readLocationId) String? locationId,
     String? detailedLocation,
     String? internalNotes,
     String? manufacturer,
@@ -27,8 +36,7 @@ abstract class Item with _$Item {
     Map<String, dynamic>? customFields,
   }) = _Item;
 
-  factory Item.fromJson(Map<String, dynamic> json) =>
-      _$ItemFromJson(json);
+  factory Item.fromJson(Map<String, dynamic> json) => _$ItemFromJson(json);
 }
 
 @freezed

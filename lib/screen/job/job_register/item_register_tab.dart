@@ -606,10 +606,19 @@ class _ItemRegisterViewState extends State<_ItemRegisterView>
 
     return switch (key) {
       'item' => InkWell(
-        onTap: () => NavigationService().navigateTo(
-          NavigationRoutes.jobItemDetails,
-          arguments: {'itemMap': data},
-        ),
+        onTap: () {
+          if (ItemRegisterProvider.idOf(data).isEmpty) {
+            CommonSnackbar.showWarning(
+              context,
+              'Item not synced yet. Please sync first.',
+            );
+            return;
+          }
+          NavigationService().navigateTo(
+            NavigationRoutes.jobItemDetails,
+            arguments: {'jobId': _provider.jobId, 'itemMap': data},
+          );
+        },
         child: Text(value, style: style?.copyWith(fontWeight: FontWeight.w600)),
       ),
       'status' => ItemStatusChip(status: value),

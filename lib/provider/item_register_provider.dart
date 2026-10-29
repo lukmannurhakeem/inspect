@@ -53,15 +53,25 @@ class ItemRegisterProvider extends ChangeNotifier {
   String? _uploadError;
 
   bool get hasItems => _items.isNotEmpty;
+
   bool get isLoading => _isLoading;
+
   bool get isSyncing => _isSyncing;
+
   bool get isLoadedFromCache => _fromCache;
+
   bool get hasSynced => _lastSyncTime != null;
+
   String get query => _query;
+
   Set<int> get selectedRows => _selected;
+
   int get uploadCount => _uploadCount;
+
   int get failCount => _failCount;
+
   String? get uploadError => _uploadError;
+
   int get pendingCount => _items.where(isUploadable).length;
 
   String? get lastSyncLabel {
@@ -80,8 +90,8 @@ class ItemRegisterProvider extends ChangeNotifier {
         .where(
           (item) => _searchKeys.any(
             (k) => (item[k]?.toString() ?? '').toLowerCase().contains(q),
-      ),
-    )
+          ),
+        )
         .toList();
   }
 
@@ -150,6 +160,9 @@ class ItemRegisterProvider extends ChangeNotifier {
       final uploaded = await _uploadPending(context, jobProvider);
       await _pullServer(context, jobProvider, uploaded);
       _setItems(await _readMerged());
+      debugPrint(
+        'merged: ${_items.map((e) => '${e['itemNo']}|id="${idOf(e)}"|${e['status']}').toList()}',
+      );
       _lastSyncTime = DateTime.now();
       _fromCache = false;
       return true;
@@ -196,9 +209,9 @@ class ItemRegisterProvider extends ChangeNotifier {
   }
 
   Future<Map<String, Map<String, dynamic>>> _uploadPending(
-      BuildContext context,
-      JobProvider jobProvider,
-      ) async {
+    BuildContext context,
+    JobProvider jobProvider,
+  ) async {
     final buckets = await Future.wait([
       JobItemStorage.getPendingItems(jobId),
       JobItemStorage.getJobDrafts(jobId),
@@ -209,16 +222,18 @@ class ItemRegisterProvider extends ChangeNotifier {
         if (isUploadable(item) && (idOf(item).isEmpty || seen.add(idOf(item))))
           item,
     ];
+    debugPrint('upload queue: ${queue.length} item(s)');
 
     final uploaded = <String, Map<String, dynamic>>{};
     for (final item in queue) {
       final id = idOf(item);
       try {
-        final result = await jobProvider.submitJobItemFromMap(
-          context,
-          jobId,
-          item,
-        );
+        debugPrint('upload start: ${item['itemNo']} id="$id"');
+        final result = await jobProvider
+            .submitJobItemFromMap(context, jobId, item)
+            .timeout(const Duration(seconds: 30));
+        debugPrint('upload result: $result');
+
         final queued = result['queued'] == true;
         if (result['success'] == true && !queued) {
           _uploadCount++;
@@ -234,6 +249,7 @@ class ItemRegisterProvider extends ChangeNotifier {
           );
         }
       } catch (e) {
+        debugPrint('upload failed: $e');
         _fail(e);
       }
     }
@@ -241,18 +257,25 @@ class ItemRegisterProvider extends ChangeNotifier {
   }
 
   Future<void> _pullServer(
-      BuildContext context,
-      JobProvider jobProvider,
-      Map<String, Map<String, dynamic>> uploaded,
-      ) async {
+    BuildContext context,
+    JobProvider jobProvider,
+    Map<String, Map<String, dynamic>> uploaded,
+  ) async {
     try {
-      await jobProvider.fetchJobRegisterModel(context, jobId);
-    } catch (_) {
+      await jobProvider
+          .fetchJobRegisterModel(context, jobId)
+          .timeout(const Duration(seconds: 30));
+    } catch (e) {
+      debugPrint('pull failed: $e');
       return;
     }
     final server = jobProvider.jobItems.map(toMap).toList();
+    debugPrint('server ids: ${server.map(idOf).toList()}');
+    debugPrint('pull result: ${server.length} server item(s)');
     if (server.isEmpty) return;
+
     final serverIds = server.map(idOf).toSet();
+
     await JobItemStorage.saveJobItems(jobId, [
       ...server,
       for (final e in uploaded.entries)
@@ -267,7 +290,7 @@ class ItemRegisterProvider extends ChangeNotifier {
 
   static bool isUploadable(Map<String, dynamic> item) =>
       (item['status'] ?? '').toString().toLowerCase() == 'pending_submission' ||
-          item['isPending'] == true;
+      item['isPending'] == true;
 
   static String text(Map<String, dynamic> data, List<String> keys) {
     for (final k in keys) {
@@ -289,8 +312,8 @@ class ItemRegisterProvider extends ChangeNotifier {
 
   static String cellValue(Map<String, dynamic> data, String column) =>
       column == 'status'
-          ? status(data)
-          : value(data, _columnSources[column] ?? column);
+      ? status(data)
+      : value(data, _columnSources[column] ?? column);
 
   static List<Map<String, dynamic>> reports(Map<String, dynamic> data) {
     final raw = data['reports'];
@@ -339,7 +362,7 @@ class ItemRegisterProvider extends ChangeNotifier {
     }
 
     final categoryId = item.categoryId ?? '';
-    final categoryName = pick(['categoryName']);
+    final categoryName = item.categoryName ?? pick(['categoryName']);
     final detailedLocation = item.detailedLocation ?? '';
     final manufacturerAddress = item.manufacturerAddress ?? '';
     final expiry = date(item.expiryDateTimeStamp);
@@ -375,7 +398,10 @@ class ItemRegisterProvider extends ChangeNotifier {
       ..._alias(['firstUseDate', 'first_use_date'], date(item.firstUseDate)),
       ..._alias(['expiryDateTimeStamp', 'expiryDate', 'expiry_date'], expiry),
       'swl': item.swl ?? '',
-      ..._alias(['photoReference', 'photo_reference'], item.photoReference ?? ''),
+      ..._alias([
+        'photoReference',
+        'photo_reference',
+      ], item.photoReference ?? ''),
       ..._alias([
         'standardReference',
         'standard_reference',
