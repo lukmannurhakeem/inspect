@@ -60,13 +60,7 @@ class _ItemOverviewScreenState extends State<ItemOverviewScreen> {
     super.initState();
     _data = _buildDataMap();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // 1️⃣ Fetch full item detail from the API (includes `itemData` dynamic
-      //    fields such as "Comment", "Is it safe?", "Photo Reference").
-      await _fetchAndMergeItemDetail();
-      // 2️⃣ Load category field definitions and prefill controllers.
-      _loadFields();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _reload());
   }
 
   @override
@@ -89,13 +83,12 @@ class _ItemOverviewScreenState extends State<ItemOverviewScreen> {
   Future<void> _fetchAndMergeItemDetail() async {
     if (!mounted) return;
 
-    final itemId =
-        [_data['itemId'], _data['itemID'], _data['item_id']]
-            .firstWhere(
-              (v) => v != null && v.toString().isNotEmpty,
-              orElse: () => '',
-            )
-            .toString();
+    final itemId = [_data['itemId'], _data['itemID'], _data['item_id']]
+        .firstWhere(
+          (v) => v != null && v.toString().isNotEmpty,
+          orElse: () => '',
+        )
+        .toString();
 
     if (itemId.isEmpty) {
       debugPrint(
@@ -310,8 +303,8 @@ class _ItemOverviewScreenState extends State<ItemOverviewScreen> {
       'category_id': item.categoryId ?? '',
       'categoryName':
           (item.customFields?['categoryName']?.toString().isNotEmpty == true)
-              ? item.customFields!['categoryName'].toString()
-              : item.categoryId ?? '',
+          ? item.customFields!['categoryName'].toString()
+          : item.categoryId ?? '',
 
       'locationId': item.locationId ?? '',
       'locationID': item.locationId ?? '',
@@ -385,10 +378,9 @@ class _ItemOverviewScreenState extends State<ItemOverviewScreen> {
     try {
       final categoryProvider = context.read<CategoryProvider>();
 
-      final categoryId =
-          _data['categoryId']?.toString().isNotEmpty == true
-              ? _data['categoryId'].toString()
-              : (_data['categoryID']?.toString() ?? '');
+      final categoryId = _data['categoryId']?.toString().isNotEmpty == true
+          ? _data['categoryId'].toString()
+          : (_data['categoryID']?.toString() ?? '');
 
       if (categoryId.isNotEmpty) {
         await categoryProvider.loadFieldsFromLocalStorage(categoryId);
@@ -484,10 +476,9 @@ class _ItemOverviewScreenState extends State<ItemOverviewScreen> {
             fieldType == 'DetailedLocation' ||
             fieldType == 'Location' ||
             labelText.contains('location')) {
-          value =
-              v('detailedLocation').isNotEmpty
-                  ? v('detailedLocation')
-                  : v('detailed_location');
+          value = v('detailedLocation').isNotEmpty
+              ? v('detailedLocation')
+              : v('detailed_location');
         } else if (fieldType == 'ItemCategory' ||
             labelText.contains('category')) {
           value = v('categoryName');
@@ -507,8 +498,9 @@ class _ItemOverviewScreenState extends State<ItemOverviewScreen> {
             labelText.contains('expiration')) {
           value = v('expiryDateTimeStamp');
         } else if (fieldType == 'Customer' || labelText.contains('customer')) {
-          value =
-              v('customerName').isNotEmpty ? v('customerName') : v('customer');
+          value = v('customerName').isNotEmpty
+              ? v('customerName')
+              : v('customer');
         } else if (fieldType == 'SiteID' || labelText.contains('site')) {
           value = v('siteName').isNotEmpty ? v('siteName') : v('site');
         } else if (labelText.contains('archived')) {
@@ -717,16 +709,16 @@ class _ItemOverviewScreenState extends State<ItemOverviewScreen> {
             )
             .toString();
 
-    final categoryName =
-        [_data['categoryName'], _data['category_name']]
-            .firstWhere(
-              (v) => v != null && v.toString().isNotEmpty,
-              orElse: () => categoryId,
-            )
-            .toString();
+    final categoryName = [_data['categoryName'], _data['category_name']]
+        .firstWhere(
+          (v) => v != null && v.toString().isNotEmpty,
+          orElse: () => categoryId,
+        )
+        .toString();
 
-    final preloadedFields =
-        _customFields.map((f) => Map<String, dynamic>.from(f)).toList();
+    final preloadedFields = _customFields
+        .map((f) => Map<String, dynamic>.from(f))
+        .toList();
 
     final existingItem = _data.map((k, v) => MapEntry(k, v?.toString() ?? ''));
 
@@ -780,7 +772,7 @@ class _ItemOverviewScreenState extends State<ItemOverviewScreen> {
       level: 0,
     );
 
-    await NavigationService().navigateTo(
+    final saved = await NavigationService().navigateTo(
       NavigationRoutes.jobItemCreateScreen,
       arguments: {
         'jobId': widget.jobId,
@@ -791,7 +783,9 @@ class _ItemOverviewScreenState extends State<ItemOverviewScreen> {
       },
     );
 
-    if (mounted) widget.onSaved?.call();
+    if (!mounted) return;
+    if (saved == true) await _reload();
+    widget.onSaved?.call();
   }
 
   // ── Save (in-place field edits) ────────────────────────────────────────────
@@ -1341,15 +1335,14 @@ class _ItemOverviewScreenState extends State<ItemOverviewScreen> {
         context.hS,
         Expanded(
           flex: 3,
-          child:
-              widget.isEditMode
-                  ? CommonDatePickerInput(label: '', controller: controller)
-                  : IgnorePointer(
-                    child: CommonDatePickerInput(
-                      label: '',
-                      controller: controller,
-                    ),
+          child: widget.isEditMode
+              ? CommonDatePickerInput(label: '', controller: controller)
+              : IgnorePointer(
+                  child: CommonDatePickerInput(
+                    label: '',
+                    controller: controller,
                   ),
+                ),
         ),
       ],
     );
@@ -1392,23 +1385,20 @@ class _ItemOverviewScreenState extends State<ItemOverviewScreen> {
           flex: 3,
           child: Align(
             alignment: Alignment.centerLeft,
-            child:
-                widget.isEditMode
-                    ? Checkbox(
+            child: widget.isEditMode
+                ? Checkbox(
+                    value: controller.text.toLowerCase() == 'true',
+                    onChanged: (value) =>
+                        setState(() => controller.text = value.toString()),
+                    activeColor: context.colors.primary,
+                  )
+                : IgnorePointer(
+                    child: Checkbox(
                       value: controller.text.toLowerCase() == 'true',
-                      onChanged:
-                          (value) => setState(
-                            () => controller.text = value.toString(),
-                          ),
+                      onChanged: null,
                       activeColor: context.colors.primary,
-                    )
-                    : IgnorePointer(
-                      child: Checkbox(
-                        value: controller.text.toLowerCase() == 'true',
-                        onChanged: null,
-                        activeColor: context.colors.primary,
-                      ),
                     ),
+                  ),
           ),
         ),
       ],
@@ -1426,10 +1416,9 @@ class _ItemOverviewScreenState extends State<ItemOverviewScreen> {
         (field['dropdownOptions'] as List<dynamic>?) ??
         (field['options'] as List<dynamic>?) ??
         [];
-    final dropdownItems =
-        rawOptions.isEmpty
-            ? <String>[]
-            : rawOptions.map((e) => e.toString()).toList();
+    final dropdownItems = rawOptions.isEmpty
+        ? <String>[]
+        : rawOptions.map((e) => e.toString()).toList();
 
     String? selectedValue = controller.text.isEmpty ? null : controller.text;
     if (selectedValue != null && !dropdownItems.contains(selectedValue)) {
@@ -1478,54 +1467,48 @@ class _ItemOverviewScreenState extends State<ItemOverviewScreen> {
         context.hS,
         Expanded(
           flex: 3,
-          child:
-              widget.isEditMode
-                  ? CommonDropdown<String>(
+          child: widget.isEditMode
+              ? CommonDropdown<String>(
+                  value: selectedValue,
+                  items: dropdownItems
+                      .map(
+                        (o) => DropdownMenuItem<String>(
+                          value: o,
+                          child: Text(
+                            o,
+                            style: context.topology.textTheme.bodySmall
+                                ?.copyWith(color: context.colors.primary),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) =>
+                      setState(() => controller.text = value ?? ''),
+                  borderColor: context.colors.primary.withOpacity(0.3),
+                  borderWidth: 1.0,
+                  borderRadius: 8.0,
+                )
+              : IgnorePointer(
+                  child: CommonDropdown<String>(
                     value: selectedValue,
-                    items:
-                        dropdownItems
-                            .map(
-                              (o) => DropdownMenuItem<String>(
-                                value: o,
-                                child: Text(
-                                  o,
-                                  style: context.topology.textTheme.bodySmall
-                                      ?.copyWith(color: context.colors.primary),
-                                ),
-                              ),
-                            )
-                            .toList(),
-                    onChanged:
-                        (value) =>
-                            setState(() => controller.text = value ?? ''),
+                    items: dropdownItems
+                        .map(
+                          (o) => DropdownMenuItem<String>(
+                            value: o,
+                            child: Text(
+                              o,
+                              style: context.topology.textTheme.bodySmall
+                                  ?.copyWith(color: context.colors.primary),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: null,
                     borderColor: context.colors.primary.withOpacity(0.3),
                     borderWidth: 1.0,
                     borderRadius: 8.0,
-                  )
-                  : IgnorePointer(
-                    child: CommonDropdown<String>(
-                      value: selectedValue,
-                      items:
-                          dropdownItems
-                              .map(
-                                (o) => DropdownMenuItem<String>(
-                                  value: o,
-                                  child: Text(
-                                    o,
-                                    style: context.topology.textTheme.bodySmall
-                                        ?.copyWith(
-                                          color: context.colors.primary,
-                                        ),
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                      onChanged: null,
-                      borderColor: context.colors.primary.withOpacity(0.3),
-                      borderWidth: 1.0,
-                      borderRadius: 8.0,
-                    ),
                   ),
+                ),
         ),
       ],
     );
@@ -1571,17 +1554,15 @@ class _ItemOverviewScreenState extends State<ItemOverviewScreen> {
         context.hS,
         Expanded(
           flex: 3,
-          child:
-              widget.isEditMode
-                  ? GestureDetector(
-                    onTap:
-                        () => _showLocationPickerDialog(
-                          controller: controller,
-                          fieldDefinedLocations: fieldDefinedLocations,
-                        ),
-                    child: _locationPickerDisplay(context, controller),
-                  )
-                  : _locationPickerDisplay(context, controller),
+          child: widget.isEditMode
+              ? GestureDetector(
+                  onTap: () => _showLocationPickerDialog(
+                    controller: controller,
+                    fieldDefinedLocations: fieldDefinedLocations,
+                  ),
+                  child: _locationPickerDisplay(context, controller),
+                )
+              : _locationPickerDisplay(context, controller),
         ),
       ],
     );
@@ -1599,36 +1580,32 @@ class _ItemOverviewScreenState extends State<ItemOverviewScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
             border: Border.all(
-              color:
-                  hasValue
-                      ? context.colors.primary
-                      : context.colors.primary.withOpacity(0.3),
+              color: hasValue
+                  ? context.colors.primary
+                  : context.colors.primary.withOpacity(0.3),
             ),
             borderRadius: BorderRadius.circular(8),
-            color:
-                hasValue
-                    ? context.colors.primary.withOpacity(0.05)
-                    : Colors.transparent,
+            color: hasValue
+                ? context.colors.primary.withOpacity(0.05)
+                : Colors.transparent,
           ),
           child: Row(
             children: [
               Icon(
                 Icons.location_on_outlined,
                 size: 16,
-                color:
-                    hasValue
-                        ? context.colors.primary
-                        : context.colors.primary.withOpacity(0.4),
+                color: hasValue
+                    ? context.colors.primary
+                    : context.colors.primary.withOpacity(0.4),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   hasValue ? value.text : 'No location set',
                   style: context.topology.textTheme.bodySmall?.copyWith(
-                    color:
-                        hasValue
-                            ? context.colors.primary
-                            : context.colors.primary.withOpacity(0.4),
+                    color: hasValue
+                        ? context.colors.primary
+                        : context.colors.primary.withOpacity(0.4),
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -1683,18 +1660,17 @@ class _ItemOverviewScreenState extends State<ItemOverviewScreen> {
         context.hS,
         Expanded(
           flex: 3,
-          child:
-              widget.isEditMode
-                  ? CommonFileUploadInput(
+          child: widget.isEditMode
+              ? CommonFileUploadInput(
+                  controller: controller,
+                  enableCamera: true,
+                )
+              : IgnorePointer(
+                  child: CommonFileUploadInput(
                     controller: controller,
-                    enableCamera: true,
-                  )
-                  : IgnorePointer(
-                    child: CommonFileUploadInput(
-                      controller: controller,
-                      enableCamera: false,
-                    ),
+                    enableCamera: false,
                   ),
+                ),
         ),
       ],
     );
@@ -1709,8 +1685,9 @@ class _ItemOverviewScreenState extends State<ItemOverviewScreen> {
     return Consumer<JobProvider>(
       builder: (context, jobProvider, _) {
         final customers = jobProvider.customers;
-        String? selectedValue =
-            controller.text.isEmpty ? null : controller.text;
+        String? selectedValue = controller.text.isEmpty
+            ? null
+            : controller.text;
         if (selectedValue != null &&
             !customers.any((c) => c.customername == selectedValue)) {
           selectedValue = null;
@@ -1720,13 +1697,12 @@ class _ItemOverviewScreenState extends State<ItemOverviewScreen> {
           label: label,
           icon: icon ?? Icons.person,
           selectedValue: selectedValue,
-          items:
-              customers
-                  .where(
-                    (c) => c.customername != null && c.customername!.isNotEmpty,
-                  )
-                  .map((c) => c.customername!)
-                  .toList(),
+          items: customers
+              .where(
+                (c) => c.customername != null && c.customername!.isNotEmpty,
+              )
+              .map((c) => c.customername!)
+              .toList(),
           onChanged: (v) => setState(() => controller.text = v ?? ''),
         );
       },
@@ -1742,8 +1718,9 @@ class _ItemOverviewScreenState extends State<ItemOverviewScreen> {
     return Consumer<SiteProvider>(
       builder: (context, siteProvider, _) {
         final sites = siteProvider.sites;
-        String? selectedValue =
-            controller.text.isEmpty ? null : controller.text;
+        String? selectedValue = controller.text.isEmpty
+            ? null
+            : controller.text;
         if (selectedValue != null &&
             !sites.any((s) => s.siteName == selectedValue)) {
           selectedValue = null;
@@ -1753,11 +1730,10 @@ class _ItemOverviewScreenState extends State<ItemOverviewScreen> {
           label: label,
           icon: icon ?? Icons.location_city,
           selectedValue: selectedValue,
-          items:
-              sites
-                  .where((s) => s.siteName != null && s.siteName!.isNotEmpty)
-                  .map((s) => s.siteName!)
-                  .toList(),
+          items: sites
+              .where((s) => s.siteName != null && s.siteName!.isNotEmpty)
+              .map((s) => s.siteName!)
+              .toList(),
           onChanged: (v) => setState(() => controller.text = v ?? ''),
         );
       },
@@ -1782,8 +1758,9 @@ class _ItemOverviewScreenState extends State<ItemOverviewScreen> {
 
         flatten(categoryProvider.filteredCategories);
 
-        String? selectedValue =
-            controller.text.isEmpty ? null : controller.text;
+        String? selectedValue = controller.text.isEmpty
+            ? null
+            : controller.text;
         if (selectedValue != null &&
             !flat.any((c) => c.name == selectedValue)) {
           selectedValue = null;
@@ -1838,54 +1815,49 @@ class _ItemOverviewScreenState extends State<ItemOverviewScreen> {
         context.hS,
         Expanded(
           flex: 3,
-          child:
-              widget.isEditMode
-                  ? CommonDropdown<String>(
+          child: widget.isEditMode
+              ? CommonDropdown<String>(
+                  value: selectedValue,
+                  items: items
+                      .map(
+                        (item) => DropdownMenuItem<String>(
+                          value: item,
+                          child: Text(
+                            item,
+                            style: context.topology.textTheme.bodySmall
+                                ?.copyWith(color: context.colors.primary),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: onChanged,
+                  borderColor: context.colors.primary.withOpacity(0.3),
+                  borderWidth: 1.0,
+                  borderRadius: 8.0,
+                )
+              : IgnorePointer(
+                  child: CommonDropdown<String>(
                     value: selectedValue,
-                    items:
-                        items
-                            .map(
-                              (item) => DropdownMenuItem<String>(
-                                value: item,
-                                child: Text(
-                                  item,
-                                  style: context.topology.textTheme.bodySmall
-                                      ?.copyWith(color: context.colors.primary),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            )
-                            .toList(),
-                    onChanged: onChanged,
+                    items: items
+                        .map(
+                          (item) => DropdownMenuItem<String>(
+                            value: item,
+                            child: Text(
+                              item,
+                              style: context.topology.textTheme.bodySmall
+                                  ?.copyWith(color: context.colors.primary),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: null,
                     borderColor: context.colors.primary.withOpacity(0.3),
                     borderWidth: 1.0,
                     borderRadius: 8.0,
-                  )
-                  : IgnorePointer(
-                    child: CommonDropdown<String>(
-                      value: selectedValue,
-                      items:
-                          items
-                              .map(
-                                (item) => DropdownMenuItem<String>(
-                                  value: item,
-                                  child: Text(
-                                    item,
-                                    style: context.topology.textTheme.bodySmall
-                                        ?.copyWith(
-                                          color: context.colors.primary,
-                                        ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                      onChanged: null,
-                      borderColor: context.colors.primary.withOpacity(0.3),
-                      borderWidth: 1.0,
-                      borderRadius: 8.0,
-                    ),
                   ),
+                ),
         ),
       ],
     );
@@ -1897,23 +1869,22 @@ class _ItemOverviewScreenState extends State<ItemOverviewScreen> {
   }) {
     showDialog(
       context: context,
-      builder:
-          (_) => _LocationPickerDialog(
-            fieldDefinedLocations: fieldDefinedLocations,
-            initialValue: controller.text,
-            storageKey: PickerStorageKey.itemLocation,
-            dialogTitle: 'Select Location',
-            emptyHint: 'Select or enter location',
-            onConfirm: (value, isCustom) async {
-              setState(() => controller.text = value);
-              if (isCustom) {
-                await PickerStorageService.add(
-                  PickerStorageKey.itemLocation,
-                  value,
-                );
-              }
-            },
-          ),
+      builder: (_) => _LocationPickerDialog(
+        fieldDefinedLocations: fieldDefinedLocations,
+        initialValue: controller.text,
+        storageKey: PickerStorageKey.itemLocation,
+        dialogTitle: 'Select Location',
+        emptyHint: 'Select or enter location',
+        onConfirm: (value, isCustom) async {
+          setState(() => controller.text = value);
+          if (isCustom) {
+            await PickerStorageService.add(
+              PickerStorageKey.itemLocation,
+              value,
+            );
+          }
+        },
+      ),
     );
   }
 
@@ -1965,6 +1936,11 @@ class _ItemOverviewScreenState extends State<ItemOverviewScreen> {
       default:
         return Icons.input;
     }
+  }
+
+  Future<void> _reload() async {
+    await _fetchAndMergeItemDetail();
+    if (mounted) await _loadFields();
   }
 }
 
@@ -2039,15 +2015,13 @@ class _LocationPickerDialogState extends State<_LocationPickerDialog>
     final saved = await PickerStorageService.getAll(widget.storageKey);
     if (!mounted) return;
     setState(() {
-      _savedLocations =
-          saved
-              .where(
-                (loc) =>
-                    !widget.fieldDefinedLocations.any(
-                      (f) => f.toLowerCase() == loc.toLowerCase(),
-                    ),
-              )
-              .toList();
+      _savedLocations = saved
+          .where(
+            (loc) => !widget.fieldDefinedLocations.any(
+              (f) => f.toLowerCase() == loc.toLowerCase(),
+            ),
+          )
+          .toList();
       _rebuildFiltered(_searchController.text);
       _isLoading = false;
     });
@@ -2057,25 +2031,21 @@ class _LocationPickerDialogState extends State<_LocationPickerDialog>
 
   void _rebuildFiltered(String query) {
     final q = query.toLowerCase().trim();
-    _filteredField =
-        q.isEmpty
-            ? List.from(widget.fieldDefinedLocations)
-            : widget.fieldDefinedLocations
-                .where((l) => l.toLowerCase().contains(q))
-                .toList();
-    _filteredSaved =
-        q.isEmpty
-            ? List.from(_savedLocations)
-            : _savedLocations
-                .where((l) => l.toLowerCase().contains(q))
-                .toList();
-    final combined =
-        <String>{...widget.fieldDefinedLocations, ..._savedLocations}.toList()
-          ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-    _filteredAll =
-        q.isEmpty
-            ? combined
-            : combined.where((l) => l.toLowerCase().contains(q)).toList();
+    _filteredField = q.isEmpty
+        ? List.from(widget.fieldDefinedLocations)
+        : widget.fieldDefinedLocations
+              .where((l) => l.toLowerCase().contains(q))
+              .toList();
+    _filteredSaved = q.isEmpty
+        ? List.from(_savedLocations)
+        : _savedLocations.where((l) => l.toLowerCase().contains(q)).toList();
+    final combined = <String>{
+      ...widget.fieldDefinedLocations,
+      ..._savedLocations,
+    }.toList()..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    _filteredAll = q.isEmpty
+        ? combined
+        : combined.where((l) => l.toLowerCase().contains(q)).toList();
   }
 
   bool get _canConfirm =>
@@ -2217,10 +2187,9 @@ class _LocationPickerDialogState extends State<_LocationPickerDialog>
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: TextField(
                   controller: _customController,
-                  onChanged:
-                      (_) => setState(() {
-                        if (_customController.text.isNotEmpty) _selected = null;
-                      }),
+                  onChanged: (_) => setState(() {
+                    if (_customController.text.isNotEmpty) _selected = null;
+                  }),
                   decoration: _inputDecoration(
                     context,
                     hint: 'Type a custom location…',
@@ -2247,21 +2216,20 @@ class _LocationPickerDialogState extends State<_LocationPickerDialog>
                     const SizedBox(width: 12),
                     ValueListenableBuilder<TextEditingValue>(
                       valueListenable: _customController,
-                      builder:
-                          (_, __, ___) => ElevatedButton.icon(
-                            onPressed: _canConfirm ? _confirm : null,
-                            icon: const Icon(Icons.check, size: 18),
-                            label: const Text('Confirm'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: context.colors.primary,
-                              foregroundColor: Colors.white,
-                              disabledBackgroundColor: context.colors.primary
-                                  .withOpacity(0.3),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
+                      builder: (_, __, ___) => ElevatedButton.icon(
+                        onPressed: _canConfirm ? _confirm : null,
+                        icon: const Icon(Icons.check, size: 18),
+                        label: const Text('Confirm'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: context.colors.primary,
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor: context.colors.primary
+                              .withOpacity(0.3),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -2325,18 +2293,16 @@ class _LocationPickerDialogState extends State<_LocationPickerDialog>
         final loc = items[index];
         final isSelected = _selected == loc;
         return Material(
-          color:
-              isSelected
-                  ? context.colors.primary.withOpacity(0.08)
-                  : Colors.transparent,
+          color: isSelected
+              ? context.colors.primary.withOpacity(0.08)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
           child: InkWell(
             borderRadius: BorderRadius.circular(6),
-            onTap:
-                () => setState(() {
-                  _selected = loc;
-                  _customController.clear();
-                }),
+            onTap: () => setState(() {
+              _selected = loc;
+              _customController.clear();
+            }),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Row(
@@ -2344,10 +2310,9 @@ class _LocationPickerDialogState extends State<_LocationPickerDialog>
                   Icon(
                     isSelected ? Icons.location_on : Icons.location_on_outlined,
                     size: 18,
-                    color:
-                        isSelected
-                            ? context.colors.primary
-                            : context.colors.primary.withOpacity(0.4),
+                    color: isSelected
+                        ? context.colors.primary
+                        : context.colors.primary.withOpacity(0.4),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -2355,8 +2320,9 @@ class _LocationPickerDialogState extends State<_LocationPickerDialog>
                       loc,
                       style: context.topology.textTheme.bodySmall?.copyWith(
                         color: context.colors.primary,
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.normal,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.normal,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),

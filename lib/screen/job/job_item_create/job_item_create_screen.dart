@@ -66,17 +66,17 @@ class _JobItemCreateViewState extends State<_JobItemCreateView> {
     });
   }
 
-  void _pop() {
+  void _pop({bool saved = false}) {
     if (_popped || !mounted) return;
     _popped = true;
-    Navigator.of(context).pop();
+    Navigator.of(context).pop(saved);
   }
 
   Future<void> _save() async {
     final result = await context.read<JobItemCreateProvider>().save(context);
     if (!mounted) return;
     if (result.message != null) _showResult(result);
-    if (result.shouldPop) _pop();
+    if (result.shouldPop) _pop(saved: true);
   }
 
   void _showResult(SaveResult result) {
