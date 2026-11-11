@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io' as io;
 import 'package:inspect/constant/app_constant.dart';
-import 'package:inspect/core/utils/web_window_helper_stub.dart';
+import 'package:inspect/core/utils/web_window_helper.dart';
 import 'package:archive/archive.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:file_picker/file_picker.dart';
@@ -178,11 +178,8 @@ class _ItemReportScreenState extends State<ItemReportScreen> {
       if (itemId.isEmpty) return 0;
 
       // ── Step 1: Get report list for this item ─────────────────────────────
-      final listResponse = await api.get(
-        ApiEndpoint.getItemReport(itemId),
-      );
+      final rawData = await api.get(ApiEndpoint.getItemReport(itemId));
 
-      final rawData = listResponse.data;
       List<dynamic>? dataList;
       if (rawData is List) {
         dataList = rawData;
@@ -194,15 +191,12 @@ class _ItemReportScreenState extends State<ItemReportScreen> {
       final data = dataList ?? <dynamic>[];
 
       if (data.isEmpty) {
-        // Still run merge so offline-pending rows stay visible
-        final existingLocal = await JobItemStorage.getItemReports(
-          itemId,
-        );
+        final existingLocal = await JobItemStorage.getItemReports(itemId);
         await JobItemStorage.saveItemReports(itemId, existingLocal);
         return 0;
       }
 
-      // ── Step 2: Fetch full detail for each report via GET /reportData/:id ─
+      // ── Step 2: Fetch full detail for each report ─────────────────────────
       final serverMaps = <Map<String, dynamic>>[];
 
       for (final r in data.whereType<Map<String, dynamic>>()) {
@@ -210,38 +204,34 @@ class _ItemReportScreenState extends State<ItemReportScreen> {
         if (reportId.isEmpty) continue;
 
         try {
-          final detailResponse = await api.get(
+          final d = await api.get(
             ApiEndpoint.getReportDataByReportId(reportId),
           );
-
-          final d = detailResponse.data;
           if (d is! Map<String, dynamic>) continue;
 
-          // ── Resolve inspector name from personnel block ─────────────────
           final personnelBlock = d['personnel'] as Map<String, dynamic>?;
           final personnelInfo =
-              personnelBlock?['personnel'] as Map<String, dynamic>?;
+          personnelBlock?['personnel'] as Map<String, dynamic>?;
           final inspectedByName =
-              d['inspectedBy']?.toString().isNotEmpty == true &&
-                      !RegExp(
-                        r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
-                        caseSensitive: false,
-                      ).hasMatch(d['inspectedBy'].toString())
-                  ? d['inspectedBy'].toString()
-                  : [
-                        personnelInfo?['firstName'],
-                        personnelInfo?['middleName'],
-                        personnelInfo?['lastName'],
-                      ]
-                      .where((s) => s != null && s.toString().trim().isNotEmpty)
-                      .join(' ');
+          d['inspectedBy']?.toString().isNotEmpty == true &&
+              !RegExp(
+                r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+                caseSensitive: false,
+              ).hasMatch(d['inspectedBy'].toString())
+              ? d['inspectedBy'].toString()
+              : [
+            personnelInfo?['firstName'],
+            personnelInfo?['middleName'],
+            personnelInfo?['lastName'],
+          ]
+              .where((s) => s != null && s.toString().trim().isNotEmpty)
+              .join(' ');
 
           final inspectedById =
               personnelInfo?['personnelID']?.toString() ??
-              d['inspectedBy']?.toString() ??
-              '';
+                  d['inspectedBy']?.toString() ??
+                  '';
 
-          // ── Parse reportData ────────────────────────────────────────────
           final rawReportData = d['reportData'] as Map<String, dynamic>? ?? {};
           final flatFieldValues = _flattenReportData(rawReportData);
 
@@ -258,17 +248,12 @@ class _ItemReportScreenState extends State<ItemReportScreen> {
             'status': d['status']?.toString() ?? '',
             'approvalStatus': d['approvalStatus']?.toString() ?? '',
             'inspectStatus': d['inspectStatus']?.toString() ?? '',
-            // Resolved display name for view mode
             'inspectedBy': inspectedByName,
-            // Raw UUID for submission / copy mode inspector pre-selection
             'inspectedById': inspectedById,
             'regulation': d['regulationName']?.toString() ?? '',
             'regulationId': d['regulationId']?.toString() ?? '',
-            // Full server reportData (label-keyed with section/type/image)
             'reportData': rawReportData,
-            // Flat map — label → value (or image map) for ReportFieldsScreen
             'fieldValues': flatFieldValues,
-            // PDF URLs from detail response
             'pdfUrlView': d['pdfViewUrl']?.toString() ?? '',
             'pdfUrl': d['pdfDownloadUrl']?.toString() ?? '',
             'isPending': false,
@@ -277,7 +262,6 @@ class _ItemReportScreenState extends State<ItemReportScreen> {
           fetched++;
         } catch (e) {
           debugPrint('⚠️ Failed to fetch detail for report $reportId: $e');
-          // Fall back to basic list-level data so the row still appears
           final fallbackReportData =
               r['reportData'] as Map<String, dynamic>? ?? {};
           serverMaps.add(<String, dynamic>{
@@ -291,10 +275,7 @@ class _ItemReportScreenState extends State<ItemReportScreen> {
             'createdAt': r['createdAt']?.toString() ?? '',
             'status': r['status']?.toString() ?? '',
             'approvalStatus':
-                r['approvalStatus'] ??
-                r['approval_status'] ??
-                r['status'] ??
-                '',
+            r['approvalStatus'] ?? r['approval_status'] ?? r['status'] ?? '',
             'inspectedBy': r['inspectedBy']?.toString() ?? '',
             'inspectedById': r['inspectedBy']?.toString() ?? '',
             'regulation': r['regulation']?.toString() ?? '',
@@ -311,20 +292,22 @@ class _ItemReportScreenState extends State<ItemReportScreen> {
       final existingLocal = await JobItemStorage.getItemReports(itemId);
 
       final serverIds =
-          serverMaps
-              .map((r) => r['reportId']?.toString() ?? '')
-              .where((id) => id.isNotEmpty)
-              .toSet();
+      serverMaps
+          .map((r) => r['reportId']?.toString() ?? '')
+          .where((id) => id.isNotEmpty)
+          .toSet();
 
       final offlineOnlyRows =
-          existingLocal.where((local) {
-            final localId = local['reportId']?.toString() ?? '';
-            if (localId.isEmpty) return true;
-            return !serverIds.contains(localId);
-          }).toList();
+      existingLocal.where((local) {
+        final localId = local['reportId']?.toString() ?? '';
+        if (localId.isEmpty) return true;
+        return !serverIds.contains(localId);
+      }).toList();
 
-      final merged = [...serverMaps, ...offlineOnlyRows];
-      await JobItemStorage.saveItemReports(itemId, merged);
+      await JobItemStorage.saveItemReports(itemId, [
+        ...serverMaps,
+        ...offlineOnlyRows,
+      ]);
     } catch (e) {
       debugPrint('❌ _pullFromServer error: $e');
       rethrow;

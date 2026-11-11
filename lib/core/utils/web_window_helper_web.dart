@@ -6,13 +6,19 @@ void openInNewTab(String url) {
   html.window.open(url, '_blank');
 }
 
+void openPdfBytesInNewTab(Uint8List bytes) {
+  final blob = html.Blob([bytes], 'application/pdf');
+  final url = html.Url.createObjectUrlFromBlob(blob);
+  html.window.open(url, '_blank');
+}
+
 void downloadBlob(List<int> bytes, String mimeType, String fileName) {
   final blob = html.Blob([Uint8List.fromList(bytes)], mimeType);
   final url = html.Url.createObjectUrlFromBlob(blob);
   final anchor =
-      html.AnchorElement(href: url)
-        ..download = fileName
-        ..style.display = 'none';
+  html.AnchorElement(href: url)
+    ..download = fileName
+    ..style.display = 'none';
   html.document.body?.append(anchor);
   anchor.click();
   Future.delayed(const Duration(milliseconds: 100), () {
