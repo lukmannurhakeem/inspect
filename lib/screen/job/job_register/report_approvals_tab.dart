@@ -533,10 +533,13 @@ class _ReportApprovalsTabState extends State<ReportApprovalsTab> {
     } catch (_) {}
   }
 
-  Future<void> _approveReport(_Json report) async {
+  Future<void> _reviewReport(_Json report, _ReportStatus status) async {
+    final verb = status == _ReportStatus.approved ? 'Approve' : 'Reject';
+    final past = status == _ReportStatus.approved ? 'approved' : 'rejected';
+
     if (!context.read<AuthenticateProvider>().isAdmin) {
       _showSnack(
-        'Only admins can approve reports.',
+        'Only admins can $past reports.'.replaceFirst(past, verb.toLowerCase()),
         Colors.red.shade600,
         icon: Icons.lock_outline,
       );
@@ -568,22 +571,26 @@ class _ReportApprovalsTabState extends State<ReportApprovalsTab> {
     if (!mounted) return;
 
     final confirmed = await _confirm(
-      title: 'Approve Report',
-      message: 'Approve "${_val(report, 'reportName')}"?',
-      confirmLabel: 'Approve',
-      confirmColor: Colors.green.shade600,
-      icon: Icons.check_circle,
+      title: '$verb Report',
+      message: '$verb "${_val(report, 'reportName')}"?',
+      confirmLabel: verb,
+      confirmColor: status.color.shade600,
+      icon: status == _ReportStatus.approved
+          ? Icons.check_circle
+          : Icons.cancel,
     );
     if (!confirmed || !mounted) return;
 
-    _showLoadingDialog('Approving…');
+    _showLoadingDialog(
+      status == _ReportStatus.approved ? 'Approving…' : 'Rejecting…',
+    );
 
     dynamic result;
     try {
       result = await context.read<JobProvider>().updateReportApprovalStatus(
         context,
         reportId,
-        'approved',
+        status.name,
       );
     } catch (e) {
       if (mounted) Navigator.of(context).pop();
@@ -595,14 +602,16 @@ class _ReportApprovalsTabState extends State<ReportApprovalsTab> {
 
     if (result?['success'] == true) {
       _showSnack(
-        'Report approved.',
-        Colors.green.shade600,
-        icon: Icons.check_circle,
+        'Report $past.',
+        status.color.shade600,
+        icon: status == _ReportStatus.approved
+            ? Icons.check_circle
+            : Icons.cancel,
       );
-      await _updateLocalStatus(report, _ReportStatus.approved);
+      await _updateLocalStatus(report, status);
       await _syncAllItemsFromApi();
     } else {
-      _showSnack(result?['error'] ?? 'Failed to approve.', Colors.red.shade600);
+      _showSnack(result?['error'] ?? 'Failed to $past.', Colors.red.shade600);
     }
   }
 
@@ -1094,7 +1103,8 @@ class _ReportApprovalsTabState extends State<ReportApprovalsTab> {
   }
 
   Widget _tableRow(_Json r) {
-    final isAdmin = context.read<AuthenticateProvider>().isAdmin;
+
+    final isAdmin = context.watch<AuthenticateProvider>().isAdmin;
     final isOffline = _isOffline(r);
     final status = _statusOf(r);
     final reportId = _reportId(r);
@@ -1104,18 +1114,31 @@ class _ReportApprovalsTabState extends State<ReportApprovalsTab> {
       r['createdAt']?.toString() ?? r['reportDate']?.toString() ?? '',
     );
 
+
     final Widget action;
     if (isOffline) {
       action = _actionBtn(
         'Upload',
-        Icons.cloud_upload_outlined,
         _pushOfflineReports,
+        icon: Icons.cloud_upload_outlined,
+        width: 100,
       );
     } else if (status == _ReportStatus.pending && isAdmin) {
-      action = _actionBtn(
-        'Approve',
-        Icons.check_circle_outline,
-            () => _approveReport(r),
+      action = Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _actionBtn(
+            'Approve',
+                () => _reviewReport(r, _ReportStatus.approved),
+            width: 100,
+          ),
+          const SizedBox(height: 6),
+          _actionBtn(
+            'Reject',
+                () => _reviewReport(r, _ReportStatus.rejected),
+            width: 100,
+          ),
+        ],
       );
     } else {
       action = Text(
@@ -1207,15 +1230,7 @@ class _ReportApprovalsTabState extends State<ReportApprovalsTab> {
               ],
             ],
           ),
-          const SizedBox(height: 3),
-          Text(
-            isOffline ? 'local draft' : shortId,
-            style: _text.bodySmall?.copyWith(
-              fontFamily: 'monospace',
-              fontSize: 10,
-              color: Colors.grey.shade400,
-            ),
-          ),
+
         ],
       ),
     );
@@ -1240,10 +1255,16 @@ class _ReportApprovalsTabState extends State<ReportApprovalsTab> {
     );
   }
 
-  Widget _actionBtn(String label, IconData icon, VoidCallback onTap) {
+  Widget _actionBtn(
+      String label,
+      VoidCallback onTap, {
+        IconData? icon,
+        double? width,
+      }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
+        width: width,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: _primary.withOpacity(0.06),
@@ -1252,9 +1273,12 @@ class _ReportApprovalsTabState extends State<ReportApprovalsTab> {
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 13, color: _primary),
-            const SizedBox(width: 5),
+            if (icon != null) ...[
+              Icon(icon, size: 13, color: _primary),
+              const SizedBox(width: 5),
+            ],
             Text(
               label,
               style: _text.bodySmall?.copyWith(

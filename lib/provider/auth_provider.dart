@@ -42,7 +42,7 @@ class AuthenticateProvider extends ChangeNotifier {
 
   UserLoginModel? get user => _user;
 
-  bool get isAdmin => _user?.user?.userGroup?.toLowerCase() == 'admin';
+  bool get isAdmin => userGroup.toLowerCase() == 'admin';
 
   String get userGroup =>
       LocalStorage.getString(LocalStorageConstant.userGroup);
