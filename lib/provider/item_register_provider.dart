@@ -410,7 +410,7 @@ class ItemRegisterProvider extends ChangeNotifier {
       'customerName': pick(['customerName', 'customer']),
       'siteName': pick(['siteName', 'site']),
       'applicableCode': pick(['applicableCode', 'ApplicableCode']),
-      'reports': custom['reports'] ?? [],
+      'reports': item.reports ?? custom['reports'] ?? [],
     };
 
     for (final e in custom.entries) {
@@ -419,7 +419,7 @@ class ItemRegisterProvider extends ChangeNotifier {
       }
     }
 
-    final data = custom['itemData'];
+    final data = item.itemData ?? custom['itemData'];
     if (data is Map) {
       data.forEach((k, v) {
         final s = v?.toString() ?? '';

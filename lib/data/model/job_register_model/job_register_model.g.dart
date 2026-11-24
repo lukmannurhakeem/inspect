@@ -33,6 +33,10 @@ _Item _$ItemFromJson(Map<String, dynamic> json) => _Item(
   photoReference: json['photoReference'] as String?,
   standardReference: json['standardReference'] as String?,
   customFields: json['customFields'] as Map<String, dynamic>?,
+  itemData: json['itemData'] as Map<String, dynamic>?,
+  reports: (json['reports'] as List<dynamic>?)
+      ?.map((e) => e as Map<String, dynamic>)
+      .toList(),
 );
 
 Map<String, dynamic> _$ItemToJson(_Item instance) => <String, dynamic>{
@@ -56,6 +60,8 @@ Map<String, dynamic> _$ItemToJson(_Item instance) => <String, dynamic>{
   'photoReference': instance.photoReference,
   'standardReference': instance.standardReference,
   'customFields': instance.customFields,
+  'itemData': instance.itemData,
+  'reports': instance.reports,
 };
 
 _JobRegisterModel _$JobRegisterModelFromJson(Map<String, dynamic> json) =>

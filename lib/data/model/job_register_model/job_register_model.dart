@@ -34,6 +34,8 @@ abstract class Item with _$Item {
     String? photoReference,
     String? standardReference,
     Map<String, dynamic>? customFields,
+    Map<String, dynamic>? itemData,
+    List<Map<String, dynamic>>? reports,
   }) = _Item;
 
   factory Item.fromJson(Map<String, dynamic> json) => _$ItemFromJson(json);

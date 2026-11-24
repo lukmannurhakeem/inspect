@@ -273,6 +273,8 @@ class _ItemRegisterViewState extends State<_ItemRegisterView>
     final itemNo = ItemRegisterProvider.text(item, ['itemNo', 'item_no']);
     final description = ItemRegisterProvider.value(item, 'description');
 
+    debugPrint('reports: ${ItemRegisterProvider.reports(item)}');
+
     showDialog(
       context: context,
       builder: (dialogContext) => Dialog(

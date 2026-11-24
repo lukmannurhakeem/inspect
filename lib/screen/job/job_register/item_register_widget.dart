@@ -1005,7 +1005,6 @@ class CategoryTile extends StatelessWidget {
     );
   }
 }
-
 class ReportTableBody extends StatefulWidget {
   final Map<String, dynamic> item;
   final void Function(String typeId, String name) onSelected;
@@ -1027,6 +1026,14 @@ class _ReportTableBodyState extends State<ReportTableBody> {
   );
   late Future<void> _future = Future.microtask(_fetch);
 
+  static String _str(Map<String, dynamic> m, List<String> keys) {
+    for (final k in keys) {
+      final v = m[k]?.toString() ?? '';
+      if (v.isNotEmpty) return v;
+    }
+    return '';
+  }
+
   Future<void> _fetch() async {
     if (!mounted) return;
     final provider = context.read<SystemProvider>();
@@ -1035,17 +1042,15 @@ class _ReportTableBodyState extends State<ReportTableBody> {
     }
   }
 
-  Map<String, dynamic>? _existingFor(String typeId) => typeId.isEmpty
-      ? null
+  List<Map<String, dynamic>> _reportsFor(String typeId) => typeId.isEmpty
+      ? const []
       : _existing
       .where(
         (r) =>
-    (r['reportTypeID'] ?? r['reportTypeId'] ?? '')
-        .toString()
-        .toLowerCase() ==
+    _str(r, ['reportTypeID', 'reportTypeId']).toLowerCase() ==
         typeId.toLowerCase(),
   )
-      .firstOrNull;
+      .toList();
 
   Future<void> _openPdf({
     required String reportId,
@@ -1145,6 +1150,70 @@ class _ReportTableBodyState extends State<ReportTableBody> {
     ),
   );
 
+  Widget _previousReports(List<Map<String, dynamic>> reports) {
+    final small = context.topology.textTheme.bodySmall;
+
+    if (reports.isEmpty) {
+      return Text(
+        'No Report',
+        style: small?.copyWith(
+          color: Colors.grey[500],
+          fontStyle: FontStyle.italic,
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final (i, r) in reports.indexed) ...[
+          if (i > 0) const SizedBox(height: 10),
+          _previousReport(r),
+        ],
+      ],
+    );
+  }
+
+  Widget _previousReport(Map<String, dynamic> r) {
+    final reportId = _str(r, ['reportID', 'reportId']);
+    final name = _str(r, ['reportName']);
+    final viewUrl = _str(r, ['viewUrl']);
+    final downloadUrl = _str(r, ['downloadUrl']);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _OutlineBtn(
+          icon: Icons.picture_as_pdf_outlined,
+          label: 'View Report',
+          color: Colors.teal.shade600,
+          onTap: () => _openPdf(
+            reportId: reportId,
+            viewUrl: viewUrl,
+            downloadUrl: downloadUrl,
+            name: name,
+          ),
+        ),
+        if (downloadUrl.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          _OutlineBtn(
+            icon: Icons.print_outlined,
+            label: 'Print Report',
+            color: Colors.blueGrey.shade600,
+            onTap: () => _openPdf(
+              reportId: reportId,
+              viewUrl: downloadUrl,
+              downloadUrl: downloadUrl,
+              name: name,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
   Widget _buildStatus(AsyncSnapshot<void> snapshot) {
     if (snapshot.connectionState != ConnectionState.done) {
       return const Padding(
@@ -1240,16 +1309,6 @@ class _ReportTableBodyState extends State<ReportTableBody> {
             final (index, report) = entry;
             final name = report.reportType?.reportName ?? '';
             final typeId = report.reportType?.reportTypeId ?? '';
-            final existing = _existingFor(typeId);
-            final reportId =
-            (existing?['reportID'] ?? existing?['reportId'] ?? '')
-                .toString();
-            final viewUrl = existing?['viewUrl']?.toString() ?? '';
-            final downloadUrl = existing?['downloadUrl']?.toString() ?? '';
-            final hasReport =
-                reportId.isNotEmpty ||
-                    viewUrl.isNotEmpty ||
-                    downloadUrl.isNotEmpty;
 
             return _tableRow(
               Text(name, style: small?.copyWith(color: primary)),
@@ -1259,45 +1318,7 @@ class _ReportTableBodyState extends State<ReportTableBody> {
                 color: primary,
                 onTap: () => widget.onSelected(typeId, name),
               ),
-              hasReport
-                  ? Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _OutlineBtn(
-                    icon: Icons.picture_as_pdf_outlined,
-                    label: 'View Report',
-                    color: Colors.teal.shade600,
-                    onTap: () => _openPdf(
-                      reportId: reportId,
-                      viewUrl: viewUrl,
-                      downloadUrl: downloadUrl,
-                      name: name,
-                    ),
-                  ),
-                  if (downloadUrl.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    _OutlineBtn(
-                      icon: Icons.print_outlined,
-                      label: 'Print Report',
-                      color: Colors.blueGrey.shade600,
-                      onTap: () => _openPdf(
-                        reportId: reportId,
-                        viewUrl: downloadUrl,
-                        downloadUrl: downloadUrl,
-                        name: name,
-                      ),
-                    ),
-                  ],
-                ],
-              )
-                  : Text(
-                'No Report',
-                style: small?.copyWith(
-                  color: Colors.grey[500],
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
+              _previousReports(_reportsFor(typeId)),
               color: index.isEven ? Colors.white : Colors.grey.shade50,
               border: Border(bottom: BorderSide(color: Colors.grey.shade100)),
             );

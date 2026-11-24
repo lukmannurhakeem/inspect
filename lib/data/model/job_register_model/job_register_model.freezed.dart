@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Item {
 
-@JsonKey(name: 'itemId', readValue: _readId) String? get itemId; String? get itemNo; String? get description; bool? get archived; String? get rfidNo;@JsonKey(name: 'categoryId', readValue: _readCategoryId) String? get categoryId; String? get categoryName;@JsonKey(name: 'locationId', readValue: _readLocationId) String? get locationId; String? get detailedLocation; String? get internalNotes; String? get manufacturer; String? get manufacturerAddress; DateTime? get manufacturerDate; DateTime? get firstUseDate; DateTime? get expiryDateTimeStamp; String? get status; String? get swl; String? get photoReference; String? get standardReference; Map<String, dynamic>? get customFields;
+@JsonKey(name: 'itemId', readValue: _readId) String? get itemId; String? get itemNo; String? get description; bool? get archived; String? get rfidNo;@JsonKey(name: 'categoryId', readValue: _readCategoryId) String? get categoryId; String? get categoryName;@JsonKey(name: 'locationId', readValue: _readLocationId) String? get locationId; String? get detailedLocation; String? get internalNotes; String? get manufacturer; String? get manufacturerAddress; DateTime? get manufacturerDate; DateTime? get firstUseDate; DateTime? get expiryDateTimeStamp; String? get status; String? get swl; String? get photoReference; String? get standardReference; Map<String, dynamic>? get customFields; Map<String, dynamic>? get itemData; List<Map<String, dynamic>>? get reports;
 /// Create a copy of Item
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $ItemCopyWith<Item> get copyWith => _$ItemCopyWithImpl<Item>(this as Item, _$ide
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Item&&(identical(other.itemId, itemId) || other.itemId == itemId)&&(identical(other.itemNo, itemNo) || other.itemNo == itemNo)&&(identical(other.description, description) || other.description == description)&&(identical(other.archived, archived) || other.archived == archived)&&(identical(other.rfidNo, rfidNo) || other.rfidNo == rfidNo)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.locationId, locationId) || other.locationId == locationId)&&(identical(other.detailedLocation, detailedLocation) || other.detailedLocation == detailedLocation)&&(identical(other.internalNotes, internalNotes) || other.internalNotes == internalNotes)&&(identical(other.manufacturer, manufacturer) || other.manufacturer == manufacturer)&&(identical(other.manufacturerAddress, manufacturerAddress) || other.manufacturerAddress == manufacturerAddress)&&(identical(other.manufacturerDate, manufacturerDate) || other.manufacturerDate == manufacturerDate)&&(identical(other.firstUseDate, firstUseDate) || other.firstUseDate == firstUseDate)&&(identical(other.expiryDateTimeStamp, expiryDateTimeStamp) || other.expiryDateTimeStamp == expiryDateTimeStamp)&&(identical(other.status, status) || other.status == status)&&(identical(other.swl, swl) || other.swl == swl)&&(identical(other.photoReference, photoReference) || other.photoReference == photoReference)&&(identical(other.standardReference, standardReference) || other.standardReference == standardReference)&&const DeepCollectionEquality().equals(other.customFields, customFields));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Item&&(identical(other.itemId, itemId) || other.itemId == itemId)&&(identical(other.itemNo, itemNo) || other.itemNo == itemNo)&&(identical(other.description, description) || other.description == description)&&(identical(other.archived, archived) || other.archived == archived)&&(identical(other.rfidNo, rfidNo) || other.rfidNo == rfidNo)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.locationId, locationId) || other.locationId == locationId)&&(identical(other.detailedLocation, detailedLocation) || other.detailedLocation == detailedLocation)&&(identical(other.internalNotes, internalNotes) || other.internalNotes == internalNotes)&&(identical(other.manufacturer, manufacturer) || other.manufacturer == manufacturer)&&(identical(other.manufacturerAddress, manufacturerAddress) || other.manufacturerAddress == manufacturerAddress)&&(identical(other.manufacturerDate, manufacturerDate) || other.manufacturerDate == manufacturerDate)&&(identical(other.firstUseDate, firstUseDate) || other.firstUseDate == firstUseDate)&&(identical(other.expiryDateTimeStamp, expiryDateTimeStamp) || other.expiryDateTimeStamp == expiryDateTimeStamp)&&(identical(other.status, status) || other.status == status)&&(identical(other.swl, swl) || other.swl == swl)&&(identical(other.photoReference, photoReference) || other.photoReference == photoReference)&&(identical(other.standardReference, standardReference) || other.standardReference == standardReference)&&const DeepCollectionEquality().equals(other.customFields, customFields)&&const DeepCollectionEquality().equals(other.itemData, itemData)&&const DeepCollectionEquality().equals(other.reports, reports));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,itemId,itemNo,description,archived,rfidNo,categoryId,categoryName,locationId,detailedLocation,internalNotes,manufacturer,manufacturerAddress,manufacturerDate,firstUseDate,expiryDateTimeStamp,status,swl,photoReference,standardReference,const DeepCollectionEquality().hash(customFields)]);
+int get hashCode => Object.hashAll([runtimeType,itemId,itemNo,description,archived,rfidNo,categoryId,categoryName,locationId,detailedLocation,internalNotes,manufacturer,manufacturerAddress,manufacturerDate,firstUseDate,expiryDateTimeStamp,status,swl,photoReference,standardReference,const DeepCollectionEquality().hash(customFields),const DeepCollectionEquality().hash(itemData),const DeepCollectionEquality().hash(reports)]);
 
 @override
 String toString() {
-  return 'Item(itemId: $itemId, itemNo: $itemNo, description: $description, archived: $archived, rfidNo: $rfidNo, categoryId: $categoryId, categoryName: $categoryName, locationId: $locationId, detailedLocation: $detailedLocation, internalNotes: $internalNotes, manufacturer: $manufacturer, manufacturerAddress: $manufacturerAddress, manufacturerDate: $manufacturerDate, firstUseDate: $firstUseDate, expiryDateTimeStamp: $expiryDateTimeStamp, status: $status, swl: $swl, photoReference: $photoReference, standardReference: $standardReference, customFields: $customFields)';
+  return 'Item(itemId: $itemId, itemNo: $itemNo, description: $description, archived: $archived, rfidNo: $rfidNo, categoryId: $categoryId, categoryName: $categoryName, locationId: $locationId, detailedLocation: $detailedLocation, internalNotes: $internalNotes, manufacturer: $manufacturer, manufacturerAddress: $manufacturerAddress, manufacturerDate: $manufacturerDate, firstUseDate: $firstUseDate, expiryDateTimeStamp: $expiryDateTimeStamp, status: $status, swl: $swl, photoReference: $photoReference, standardReference: $standardReference, customFields: $customFields, itemData: $itemData, reports: $reports)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $ItemCopyWith<$Res>  {
   factory $ItemCopyWith(Item value, $Res Function(Item) _then) = _$ItemCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'itemId', readValue: _readId) String? itemId, String? itemNo, String? description, bool? archived, String? rfidNo,@JsonKey(name: 'categoryId', readValue: _readCategoryId) String? categoryId, String? categoryName,@JsonKey(name: 'locationId', readValue: _readLocationId) String? locationId, String? detailedLocation, String? internalNotes, String? manufacturer, String? manufacturerAddress, DateTime? manufacturerDate, DateTime? firstUseDate, DateTime? expiryDateTimeStamp, String? status, String? swl, String? photoReference, String? standardReference, Map<String, dynamic>? customFields
+@JsonKey(name: 'itemId', readValue: _readId) String? itemId, String? itemNo, String? description, bool? archived, String? rfidNo,@JsonKey(name: 'categoryId', readValue: _readCategoryId) String? categoryId, String? categoryName,@JsonKey(name: 'locationId', readValue: _readLocationId) String? locationId, String? detailedLocation, String? internalNotes, String? manufacturer, String? manufacturerAddress, DateTime? manufacturerDate, DateTime? firstUseDate, DateTime? expiryDateTimeStamp, String? status, String? swl, String? photoReference, String? standardReference, Map<String, dynamic>? customFields, Map<String, dynamic>? itemData, List<Map<String, dynamic>>? reports
 });
 
 
@@ -65,7 +65,7 @@ class _$ItemCopyWithImpl<$Res>
 
 /// Create a copy of Item
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? itemId = freezed,Object? itemNo = freezed,Object? description = freezed,Object? archived = freezed,Object? rfidNo = freezed,Object? categoryId = freezed,Object? categoryName = freezed,Object? locationId = freezed,Object? detailedLocation = freezed,Object? internalNotes = freezed,Object? manufacturer = freezed,Object? manufacturerAddress = freezed,Object? manufacturerDate = freezed,Object? firstUseDate = freezed,Object? expiryDateTimeStamp = freezed,Object? status = freezed,Object? swl = freezed,Object? photoReference = freezed,Object? standardReference = freezed,Object? customFields = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? itemId = freezed,Object? itemNo = freezed,Object? description = freezed,Object? archived = freezed,Object? rfidNo = freezed,Object? categoryId = freezed,Object? categoryName = freezed,Object? locationId = freezed,Object? detailedLocation = freezed,Object? internalNotes = freezed,Object? manufacturer = freezed,Object? manufacturerAddress = freezed,Object? manufacturerDate = freezed,Object? firstUseDate = freezed,Object? expiryDateTimeStamp = freezed,Object? status = freezed,Object? swl = freezed,Object? photoReference = freezed,Object? standardReference = freezed,Object? customFields = freezed,Object? itemData = freezed,Object? reports = freezed,}) {
   return _then(_self.copyWith(
 itemId: freezed == itemId ? _self.itemId : itemId // ignore: cast_nullable_to_non_nullable
 as String?,itemNo: freezed == itemNo ? _self.itemNo : itemNo // ignore: cast_nullable_to_non_nullable
@@ -87,7 +87,9 @@ as String?,swl: freezed == swl ? _self.swl : swl // ignore: cast_nullable_to_non
 as String?,photoReference: freezed == photoReference ? _self.photoReference : photoReference // ignore: cast_nullable_to_non_nullable
 as String?,standardReference: freezed == standardReference ? _self.standardReference : standardReference // ignore: cast_nullable_to_non_nullable
 as String?,customFields: freezed == customFields ? _self.customFields : customFields // ignore: cast_nullable_to_non_nullable
-as Map<String, dynamic>?,
+as Map<String, dynamic>?,itemData: freezed == itemData ? _self.itemData : itemData // ignore: cast_nullable_to_non_nullable
+as Map<String, dynamic>?,reports: freezed == reports ? _self.reports : reports // ignore: cast_nullable_to_non_nullable
+as List<Map<String, dynamic>>?,
   ));
 }
 
@@ -172,10 +174,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'itemId', readValue: _readId)  String? itemId,  String? itemNo,  String? description,  bool? archived,  String? rfidNo, @JsonKey(name: 'categoryId', readValue: _readCategoryId)  String? categoryId,  String? categoryName, @JsonKey(name: 'locationId', readValue: _readLocationId)  String? locationId,  String? detailedLocation,  String? internalNotes,  String? manufacturer,  String? manufacturerAddress,  DateTime? manufacturerDate,  DateTime? firstUseDate,  DateTime? expiryDateTimeStamp,  String? status,  String? swl,  String? photoReference,  String? standardReference,  Map<String, dynamic>? customFields)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'itemId', readValue: _readId)  String? itemId,  String? itemNo,  String? description,  bool? archived,  String? rfidNo, @JsonKey(name: 'categoryId', readValue: _readCategoryId)  String? categoryId,  String? categoryName, @JsonKey(name: 'locationId', readValue: _readLocationId)  String? locationId,  String? detailedLocation,  String? internalNotes,  String? manufacturer,  String? manufacturerAddress,  DateTime? manufacturerDate,  DateTime? firstUseDate,  DateTime? expiryDateTimeStamp,  String? status,  String? swl,  String? photoReference,  String? standardReference,  Map<String, dynamic>? customFields,  Map<String, dynamic>? itemData,  List<Map<String, dynamic>>? reports)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Item() when $default != null:
-return $default(_that.itemId,_that.itemNo,_that.description,_that.archived,_that.rfidNo,_that.categoryId,_that.categoryName,_that.locationId,_that.detailedLocation,_that.internalNotes,_that.manufacturer,_that.manufacturerAddress,_that.manufacturerDate,_that.firstUseDate,_that.expiryDateTimeStamp,_that.status,_that.swl,_that.photoReference,_that.standardReference,_that.customFields);case _:
+return $default(_that.itemId,_that.itemNo,_that.description,_that.archived,_that.rfidNo,_that.categoryId,_that.categoryName,_that.locationId,_that.detailedLocation,_that.internalNotes,_that.manufacturer,_that.manufacturerAddress,_that.manufacturerDate,_that.firstUseDate,_that.expiryDateTimeStamp,_that.status,_that.swl,_that.photoReference,_that.standardReference,_that.customFields,_that.itemData,_that.reports);case _:
   return orElse();
 
 }
@@ -193,10 +195,10 @@ return $default(_that.itemId,_that.itemNo,_that.description,_that.archived,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'itemId', readValue: _readId)  String? itemId,  String? itemNo,  String? description,  bool? archived,  String? rfidNo, @JsonKey(name: 'categoryId', readValue: _readCategoryId)  String? categoryId,  String? categoryName, @JsonKey(name: 'locationId', readValue: _readLocationId)  String? locationId,  String? detailedLocation,  String? internalNotes,  String? manufacturer,  String? manufacturerAddress,  DateTime? manufacturerDate,  DateTime? firstUseDate,  DateTime? expiryDateTimeStamp,  String? status,  String? swl,  String? photoReference,  String? standardReference,  Map<String, dynamic>? customFields)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'itemId', readValue: _readId)  String? itemId,  String? itemNo,  String? description,  bool? archived,  String? rfidNo, @JsonKey(name: 'categoryId', readValue: _readCategoryId)  String? categoryId,  String? categoryName, @JsonKey(name: 'locationId', readValue: _readLocationId)  String? locationId,  String? detailedLocation,  String? internalNotes,  String? manufacturer,  String? manufacturerAddress,  DateTime? manufacturerDate,  DateTime? firstUseDate,  DateTime? expiryDateTimeStamp,  String? status,  String? swl,  String? photoReference,  String? standardReference,  Map<String, dynamic>? customFields,  Map<String, dynamic>? itemData,  List<Map<String, dynamic>>? reports)  $default,) {final _that = this;
 switch (_that) {
 case _Item():
-return $default(_that.itemId,_that.itemNo,_that.description,_that.archived,_that.rfidNo,_that.categoryId,_that.categoryName,_that.locationId,_that.detailedLocation,_that.internalNotes,_that.manufacturer,_that.manufacturerAddress,_that.manufacturerDate,_that.firstUseDate,_that.expiryDateTimeStamp,_that.status,_that.swl,_that.photoReference,_that.standardReference,_that.customFields);case _:
+return $default(_that.itemId,_that.itemNo,_that.description,_that.archived,_that.rfidNo,_that.categoryId,_that.categoryName,_that.locationId,_that.detailedLocation,_that.internalNotes,_that.manufacturer,_that.manufacturerAddress,_that.manufacturerDate,_that.firstUseDate,_that.expiryDateTimeStamp,_that.status,_that.swl,_that.photoReference,_that.standardReference,_that.customFields,_that.itemData,_that.reports);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -213,10 +215,10 @@ return $default(_that.itemId,_that.itemNo,_that.description,_that.archived,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'itemId', readValue: _readId)  String? itemId,  String? itemNo,  String? description,  bool? archived,  String? rfidNo, @JsonKey(name: 'categoryId', readValue: _readCategoryId)  String? categoryId,  String? categoryName, @JsonKey(name: 'locationId', readValue: _readLocationId)  String? locationId,  String? detailedLocation,  String? internalNotes,  String? manufacturer,  String? manufacturerAddress,  DateTime? manufacturerDate,  DateTime? firstUseDate,  DateTime? expiryDateTimeStamp,  String? status,  String? swl,  String? photoReference,  String? standardReference,  Map<String, dynamic>? customFields)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'itemId', readValue: _readId)  String? itemId,  String? itemNo,  String? description,  bool? archived,  String? rfidNo, @JsonKey(name: 'categoryId', readValue: _readCategoryId)  String? categoryId,  String? categoryName, @JsonKey(name: 'locationId', readValue: _readLocationId)  String? locationId,  String? detailedLocation,  String? internalNotes,  String? manufacturer,  String? manufacturerAddress,  DateTime? manufacturerDate,  DateTime? firstUseDate,  DateTime? expiryDateTimeStamp,  String? status,  String? swl,  String? photoReference,  String? standardReference,  Map<String, dynamic>? customFields,  Map<String, dynamic>? itemData,  List<Map<String, dynamic>>? reports)?  $default,) {final _that = this;
 switch (_that) {
 case _Item() when $default != null:
-return $default(_that.itemId,_that.itemNo,_that.description,_that.archived,_that.rfidNo,_that.categoryId,_that.categoryName,_that.locationId,_that.detailedLocation,_that.internalNotes,_that.manufacturer,_that.manufacturerAddress,_that.manufacturerDate,_that.firstUseDate,_that.expiryDateTimeStamp,_that.status,_that.swl,_that.photoReference,_that.standardReference,_that.customFields);case _:
+return $default(_that.itemId,_that.itemNo,_that.description,_that.archived,_that.rfidNo,_that.categoryId,_that.categoryName,_that.locationId,_that.detailedLocation,_that.internalNotes,_that.manufacturer,_that.manufacturerAddress,_that.manufacturerDate,_that.firstUseDate,_that.expiryDateTimeStamp,_that.status,_that.swl,_that.photoReference,_that.standardReference,_that.customFields,_that.itemData,_that.reports);case _:
   return null;
 
 }
@@ -228,7 +230,7 @@ return $default(_that.itemId,_that.itemNo,_that.description,_that.archived,_that
 @JsonSerializable()
 
 class _Item implements Item {
-  const _Item({@JsonKey(name: 'itemId', readValue: _readId) this.itemId, this.itemNo, this.description, this.archived, this.rfidNo, @JsonKey(name: 'categoryId', readValue: _readCategoryId) this.categoryId, this.categoryName, @JsonKey(name: 'locationId', readValue: _readLocationId) this.locationId, this.detailedLocation, this.internalNotes, this.manufacturer, this.manufacturerAddress, this.manufacturerDate, this.firstUseDate, this.expiryDateTimeStamp, this.status, this.swl, this.photoReference, this.standardReference, final  Map<String, dynamic>? customFields}): _customFields = customFields;
+  const _Item({@JsonKey(name: 'itemId', readValue: _readId) this.itemId, this.itemNo, this.description, this.archived, this.rfidNo, @JsonKey(name: 'categoryId', readValue: _readCategoryId) this.categoryId, this.categoryName, @JsonKey(name: 'locationId', readValue: _readLocationId) this.locationId, this.detailedLocation, this.internalNotes, this.manufacturer, this.manufacturerAddress, this.manufacturerDate, this.firstUseDate, this.expiryDateTimeStamp, this.status, this.swl, this.photoReference, this.standardReference, final  Map<String, dynamic>? customFields, final  Map<String, dynamic>? itemData, final  List<Map<String, dynamic>>? reports}): _customFields = customFields,_itemData = itemData,_reports = reports;
   factory _Item.fromJson(Map<String, dynamic> json) => _$ItemFromJson(json);
 
 @override@JsonKey(name: 'itemId', readValue: _readId) final  String? itemId;
@@ -259,6 +261,24 @@ class _Item implements Item {
   return EqualUnmodifiableMapView(value);
 }
 
+ final  Map<String, dynamic>? _itemData;
+@override Map<String, dynamic>? get itemData {
+  final value = _itemData;
+  if (value == null) return null;
+  if (_itemData is EqualUnmodifiableMapView) return _itemData;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(value);
+}
+
+ final  List<Map<String, dynamic>>? _reports;
+@override List<Map<String, dynamic>>? get reports {
+  final value = _reports;
+  if (value == null) return null;
+  if (_reports is EqualUnmodifiableListView) return _reports;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(value);
+}
+
 
 /// Create a copy of Item
 /// with the given fields replaced by the non-null parameter values.
@@ -273,16 +293,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Item&&(identical(other.itemId, itemId) || other.itemId == itemId)&&(identical(other.itemNo, itemNo) || other.itemNo == itemNo)&&(identical(other.description, description) || other.description == description)&&(identical(other.archived, archived) || other.archived == archived)&&(identical(other.rfidNo, rfidNo) || other.rfidNo == rfidNo)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.locationId, locationId) || other.locationId == locationId)&&(identical(other.detailedLocation, detailedLocation) || other.detailedLocation == detailedLocation)&&(identical(other.internalNotes, internalNotes) || other.internalNotes == internalNotes)&&(identical(other.manufacturer, manufacturer) || other.manufacturer == manufacturer)&&(identical(other.manufacturerAddress, manufacturerAddress) || other.manufacturerAddress == manufacturerAddress)&&(identical(other.manufacturerDate, manufacturerDate) || other.manufacturerDate == manufacturerDate)&&(identical(other.firstUseDate, firstUseDate) || other.firstUseDate == firstUseDate)&&(identical(other.expiryDateTimeStamp, expiryDateTimeStamp) || other.expiryDateTimeStamp == expiryDateTimeStamp)&&(identical(other.status, status) || other.status == status)&&(identical(other.swl, swl) || other.swl == swl)&&(identical(other.photoReference, photoReference) || other.photoReference == photoReference)&&(identical(other.standardReference, standardReference) || other.standardReference == standardReference)&&const DeepCollectionEquality().equals(other._customFields, _customFields));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Item&&(identical(other.itemId, itemId) || other.itemId == itemId)&&(identical(other.itemNo, itemNo) || other.itemNo == itemNo)&&(identical(other.description, description) || other.description == description)&&(identical(other.archived, archived) || other.archived == archived)&&(identical(other.rfidNo, rfidNo) || other.rfidNo == rfidNo)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.locationId, locationId) || other.locationId == locationId)&&(identical(other.detailedLocation, detailedLocation) || other.detailedLocation == detailedLocation)&&(identical(other.internalNotes, internalNotes) || other.internalNotes == internalNotes)&&(identical(other.manufacturer, manufacturer) || other.manufacturer == manufacturer)&&(identical(other.manufacturerAddress, manufacturerAddress) || other.manufacturerAddress == manufacturerAddress)&&(identical(other.manufacturerDate, manufacturerDate) || other.manufacturerDate == manufacturerDate)&&(identical(other.firstUseDate, firstUseDate) || other.firstUseDate == firstUseDate)&&(identical(other.expiryDateTimeStamp, expiryDateTimeStamp) || other.expiryDateTimeStamp == expiryDateTimeStamp)&&(identical(other.status, status) || other.status == status)&&(identical(other.swl, swl) || other.swl == swl)&&(identical(other.photoReference, photoReference) || other.photoReference == photoReference)&&(identical(other.standardReference, standardReference) || other.standardReference == standardReference)&&const DeepCollectionEquality().equals(other._customFields, _customFields)&&const DeepCollectionEquality().equals(other._itemData, _itemData)&&const DeepCollectionEquality().equals(other._reports, _reports));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,itemId,itemNo,description,archived,rfidNo,categoryId,categoryName,locationId,detailedLocation,internalNotes,manufacturer,manufacturerAddress,manufacturerDate,firstUseDate,expiryDateTimeStamp,status,swl,photoReference,standardReference,const DeepCollectionEquality().hash(_customFields)]);
+int get hashCode => Object.hashAll([runtimeType,itemId,itemNo,description,archived,rfidNo,categoryId,categoryName,locationId,detailedLocation,internalNotes,manufacturer,manufacturerAddress,manufacturerDate,firstUseDate,expiryDateTimeStamp,status,swl,photoReference,standardReference,const DeepCollectionEquality().hash(_customFields),const DeepCollectionEquality().hash(_itemData),const DeepCollectionEquality().hash(_reports)]);
 
 @override
 String toString() {
-  return 'Item(itemId: $itemId, itemNo: $itemNo, description: $description, archived: $archived, rfidNo: $rfidNo, categoryId: $categoryId, categoryName: $categoryName, locationId: $locationId, detailedLocation: $detailedLocation, internalNotes: $internalNotes, manufacturer: $manufacturer, manufacturerAddress: $manufacturerAddress, manufacturerDate: $manufacturerDate, firstUseDate: $firstUseDate, expiryDateTimeStamp: $expiryDateTimeStamp, status: $status, swl: $swl, photoReference: $photoReference, standardReference: $standardReference, customFields: $customFields)';
+  return 'Item(itemId: $itemId, itemNo: $itemNo, description: $description, archived: $archived, rfidNo: $rfidNo, categoryId: $categoryId, categoryName: $categoryName, locationId: $locationId, detailedLocation: $detailedLocation, internalNotes: $internalNotes, manufacturer: $manufacturer, manufacturerAddress: $manufacturerAddress, manufacturerDate: $manufacturerDate, firstUseDate: $firstUseDate, expiryDateTimeStamp: $expiryDateTimeStamp, status: $status, swl: $swl, photoReference: $photoReference, standardReference: $standardReference, customFields: $customFields, itemData: $itemData, reports: $reports)';
 }
 
 
@@ -293,7 +313,7 @@ abstract mixin class _$ItemCopyWith<$Res> implements $ItemCopyWith<$Res> {
   factory _$ItemCopyWith(_Item value, $Res Function(_Item) _then) = __$ItemCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'itemId', readValue: _readId) String? itemId, String? itemNo, String? description, bool? archived, String? rfidNo,@JsonKey(name: 'categoryId', readValue: _readCategoryId) String? categoryId, String? categoryName,@JsonKey(name: 'locationId', readValue: _readLocationId) String? locationId, String? detailedLocation, String? internalNotes, String? manufacturer, String? manufacturerAddress, DateTime? manufacturerDate, DateTime? firstUseDate, DateTime? expiryDateTimeStamp, String? status, String? swl, String? photoReference, String? standardReference, Map<String, dynamic>? customFields
+@JsonKey(name: 'itemId', readValue: _readId) String? itemId, String? itemNo, String? description, bool? archived, String? rfidNo,@JsonKey(name: 'categoryId', readValue: _readCategoryId) String? categoryId, String? categoryName,@JsonKey(name: 'locationId', readValue: _readLocationId) String? locationId, String? detailedLocation, String? internalNotes, String? manufacturer, String? manufacturerAddress, DateTime? manufacturerDate, DateTime? firstUseDate, DateTime? expiryDateTimeStamp, String? status, String? swl, String? photoReference, String? standardReference, Map<String, dynamic>? customFields, Map<String, dynamic>? itemData, List<Map<String, dynamic>>? reports
 });
 
 
@@ -310,7 +330,7 @@ class __$ItemCopyWithImpl<$Res>
 
 /// Create a copy of Item
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? itemId = freezed,Object? itemNo = freezed,Object? description = freezed,Object? archived = freezed,Object? rfidNo = freezed,Object? categoryId = freezed,Object? categoryName = freezed,Object? locationId = freezed,Object? detailedLocation = freezed,Object? internalNotes = freezed,Object? manufacturer = freezed,Object? manufacturerAddress = freezed,Object? manufacturerDate = freezed,Object? firstUseDate = freezed,Object? expiryDateTimeStamp = freezed,Object? status = freezed,Object? swl = freezed,Object? photoReference = freezed,Object? standardReference = freezed,Object? customFields = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? itemId = freezed,Object? itemNo = freezed,Object? description = freezed,Object? archived = freezed,Object? rfidNo = freezed,Object? categoryId = freezed,Object? categoryName = freezed,Object? locationId = freezed,Object? detailedLocation = freezed,Object? internalNotes = freezed,Object? manufacturer = freezed,Object? manufacturerAddress = freezed,Object? manufacturerDate = freezed,Object? firstUseDate = freezed,Object? expiryDateTimeStamp = freezed,Object? status = freezed,Object? swl = freezed,Object? photoReference = freezed,Object? standardReference = freezed,Object? customFields = freezed,Object? itemData = freezed,Object? reports = freezed,}) {
   return _then(_Item(
 itemId: freezed == itemId ? _self.itemId : itemId // ignore: cast_nullable_to_non_nullable
 as String?,itemNo: freezed == itemNo ? _self.itemNo : itemNo // ignore: cast_nullable_to_non_nullable
@@ -332,7 +352,9 @@ as String?,swl: freezed == swl ? _self.swl : swl // ignore: cast_nullable_to_non
 as String?,photoReference: freezed == photoReference ? _self.photoReference : photoReference // ignore: cast_nullable_to_non_nullable
 as String?,standardReference: freezed == standardReference ? _self.standardReference : standardReference // ignore: cast_nullable_to_non_nullable
 as String?,customFields: freezed == customFields ? _self._customFields : customFields // ignore: cast_nullable_to_non_nullable
-as Map<String, dynamic>?,
+as Map<String, dynamic>?,itemData: freezed == itemData ? _self._itemData : itemData // ignore: cast_nullable_to_non_nullable
+as Map<String, dynamic>?,reports: freezed == reports ? _self._reports : reports // ignore: cast_nullable_to_non_nullable
+as List<Map<String, dynamic>>?,
   ));
 }
 

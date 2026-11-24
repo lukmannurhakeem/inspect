@@ -3,12 +3,10 @@ import 'package:inspect/core/extension/date_time_extension.dart';
 import 'package:inspect/core/extension/theme_extension.dart';
 import 'package:inspect/navigation/navigation_route.dart';
 import 'package:inspect/navigation/navigation_service.dart';
-import 'package:inspect/provider/auth_provider.dart';
 import 'package:inspect/provider/job_provider.dart';
 import 'package:inspect/provider/job_sync_manager_provider.dart';
 import 'package:inspect/screen/job/job_register/pending_jobs_widget.dart';
 import 'package:inspect/widget/common_button.dart';
-import 'package:inspect/widget/common_confirm_dialog.dart';
 import 'package:inspect/widget/common_dialog.dart';
 import 'package:inspect/widget/common_dropdown.dart';
 import 'package:inspect/widget/common_textfield.dart';
@@ -85,8 +83,8 @@ class _JobScreenState extends State<JobScreen> {
 
   String _valueLabel(SearchColumn column, dynamic value) =>
       column == SearchColumn.status
-      ? _statusText(value == true)
-      : value.toString();
+          ? _statusText(value == true)
+          : value.toString();
 
   List<dynamic> _jobs(JobProvider provider) =>
       provider.jobModel?.data ?? const [];
@@ -123,15 +121,15 @@ class _JobScreenState extends State<JobScreen> {
 
   bool _matchesSearch(dynamic job, String query) =>
       _jobNumber(job).toLowerCase().contains(query) ||
-      _customerName(job).toLowerCase().contains(query) ||
-      _siteName(job).toLowerCase().contains(query);
+          _customerName(job).toLowerCase().contains(query) ||
+          _siteName(job).toLowerCase().contains(query);
 
   List<dynamic> _filteredJobs(JobProvider provider) {
     final query = _searchController.text.toLowerCase();
     return _jobs(provider).where((job) {
       if (query.isNotEmpty && !_matchesSearch(job, query)) return false;
       return _activeFilters.entries.every(
-        (e) => e.value == null || _matchesFilter(job, e.key, e.value),
+            (e) => e.value == null || _matchesFilter(job, e.key, e.value),
       );
     }).toList();
   }
@@ -140,10 +138,10 @@ class _JobScreenState extends State<JobScreen> {
       context.colors.primary.withOpacity(opacity);
 
   TextStyle? _bodySmall(
-    BuildContext context, {
-    double opacity = 1,
-    double? fontSize,
-  }) => context.topology.textTheme.bodySmall?.copyWith(
+      BuildContext context, {
+        double opacity = 1,
+        double? fontSize,
+      }) => context.topology.textTheme.bodySmall?.copyWith(
     color: _fade(context, opacity),
     fontSize: fontSize,
   );
@@ -152,59 +150,6 @@ class _JobScreenState extends State<JobScreen> {
     NavigationService().navigateTo(
       NavigationRoutes.jobRegister,
       arguments: {'jobId': job.jobId, 'job': job},
-    );
-  }
-
-  void _editJob(dynamic job) {
-    NavigationService().navigateTo(
-      NavigationRoutes.jobAddNewDetailsScreen,
-      arguments: {
-        'customerId': job.customerId ?? job.clientId ?? '',
-        'customerName': _customerName(job),
-        'siteId': job.siteId ?? '',
-        'siteName': _siteName(job),
-        'jobId': job.jobId,
-        'job': job,
-        'isEditMode': true,
-      },
-    );
-  }
-
-  void _confirmDelete(BuildContext context, dynamic job) {
-    final customer = _customerName(job);
-
-    CommonConfirmDialog.show(
-      context: context,
-      title: 'Delete Job',
-      message:
-          'Are you sure you want to delete job "${_jobNumber(job)}"? This action cannot be undone.',
-      warningNote: 'All items and reports linked to this job will be removed.',
-      confirmText: 'Delete',
-      isDestructive: true,
-      previewWidget: Row(
-        children: [
-          Icon(Icons.work_outline, color: Colors.grey.shade600, size: 20),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _jobNumber(job),
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                if (customer.isNotEmpty)
-                  Text(
-                    customer,
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      onConfirm: () =>
-          context.read<JobProvider>().deleteJobFromList(context, job.jobId),
     );
   }
 
@@ -232,9 +177,9 @@ class _JobScreenState extends State<JobScreen> {
                               '${entry.key.label}: ${_valueLabel(entry.key, entry.value)}',
                               style: context.topology.textTheme.bodySmall
                                   ?.copyWith(
-                                    color: context.colors.onPrimary,
-                                    fontSize: 11,
-                                  ),
+                                color: context.colors.onPrimary,
+                                fontSize: 11,
+                              ),
                             ),
                             backgroundColor: context.colors.primary,
                             deleteIcon: Icon(
@@ -243,7 +188,7 @@ class _JobScreenState extends State<JobScreen> {
                               color: context.colors.onPrimary,
                             ),
                             onDeleted: () => setDialogState(
-                              () => tempFilters.remove(entry.key),
+                                  () => tempFilters.remove(entry.key),
                             ),
                           ),
                       ],
@@ -258,7 +203,7 @@ class _JobScreenState extends State<JobScreen> {
                           provider,
                           column,
                           tempFilters[column],
-                          (value) => setDialogState(() {
+                              (value) => setDialogState(() {
                             if (value == null) {
                               tempFilters.remove(column);
                             } else {
@@ -287,7 +232,7 @@ class _JobScreenState extends State<JobScreen> {
                         text: 'Apply',
                         onPressed: () {
                           setState(
-                            () => _activeFilters = Map.from(tempFilters),
+                                () => _activeFilters = Map.from(tempFilters),
                           );
                           NavigationService().goBack();
                         },
@@ -304,12 +249,12 @@ class _JobScreenState extends State<JobScreen> {
   }
 
   Widget _buildFilterCard(
-    BuildContext context,
-    JobProvider provider,
-    SearchColumn column,
-    dynamic currentValue,
-    ValueChanged<dynamic> onChanged,
-  ) {
+      BuildContext context,
+      JobProvider provider,
+      SearchColumn column,
+      dynamic currentValue,
+      ValueChanged<dynamic> onChanged,
+      ) {
     final values = _columnValues(provider, column);
 
     return Card(
@@ -398,15 +343,15 @@ class _JobScreenState extends State<JobScreen> {
             tooltip: 'Sync jobs',
             icon: provider.isSyncing
                 ? SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        context.colors.primary,
-                      ),
-                    ),
-                  )
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  context.colors.primary,
+                ),
+              ),
+            )
                 : Icon(Icons.sync, color: context.colors.primary),
             onPressed: provider.isSyncing
                 ? null
@@ -432,28 +377,6 @@ class _JobScreenState extends State<JobScreen> {
         backgroundColor: Colors.green,
         duration: const Duration(seconds: 2),
       ),
-    );
-  }
-
-  Widget _buildAdminActions(BuildContext context, dynamic job) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton(
-          tooltip: 'Edit job',
-          icon: Icon(Icons.edit_outlined, size: 18, color: _fade(context, 0.7)),
-          onPressed: () => _editJob(job),
-        ),
-        IconButton(
-          tooltip: 'Delete job',
-          icon: Icon(
-            Icons.delete_outline,
-            size: 18,
-            color: Colors.red.shade400,
-          ),
-          onPressed: () => _confirmDelete(context, job),
-        ),
-      ],
     );
   }
 
@@ -542,12 +465,11 @@ class _JobScreenState extends State<JobScreen> {
   }
 
   DataColumn _dataColumn(
-    BuildContext context,
-    JobProvider provider,
-    String label, {
-    int flex = 1,
-    bool sortable = true,
-  }) {
+      BuildContext context,
+      JobProvider provider,
+      String label, {
+        int flex = 1,
+      }) {
     return DataColumn(
       label: Expanded(
         flex: flex,
@@ -558,9 +480,7 @@ class _JobScreenState extends State<JobScreen> {
           ),
         ),
       ),
-      onSort: sortable
-          ? (index, _) => setState(() => provider.sortColumnIndex = index)
-          : null,
+      onSort: (index, _) => setState(() => provider.sortColumnIndex = index),
     );
   }
 
@@ -579,11 +499,10 @@ class _JobScreenState extends State<JobScreen> {
   }
 
   Widget _buildDataTable(
-    BuildContext context,
-    JobProvider provider,
-    List<dynamic> jobs,
-    bool isAdmin,
-  ) {
+      BuildContext context,
+      JobProvider provider,
+      List<dynamic> jobs,
+      ) {
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
@@ -605,14 +524,12 @@ class _JobScreenState extends State<JobScreen> {
                   _dataColumn(context, provider, 'Status'),
                   _dataColumn(context, provider, 'Start Date'),
                   _dataColumn(context, provider, 'End Date'),
-                  if (isAdmin)
-                    _dataColumn(context, provider, 'Actions', sortable: false),
                 ],
                 rows: [
                   for (var i = 0; i < jobs.length; i++)
                     DataRow(
                       color: MaterialStateProperty.resolveWith<Color?>(
-                        (_) => i.isEven ? _fade(context, 0.05) : null,
+                            (_) => i.isEven ? _fade(context, 0.05) : null,
                       ),
                       onSelectChanged: (selected) {
                         if (selected == true) _openJob(jobs[i]);
@@ -642,8 +559,6 @@ class _JobScreenState extends State<JobScreen> {
                           context,
                           _formatDate(jobs[i].estimatedEndDate),
                         ),
-                        if (isAdmin)
-                          DataCell(_buildAdminActions(context, jobs[i])),
                       ],
                     ),
                 ],
@@ -655,7 +570,7 @@ class _JobScreenState extends State<JobScreen> {
     );
   }
 
-  Widget _buildJobCard(BuildContext context, dynamic job, bool isAdmin) {
+  Widget _buildJobCard(BuildContext context, dynamic job) {
     final started = _isStarted(job);
 
     return Card(
@@ -728,11 +643,6 @@ class _JobScreenState extends State<JobScreen> {
                   ),
                 ],
               ),
-              if (isAdmin)
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: _buildAdminActions(context, job),
-                ),
             ],
           ),
         ),
@@ -740,16 +650,11 @@ class _JobScreenState extends State<JobScreen> {
     );
   }
 
-  Widget _buildMobileList(
-    BuildContext context,
-    List<dynamic> jobs,
-    bool isAdmin,
-  ) {
+  Widget _buildMobileList(BuildContext context, List<dynamic> jobs) {
     return ListView.builder(
       physics: const AlwaysScrollableScrollPhysics(),
       itemCount: jobs.length,
-      itemBuilder: (context, index) =>
-          _buildJobCard(context, jobs[index], isAdmin),
+      itemBuilder: (context, index) => _buildJobCard(context, jobs[index]),
     );
   }
 
@@ -821,27 +726,26 @@ class _JobScreenState extends State<JobScreen> {
   }
 
   Widget _buildJobList(
-    BuildContext context,
-    JobProvider provider,
-    JobSyncManagerProvider syncManager,
-    List<dynamic> jobs,
-    bool isAdmin,
-  ) {
+      BuildContext context,
+      JobProvider provider,
+      JobSyncManagerProvider syncManager,
+      List<dynamic> jobs,
+      ) {
     return RefreshIndicator(
       onRefresh: () async {
         await provider.syncJobs(context);
         syncManager.refresh();
       },
       child: context.isTablet
-          ? _buildDataTable(context, provider, jobs, isAdmin)
-          : _buildMobileList(context, jobs, isAdmin),
+          ? _buildDataTable(context, provider, jobs)
+          : _buildMobileList(context, jobs),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer3<JobProvider, JobSyncManagerProvider, AuthenticateProvider>(
-      builder: (context, provider, syncManager, auth, _) {
+    return Consumer2<JobProvider, JobSyncManagerProvider>(
+      builder: (context, provider, syncManager, _) {
         final hasPending = syncManager.pendingCount > 0;
 
         if (provider.jobModel?.data?.isEmpty == true) {
@@ -876,13 +780,7 @@ class _JobScreenState extends State<JobScreen> {
                 Expanded(
                   child: jobs.isEmpty
                       ? _buildNoResults(context)
-                      : _buildJobList(
-                          context,
-                          provider,
-                          syncManager,
-                          jobs,
-                          auth.isAdmin,
-                        ),
+                      : _buildJobList(context, provider, syncManager, jobs),
                 ),
               ],
             ),
