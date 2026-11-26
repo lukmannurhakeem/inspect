@@ -176,8 +176,8 @@ class InspectionRegisterProvider extends ChangeNotifier {
     for (final item in items) {
       final id = item.itemId!;
       try {
-        final response = await api.get(ApiEndpoint.getItemReport(id));
-        final data = response.data;
+        // apiClient.get already returns the decoded body, not a Response.
+        final data = await api.get(ApiEndpoint.getItemReport(id));
         if (data is! List) continue;
 
         final server = data
