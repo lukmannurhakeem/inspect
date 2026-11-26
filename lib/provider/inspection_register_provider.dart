@@ -13,13 +13,9 @@ class InspectionRegisterProvider extends ChangeNotifier {
 
   static const columnLabels = <String, String>{
     'item': 'Item No',
-    'description': 'Description',
-    'category': 'Category',
-    'location': 'Location',
     'reportNo': 'Report No',
-    'reportType': 'Report Type',
     'reportName': 'Report Name',
-    'status': 'Status',
+    'status': 'Approval Status',
     'inspectedOn': 'Inspected On',
     'expiryDate': 'Expiry Date',
     'pdf': 'PDF',
